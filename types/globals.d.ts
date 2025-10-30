@@ -1,9 +1,7 @@
 import { User } from "./user";
 
-export {}
+export {};
 
 declare global {
-    interface CustomJWTSession extends User {
-
-    }
+  interface CustomJWTSession extends User {}
 }

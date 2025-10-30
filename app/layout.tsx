@@ -4,7 +4,6 @@ import { ClerkProvider } from "@clerk/nextjs";
 import Header from "@/components/header";
 import Sidebar from "@/components/sidebar";
 
-
 export const metadata: Metadata = {
   title: "Tandaan",
   description: "A simple note-taking AI app.",
@@ -18,9 +17,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body
-          className="antialiased"
-        >
+        <body className="antialiased">
           <Header />
           <div className="flex min-h-screen">
             <Sidebar />
