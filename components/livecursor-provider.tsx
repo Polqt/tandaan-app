@@ -25,7 +25,7 @@ export default function LiveCursorProvider({
     <div onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave}>
       {others
         .filter((user) => user.presence.cursor != null)
-        .map(({connectionId, presence, info}) => (
+        .map(({ connectionId, presence, info }) => (
           <FollowPointer
             key={connectionId}
             x={presence.cursor!.x}

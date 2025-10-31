@@ -1,14 +1,14 @@
 "use client";
 
 import Document from "@/components/document";
+import { use } from "react";
 
 export default function DocumentPage({
-  params: { id },
+  params,
 }: {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   return (
     <div className="flex flex-col flex-1 min-h-screen">
       <Document id={id} />

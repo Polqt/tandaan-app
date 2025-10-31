@@ -3,6 +3,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import Header from "@/components/header";
 import Sidebar from "@/components/sidebar";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Tandaan",
@@ -21,10 +22,11 @@ export default function RootLayout({
           <Header />
           <div className="flex min-h-screen">
             <Sidebar />
+            <div className="flex-1 p-4 bg-slate-100 overflow-y-auto scrollbar-hide">
+              {children}
+            </div>
           </div>
-          <div className="flex-1 p-4 bg-slate-100 overflow-y-auto scrollbar-hide">
-            {children}
-          </div>
+          <Toaster position="top-right" />
         </body>
       </html>
     </ClerkProvider>

@@ -12,10 +12,8 @@ import {
 } from "./ui/sheet";
 import { useUser } from "@clerk/nextjs";
 import {
-  collectionGroup,
   DocumentData,
-  query,
-  where,
+  collection,
 } from "firebase/firestore";
 import { db } from "@/firebase";
 import { useEffect, useState } from "react";
@@ -39,10 +37,7 @@ export default function Sidebar() {
   });
   const [data, loading, error] = useCollection(
     user &&
-      query(
-        collectionGroup(db, "rooms"),
-        where("userId", "==", user.emailAddresses[0].toString()),
-      ),
+      collection(db, "users", user.id, "rooms"),
   );
 
   useEffect(() => {
@@ -85,7 +80,7 @@ export default function Sidebar() {
         ) : (
           <>
             <h2 className="text-slate-500 font-semibold text-sm">
-              My Documents
+              my documents
             </h2>
             {groupedData.owner.map((doc) => (
               <SidebarOption
@@ -126,13 +121,15 @@ export default function Sidebar() {
           </SheetTrigger>
           <SheetContent side="left">
             <SheetHeader>
-              <SheetTitle>Menu</SheetTitle>
+              <SheetTitle>menu</SheetTitle>
               <div>{menuOptions}</div>
             </SheetHeader>
           </SheetContent>
         </Sheet>
       </div>
-      <div className="hidden md:inline"></div>
+      <div className="hidden md:block">
+        {menuOptions}
+      </div>
     </div>
   );
 }
