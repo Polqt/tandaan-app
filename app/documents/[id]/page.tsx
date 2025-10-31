@@ -1,7 +1,6 @@
 "use client";
 
 import Document from "@/components/document";
-import React from "react";
 
 export default function DocumentPage({
   params: { id },

@@ -6,7 +6,7 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 export async function createNewDocument() {
   auth.protect();
 
-  const { session } = auth();
+  const { sessionClaims } = auth();
 
   const docCollection = await adminDB.collection("documents");
   const docRef = await docCollection.add({
@@ -16,11 +16,11 @@ export async function createNewDocument() {
 
   await adminDB
     .collection("users")
-    .doc(session?.email!)
+    .doc(sessionClaims?.email!)
     .collection("rooms")
     .doc(docRef.id)
     .set({
-      userId: session?.email,
+      userId: sessionClaims?.email,
       role: "owner",
       createdAt: new Date(),
       roomId: docRef.id,
