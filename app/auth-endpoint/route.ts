@@ -15,15 +15,15 @@ export async function POST(req: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { message: "Authentication required." },
-        { status: 401 }
-      )
+        { status: 401 },
+      );
     }
 
     if (!room) {
       return NextResponse.json(
         { message: "Room ID is required." },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
     const userIdString = userId as string;
@@ -32,11 +32,15 @@ export async function POST(req: NextRequest) {
       userInfo: {
         name: (sessionClaims?.fullName as string) || "Anonymous",
         email: (sessionClaims?.email as string) || userIdString,
-        avatar: (sessionClaims?.image as string),
+        avatar: sessionClaims?.image as string,
       },
     });
 
-    const userDocumentRef = adminDB.collection("users").doc(userIdString).collection("rooms").doc(room);
+    const userDocumentRef = adminDB
+      .collection("users")
+      .doc(userIdString)
+      .collection("rooms")
+      .doc(room);
     const userDocument = await userDocumentRef.get();
 
     if (userDocument) {
@@ -50,7 +54,6 @@ export async function POST(req: NextRequest) {
         { status: 403 },
       );
     }
-
   } catch (error) {
     console.error("Error inviting user:", error);
     return NextResponse.json({ success: false }, { status: 500 });

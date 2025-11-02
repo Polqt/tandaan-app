@@ -42,7 +42,7 @@ export default function InviteUser() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <Button asChild variant={"outline"}>
-        <DialogTrigger>Invite</DialogTrigger>
+        <DialogTrigger>invite</DialogTrigger>
       </Button>
       <DialogContent>
         <DialogHeader>

@@ -88,9 +88,12 @@ export async function inviteUser(roomId: string, email: string) {
 
 export async function getUserDocuments(userId: string) {
   try {
-    const roomsRef = adminDB.collection("users").doc(userId).collection("rooms");
+    const roomsRef = adminDB
+      .collection("users")
+      .doc(userId)
+      .collection("rooms");
     const snapshot = await roomsRef.get();
-    const documents = snapshot.docs.map(doc => ({
+    const documents = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
@@ -98,5 +101,23 @@ export async function getUserDocuments(userId: string) {
   } catch (error) {
     console.error("Error fetching user documents:", error);
     return [];
+  }
+}
+
+export async function removeUser(roomId: string, email: string) {
+  auth.protect();
+
+  try {
+    await adminDB
+      .collection("users")
+      .doc(email)
+      .collection("rooms")
+      .doc(roomId)
+      .delete();
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error removing user:", error);
+    return { success: false };
   }
 }

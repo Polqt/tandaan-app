@@ -11,10 +11,7 @@ import {
   SheetTrigger,
 } from "./ui/sheet";
 import { useUser } from "@clerk/nextjs";
-import {
-  DocumentData,
-  collection,
-} from "firebase/firestore";
+import { DocumentData, collection } from "firebase/firestore";
 import { db } from "@/firebase";
 import { useEffect, useState } from "react";
 import SidebarOption from "./sidebar-option";
@@ -36,8 +33,7 @@ export default function Sidebar() {
     editor: [],
   });
   const [data, loading, error] = useCollection(
-    user &&
-      collection(db, "users", user.id, "rooms"),
+    user && collection(db, "users", user.id, "rooms"),
   );
 
   useEffect(() => {
@@ -127,9 +123,7 @@ export default function Sidebar() {
           </SheetContent>
         </Sheet>
       </div>
-      <div className="hidden md:block">
-        {menuOptions}
-      </div>
+      <div className="hidden md:block">{menuOptions}</div>
     </div>
   );
 }

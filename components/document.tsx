@@ -1,6 +1,6 @@
 "use client";
 
-import React, { FormEvent, useEffect, useState, useTransition } from "react";
+import { FormEvent, useEffect, useState, useTransition } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { doc, updateDoc } from "firebase/firestore";
@@ -10,6 +10,8 @@ import Editor from "./editor";
 import useOwner from "@/lib/useOwner";
 import DeleteDocument from "./delete-document";
 import InviteUser from "./invite-user";
+import ManageUsers from "./manage-users";
+import Avatars from "./avatars";
 
 export default function Document({ id }: { id: string }) {
   const [input, setInput] = useState("");
@@ -55,7 +57,10 @@ export default function Document({ id }: { id: string }) {
         </form>
       </div>
 
-      <div></div>
+      <div className="flex max-w-6xl mx-auto justify-between items-center mb-5">
+        <ManageUsers />
+        <Avatars />
+      </div>
 
       <hr className="pb-10" />
       <Editor />
