@@ -1,0 +1,49 @@
+"use server";
+
+import { adminDB } from "@/firebase-admin";
+import { auth } from "@clerk/nextjs/server";
+
+export async function getDocumentVersion(roomdId: string) {
+  auth.protect();
+
+  try {
+  } catch (error) {
+    console.error("Error getting document versions:", error);
+    return { success: false };
+  }
+}
+
+export async function saveDocumentVersion(roomId: string, content: any) {
+  auth.protect();
+
+  try {
+    const versionRef = adminDB
+      .collection("documents")
+      .doc(roomId)
+      .collection("versions")
+      .doc();
+    await versionRef.set({
+      content,
+      timeStamp: new Date(),
+      userId: (await auth()).userId,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error saving document version:", error);
+    return { success: false };
+  }
+}
+
+export async function restoreDocumentVersion(
+  roomId: string,
+  versionId: string,
+) {
+  auth.protect();
+
+  try {
+  } catch (error) {
+    console.error("Error restoring document version:", error);
+    return { success: false };
+  }
+}

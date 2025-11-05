@@ -41,12 +41,16 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --color-notion-bg: oklch(0.99 0 0);
+  --color-notion-sidebar: oklch(0.97 0 0);
+  --color-notion-text: oklch(0.25 0 0);
+  --color-notion-border: oklch(0.92 0 0 / 60%);
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --radius: 0.375rem;
+  --background: var(--color-notion-bg);
+  --foreground: var(--color-notion-text);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
@@ -113,10 +117,15 @@
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
   }
-  body {
-    @apply bg-background text-foreground;
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full hover:bg-gray-400;
   }
 }

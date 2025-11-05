@@ -17,8 +17,8 @@ import { collectionGroup, query, where } from "firebase/firestore";
 import { useCollection } from "react-firebase-hooks/firestore";
 import { db } from "@/firebase";
 import { X } from "lucide-react";
-import { removeUser } from "@/actions/actions";
 import { toast } from "sonner";
+import { removeUser } from "@/actions/users";
 
 export default function ManageUsers() {
   const { user } = useUser();

@@ -5,8 +5,10 @@ import {
   SignedOut,
   SignInButton,
   SignOutButton,
+  UserButton,
   useUser,
 } from "@clerk/nextjs";
+import { Button } from "./ui/button";
 
 export default function Header() {
   const { user } = useUser();
@@ -22,10 +24,12 @@ export default function Header() {
 
       <div>
         <SignedOut>
-          <SignOutButton />
+          <SignInButton mode="modal">
+            <Button variant={"outline"}>Sign In</Button>
+          </SignInButton>
         </SignedOut>
         <SignedIn>
-          <SignInButton />
+          <UserButton afterSignOutUrl="/" />
         </SignedIn>
       </div>
     </div>

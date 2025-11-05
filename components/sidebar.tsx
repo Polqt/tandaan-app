@@ -15,6 +15,8 @@ import { DocumentData, collection } from "firebase/firestore";
 import { db } from "@/firebase";
 import { useEffect, useState } from "react";
 import SidebarOption from "./sidebar-option";
+import { Button } from "./ui/button";
+import SearchDialog from "./search-dialog";
 
 interface RoomDocument extends DocumentData {
   createdAt: string;
@@ -65,65 +67,80 @@ export default function Sidebar() {
   }, [data]);
 
   const menuOptions = (
-    <>
-      <NewDocument />
+    <div className="flex flex-col h-full">
+      <div className="p-2 mb-2">
+        <div className="relative">
+          <SearchDialog />
+        </div>
+      </div>
 
-      <div className="flex py-4 flex-col space-y-4 mad:max-w-36">
-        {groupedData.owner.length === 0 ? (
-          <h2 className="text-slate-500 font-semibold text-sm">
-            no documents found
-          </h2>
+      <div className="px-2 mb-4">
+        <NewDocument />
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-2 space-y-6">
+        {groupedData.owner.length === 0 && groupedData.editor.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">
+            <p className="text-sm">no documentes yet</p>
+          </div>
         ) : (
           <>
-            <h2 className="text-slate-500 font-semibold text-sm">
-              my documents
-            </h2>
-            {groupedData.owner.map((doc) => (
-              <SidebarOption
-                key={doc.id}
-                id={doc.id}
-                href={`/documents/${doc.id}`}
-              />
-            ))}
-          </>
-        )}
-      </div>
+            {groupedData.owner.length > 0 && (
+              <div>
+                <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">
+                  My Documents
+                </h2>
+                <div className="space-y-1">
+                  {groupedData.owner.map((doc) => (
+                    <SidebarOption
+                      key={doc.id}
+                      id={doc.id}
+                      href={`/documents/${doc.id}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
-      <div>
-        {groupedData.editor.length > 0 && (
-          <>
-            <h2 className="text-slate-500 font-semibold text-sm">
-              shared with me
-            </h2>
-            {groupedData.editor.map((doc) => (
-              <SidebarOption
-                key={doc.id}
-                id={doc.id}
-                href={`/documents/${doc.id}`}
-              />
-            ))}
+            {groupedData.editor.length > 0 && (
+              <div>
+                <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">
+                  Shared with me
+                </h2>
+                <div className="space-y-1">
+                  {groupedData.editor.map((doc) => (
+                    <SidebarOption
+                      key={doc.id}
+                      id={doc.id}
+                      href={`/documents/${doc.id}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
-    </>
+    </div>
   );
 
   return (
-    <div className="p-2 md:p-5 bg-gray-200 relative">
-      <div className="md:hidden">
+    <div className="h-full bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800">
+      <div className="md:hidden p-2">
         <Sheet>
           <SheetTrigger>
-            <MenuIcon className="p-2 hover:opacity-30 rounded-lg" size={40} />
+            <Button variant={"ghost"} size={"icon"}>
+              <MenuIcon className="w-5 h-5" />
+            </Button>
           </SheetTrigger>
-          <SheetContent side="left">
-            <SheetHeader>
-              <SheetTitle>menu</SheetTitle>
-              <div>{menuOptions}</div>
-            </SheetHeader>
+          <SheetContent side="left" className="w-72 p-0">
+            {" "}
+            <SheetTitle>menu</SheetTitle>
+            <div className="h-full">{menuOptions}</div>
           </SheetContent>
         </Sheet>
       </div>
-      <div className="hidden md:block">{menuOptions}</div>
+      <div className="hidden md:block h-full w-64">{menuOptions}</div>
     </div>
   );
 }

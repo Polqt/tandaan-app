@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
       .doc(userIdString)
       .collection("rooms")
       .doc(room);
+
     const userDocument = await userDocumentRef.get();
 
     if (userDocument) {
