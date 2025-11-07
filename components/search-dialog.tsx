@@ -17,6 +17,7 @@ import { collection } from "firebase/firestore";
 import { db } from "@/firebase";
 import { Input } from "./ui/input";
 import SearchResultItem from "./search-result-item";
+import { Kbd } from "./ui/kbd";
 
 export default function SearchDialog() {
   const router = useRouter();
@@ -53,9 +54,7 @@ export default function SearchDialog() {
         >
           <Search className="w-4 h-4 mr-2" />
           <span className="flex-1 text-left">Search</span>
-          <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-gray-100 px-1.5 font-mono text-[10px] font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-            <span className="text-xs">⌘</span>K
-          </kbd>
+          <Kbd className="border pointer-events-none">⌘ K</Kbd>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl p-0 gap-0">

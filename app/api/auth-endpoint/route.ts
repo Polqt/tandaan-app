@@ -10,6 +10,15 @@ export async function POST(req: NextRequest) {
     const { sessionClaims, userId: clerkUserId } = await auth();
     const { room } = await req.json();
 
+    const email = sessionClaims?.email as string;
+
+    if (!email) {
+      return NextResponse.json(
+        { message: "Unable to determine user ID." },
+        { status: 400 },
+      )
+    }
+
     const userId = sessionClaims?.email || clerkUserId;
 
     if (!userId) {
@@ -38,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     const userDocumentRef = adminDB
       .collection("users")
-      .doc(userIdString)
+      .doc(email)
       .collection("rooms")
       .doc(room);
 

@@ -5,7 +5,7 @@ import {
   ClientSideSuspense,
   RoomProvider as RoomProviderWrapper,
 } from "@liveblocks/react/suspense";
-import { Spinner } from "./ui/spinner";
+import { Spinner } from "../ui/spinner";
 import LiveCursorProvider from "./livecursor-provider";
 
 export default function RoomProvider({

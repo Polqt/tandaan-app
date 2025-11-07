@@ -7,13 +7,12 @@ import { auth } from "@clerk/nextjs/server";
 export async function createNewDocument() {
   auth.protect();
 
-  const { userId: clerkUserId } = await auth();
+  const { sessionClaims } = await auth();
+  const email = sessionClaims?.email as string;
 
-  if (!clerkUserId) {
+  if (!email) {
     throw new Error("Unable to determine user ID");
   }
-
-  const userIdString = clerkUserId;
 
   const docCollection = adminDB.collection("documents");
   const docRef = await docCollection.add({
@@ -23,11 +22,11 @@ export async function createNewDocument() {
 
   await adminDB
     .collection("users")
-    .doc(userIdString)
+    .doc(email)
     .collection("rooms")
     .doc(docRef.id)
     .set({
-      userId: userIdString,
+      userId: email,
       role: "owner",
       createdAt: new Date(),
       roomId: docRef.id,

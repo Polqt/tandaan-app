@@ -8,8 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "./ui/dialog";
-import { Button } from "./ui/button";
+} from "../ui/dialog";
+import { Button } from "../ui/button";
 import { useUser } from "@clerk/nextjs";
 import useOwner from "@/lib/useOwner";
 import { useRoom } from "@liveblocks/react/suspense";

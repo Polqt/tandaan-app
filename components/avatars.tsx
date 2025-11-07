@@ -17,7 +17,7 @@ export default function Avatars() {
 
       <div className="flex -space-x-5">
         {all.map((user, i) => (
-          <div>
+          <div key={i}>
             <TooltipProvider key={user?.id + i}>
               <Tooltip>
                 <TooltipTrigger>

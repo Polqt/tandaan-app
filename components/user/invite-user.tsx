@@ -8,18 +8,24 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "./ui/dialog";
-import { Button } from "./ui/button";
+} from "../ui/dialog";
+import { Button } from "../ui/button";
 import { usePathname } from "next/navigation";
-import { inviteUser } from "@/actions/users";
+import { getAllUsers, getRoomUsers, inviteUser } from "@/actions/users";
 import { toast } from "sonner";
-import { Input } from "./ui/input";
+import { Input } from "../ui/input";
+import { User } from "@/types/user";
+import { useUser } from "@clerk/nextjs";
 
 export default function InviteUser() {
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
+  const [users, setUsers] = useState<User[]>([]);
+  const [roomUsers, setRoomUsers] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { user: currentUser } = useUser();
 
   const handleInvite = async (e: FormEvent) => {
     e.preventDefault();
@@ -38,6 +44,24 @@ export default function InviteUser() {
       }
     });
   };
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const roomId = pathname.split("/").pop();
+      if (!roomId) return;
+
+      const [allUsers,existingUsers] = await Promise.all([
+        getAllUsers(),
+        getRoomUsers(roomId),
+      ])
+      
+    } catch (error) {
+      toast.error("failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

@@ -2,7 +2,7 @@
 
 import { useMyPresence, useOthers } from "@liveblocks/react/suspense";
 import React, { PointerEvent } from "react";
-import FollowPointer from "./follow-pointer";
+import FollowPointer from "../follow-pointer";
 
 export default function LiveCursorProvider({
   children,

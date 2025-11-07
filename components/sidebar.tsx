@@ -2,7 +2,6 @@
 
 import { MenuIcon } from "lucide-react";
 import { useCollection } from "react-firebase-hooks/firestore";
-import NewDocument from "./new-document";
 import {
   Sheet,
   SheetContent,
@@ -17,6 +16,7 @@ import { useEffect, useState } from "react";
 import SidebarOption from "./sidebar-option";
 import { Button } from "./ui/button";
 import SearchDialog from "./search-dialog";
+import NewDocument from "./documents/new-document";
 
 interface RoomDocument extends DocumentData {
   createdAt: string;

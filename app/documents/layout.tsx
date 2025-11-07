@@ -1,6 +1,6 @@
 "use client";
 
-import LiveBlocksProvider from "@/components/liveblocks-provider";
+import LiveBlocksProvider from "@/components/providers/liveblocks-provider";
 
 export default function PageLayout({
   children,

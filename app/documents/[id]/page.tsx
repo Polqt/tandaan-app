@@ -1,6 +1,6 @@
 "use client";
 
-import Document from "@/components/document";
+import Document from "@/components/documents/document";
 import { use } from "react";
 
 export default function DocumentPage({

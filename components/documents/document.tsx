@@ -1,17 +1,20 @@
 "use client";
 
 import { FormEvent, useEffect, useState, useTransition } from "react";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 import { useDocumentData } from "react-firebase-hooks/firestore";
-import Editor from "./editor";
 import useOwner from "@/lib/useOwner";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import InviteUser from "../user/invite-user";
+import ManageUsers from "../user/manage-users";
+import Avatars from "../avatars";
+import Editor from "./editor";
+import CommentsPanel from "./comments-panel";
 import DeleteDocument from "./delete-document";
-import InviteUser from "./invite-user";
-import ManageUsers from "./manage-users";
-import Avatars from "./avatars";
+
 
 export default function Document({ id }: { id: string }) {
   const [input, setInput] = useState("");
@@ -63,7 +66,12 @@ export default function Document({ id }: { id: string }) {
       </div>
 
       <hr className="pb-10" />
-      <Editor />
+      <div className="flex h-screen">
+        <div className="flex-1">
+          <Editor />
+        </div>
+        <CommentsPanel roomId={id} />
+      </div>
     </div>
   );
 }

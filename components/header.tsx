@@ -22,14 +22,17 @@ export default function Header() {
         </h1>
       )}
 
-      <div>
+      <div className="flex items-center gap-3">
         <SignedOut>
           <SignInButton mode="modal">
             <Button variant={"outline"}>Sign In</Button>
           </SignInButton>
         </SignedOut>
         <SignedIn>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton
+            afterSignOutUrl="/"
+            appearance={{ elements: { avatarBox: "w-8 h-8" } }}
+          />
         </SignedIn>
       </div>
     </div>

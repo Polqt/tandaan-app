@@ -9,8 +9,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "./ui/sheet";
-import { Button } from "./ui/button";
+} from "../ui/sheet";
+import { Button } from "../ui/button";
 import { History } from "lucide-react";
 
 export default function VersionHistory() {
