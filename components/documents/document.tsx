@@ -12,14 +12,13 @@ import InviteUser from "../user/invite-user";
 import ManageUsers from "../user/manage-users";
 import Avatars from "../avatars";
 import Editor from "./editor";
-import CommentsPanel from "./comments-panel";
 import DeleteDocument from "./delete-document";
 
 
 export default function Document({ id }: { id: string }) {
   const [input, setInput] = useState("");
   const [update, startTransition] = useTransition();
-  const [data, loading, error] = useDocumentData(doc(db, "documents", id));
+  const [data] = useDocumentData(doc(db, "documents", id));
   const isOwner = useOwner();
 
   useEffect(() => {
@@ -66,12 +65,7 @@ export default function Document({ id }: { id: string }) {
       </div>
 
       <hr className="pb-10" />
-      <div className="flex h-screen">
-        <div className="flex-1">
-          <Editor />
-        </div>
-        <CommentsPanel roomId={id} />
-      </div>
+      <Editor />
     </div>
   );
 }

@@ -25,14 +25,24 @@ export default function LiveCursorProvider({
     <div onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave}>
       {others
         .filter((user) => user.presence.cursor != null)
-        .map(({ connectionId, presence, info }) => (
-          <FollowPointer
-            key={connectionId}
-            x={presence.cursor!.x}
-            y={presence.cursor!.y}
-            info={info}
-          />
-        ))}
+        .map(({ connectionId, presence, info }) => {
+          const resolvedInfo = {
+            name:
+              info.name ??
+              (`${(info.firstName ?? "").trim()} ${(info.lastName ?? "").trim()}`.trim() ||
+              "Anonymous"),
+            email: info.email ?? "",
+            avatar: info.avatar ?? "",
+          };
+          return (
+            <FollowPointer
+              key={connectionId}
+              x={presence.cursor!.x}
+              y={presence.cursor!.y}
+              info={resolvedInfo}
+            />
+          );
+        })}
 
       {children}
     </div>

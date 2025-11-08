@@ -12,7 +12,19 @@ export default function LiveBlocksProvider({
   }
 
   return (
-    <LiveblocksProvider throttle={16} authEndpoint={"/api/auth-endpoint"}>
+    <LiveblocksProvider throttle={16} authEndpoint={"/api/auth-endpoint"} resolveUsers={async ({ userIds }) => {
+        const searchParams = new URLSearchParams(
+          userIds.map((userId) => ["userIds", userId])
+        );
+        const response = await fetch(`/api/users?${searchParams}`);
+
+        if (!response.ok) {
+          throw new Error("Problem resolving users");
+        }
+
+        const users = await response.json();
+        return users;
+      }}>
       {children}
     </LiveblocksProvider>
   );

@@ -11,14 +11,14 @@ const liveblocks = new Liveblocks({
   secret: key,
 });
 
-export async function resolveUsers(userId: string[]) {
+export async function resolveUsers(userIds: string[]) {
   const client = await clerkClient();
 
   const users = await Promise.all(
-    userId.map(async (userId) => {
+    userIds.map(async (userId) => {
       const user = await client.users.getUser(userId);
       return {
-        name: user.firstName || user.emailAddresses[0]?.emailAddress,
+        name: user.firstName || user.emailAddresses[0]?.emailAddress || "Jani",
         avatar: user.imageUrl || undefined,
       }
     })
