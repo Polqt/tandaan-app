@@ -20,9 +20,9 @@ export async function resolveUsers(userIds: string[]) {
       return {
         name: user.firstName || user.emailAddresses[0]?.emailAddress || "Jani",
         avatar: user.imageUrl || undefined,
-      }
-    })
-  )
+      };
+    }),
+  );
 
   return users;
 }

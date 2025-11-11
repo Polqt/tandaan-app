@@ -14,7 +14,6 @@ import Avatars from "../avatars";
 import Editor from "./editor";
 import DeleteDocument from "./delete-document";
 
-
 export default function Document({ id }: { id: string }) {
   const [input, setInput] = useState("");
   const [update, startTransition] = useTransition();

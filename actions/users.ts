@@ -14,7 +14,7 @@ export async function getAllUsers() {
       id: user.id,
       email: user.emailAddresses[0]?.emailAddress || "",
       name: user.fullName || user.firstName || "Anonymous",
-    }))
+    }));
   } catch (error) {
     console.error("Error getting users:", error);
     return { users: [] };
@@ -63,14 +63,14 @@ export async function removeUser(roomId: string, email: string) {
 }
 
 export async function getRoomUsers(roomId: string) {
-  auth.protect()
+  auth.protect();
 
   try {
     const roomUsers = await adminDB
       .collectionGroup("rooms")
       .where("roomId", "==", roomId)
       .get();
-    
+
     const emails = roomUsers.docs.map((doc) => doc.data().userId);
 
     return { success: true, emails };

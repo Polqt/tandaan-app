@@ -16,18 +16,18 @@ export default function useOwner() {
   );
 
   useEffect(() => {
-    if (userInRoom?.docs && userInRoom.docs.length > 0 && user?.emailAddresses[0]) {
+    if (
+      userInRoom?.docs &&
+      userInRoom.docs.length > 0 &&
+      user?.emailAddresses[0]
+    ) {
       const owners = userInRoom.docs.filter(
         (doc) => doc.data().role === "owner",
       );
 
       const userEmail = user.emailAddresses[0].emailAddress;
 
-      if (
-        owners.some(
-          (owner) => owner.data().userId === userEmail,
-        )
-      ) {
+      if (owners.some((owner) => owner.data().userId === userEmail)) {
         setIsOwner(true);
       } else {
         setIsOwner(false);

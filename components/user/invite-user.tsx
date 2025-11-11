@@ -51,28 +51,27 @@ export default function InviteUser() {
       const roomId = pathname.split("/").pop();
       if (!roomId) return;
 
-      const [allUsers,existingUsers] = await Promise.all([
+      const [allUsers, existingUsers] = await Promise.all([
         getAllUsers(),
         getRoomUsers(roomId),
-      ])
-      
+      ]);
     } catch (error) {
       toast.error("failed to load users");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <Button asChild variant={"outline"}>
-        <DialogTrigger>invite</DialogTrigger>
+        <DialogTrigger>Invite</DialogTrigger>
       </Button>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>invite a user to collaborate</DialogTitle>
+          <DialogTitle>Invite a user to collaborate</DialogTitle>
           <DialogDescription>
-            what is the email of the user you want to invite?
+            What is the email of the user you want to invite?
           </DialogDescription>
         </DialogHeader>
 
@@ -85,7 +84,7 @@ export default function InviteUser() {
             onChange={(e) => setEmail(e.target.value)}
           />
           <Button type="submit" disabled={!email || isPending}>
-            {isPending ? "inviting..." : "invite user"}
+            {isPending ? "Inviting..." : "Invite User"}
           </Button>
         </form>
       </DialogContent>

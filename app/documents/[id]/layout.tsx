@@ -1,4 +1,3 @@
-
 import RoomProvider from "@/components/providers/room-provider";
 import { auth } from "@clerk/nextjs/server";
 import React from "react";

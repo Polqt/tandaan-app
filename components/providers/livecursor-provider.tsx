@@ -30,7 +30,7 @@ export default function LiveCursorProvider({
             name:
               info.name ??
               (`${(info.firstName ?? "").trim()} ${(info.lastName ?? "").trim()}`.trim() ||
-              "Anonymous"),
+                "Anonymous"),
             email: info.email ?? "",
             avatar: info.avatar ?? "",
           };

@@ -14,8 +14,9 @@ import { useCreateBlockNote } from "@blocknote/react";
 import stringToColor from "@/lib/stringToColor";
 import DeleteDocument from "./delete-document";
 import InviteUser from "../user/invite-user";
-import CommentsPanel  from "../documents/comments-panel";
+import CommentsPanel from "../documents/comments-panel";
 import { cn } from "@/lib/utils";
+import VersionHistory from "./version-history";
 
 type EditorProps = {
   doc: Y.Doc;
@@ -37,10 +38,7 @@ function BlockNote({ doc, provider }: EditorProps) {
 
   return (
     <div className="relative max-w-6xl mx-auto">
-      <BlockNoteView
-        className="min-h-screen"
-        editor={editor}
-      />
+      <BlockNoteView className="min-h-screen" editor={editor} />
     </div>
   );
 }
@@ -49,8 +47,6 @@ export default function Editor() {
   const room = useRoom();
   const [document, setDocument] = useState<Y.Doc>();
   const [provider, setProvider] = useState<LiveblocksYjsProvider>();
-  const [showComments, setShowComments] = useState(false);
-
   useEffect(() => {
     const yDoc = new Y.Doc();
     const yProvider = new LiveblocksYjsProvider(room, yDoc);
@@ -68,17 +64,10 @@ export default function Editor() {
       <div className="flex-1 overflow-auto">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-2 justify-end mb-10 sticky top-0 bg-background/95 backdrop-blur py-4 z-10">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowComments(!showComments)}
-              className={cn(showComments && "bg-accent")}
-            >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Comments
-            </Button>
+            <CommentsPanel />
             <DeleteDocument />
             <InviteUser />
+            <VersionHistory />
           </div>
 
           {document && provider && (
@@ -86,22 +75,6 @@ export default function Editor() {
           )}
         </div>
       </div>
-
-      {showComments && (
-        <div className="w-80 border-l bg-background flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="font-semibold">Comments</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowComments(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <CommentsPanel roomId={room.id} />
-        </div>
-      )}
     </div>
   );
 }

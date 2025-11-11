@@ -11,12 +11,12 @@ export async function GET(request: NextRequest) {
     }
 
     const client = await clerkClient();
-    
+
     const users = await Promise.all(
       userIds.map(async (identifier) => {
         try {
           let user;
-          
+
           // Check if it's an email or user ID
           if (identifier.includes("@")) {
             // It's an email, search by email
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
             avatar: "",
           };
         }
-      })
+      }),
     );
 
     return NextResponse.json(users);
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching users:", error);
     return NextResponse.json(
       { error: "Failed to fetch users" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

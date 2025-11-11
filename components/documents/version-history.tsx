@@ -26,7 +26,7 @@ export default function VersionHistory() {
       <SheetTrigger asChild>
         <Button variant={"outline"} size={"sm"} onClick={loadVersions}>
           <History className="w-4 h-4 mr-2" />
-          Version History
+          History
         </Button>
       </SheetTrigger>
       <SheetContent className="w-[400px] sm:w-[600px]">

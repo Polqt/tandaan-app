@@ -30,9 +30,9 @@ export default function DeleteDocument() {
       const { success } = await deleteDocument(roomId);
       if (success) {
         router.replace("/");
-        toast.success("room deleted succesfully");
+        toast.success("Room deleted successfully");
       } else {
-        toast.error("failed to delete the room");
+        toast.error("Failed to delete the room");
       }
     });
   };
@@ -44,10 +44,10 @@ export default function DeleteDocument() {
       </Button>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>are you sure you want to delete?</DialogTitle>
+          <DialogTitle>Are you sure you want to delete?</DialogTitle>
           <DialogDescription>
             This action cannot be undone. This will permanently delete your
-            account and remove your data from our servers.
+            document and remove your data from our servers.
           </DialogDescription>
         </DialogHeader>
 
@@ -58,11 +58,11 @@ export default function DeleteDocument() {
             onClick={handleDelete}
             disabled={isPending}
           >
-            {isPending ? "deleting..." : "delete"}
+            {isPending ? "Deleting..." : "Delete"}
           </Button>
           <DialogClose asChild>
             <Button type="button" variant={"secondary"}>
-              close
+              Close
             </Button>
           </DialogClose>
         </DialogFooter>

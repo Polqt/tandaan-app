@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { message: "Unable to determine user ID." },
         { status: 400 },
-      )
+      );
     }
 
     const userId = sessionClaims?.email || clerkUserId;
