@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "Sentry": {
+      "url": "https://mcp.sentry.dev/mcp/usls-40/tandaan",
+      "type": "http"
+    }
+  }
+}

@@ -38,9 +38,9 @@ export default function ManageUsers() {
       const { success } = await removeUser(room.id, userId);
 
       if (success) {
-        toast.success("user removed from the room successfully");
+        toast.success("User removed from the room successfully");
       } else {
-        toast.error("failed to remove user from the room");
+        toast.error("Failed to remove user from the room");
       }
     });
   };
@@ -52,9 +52,9 @@ export default function ManageUsers() {
       </Button>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>invite a user to collaborate</DialogTitle>
+          <DialogTitle>Invite a user to collaborate</DialogTitle>
           <DialogDescription>
-            what is the email of the user you want to invite?
+            What is the email of the user you want to invite?
           </DialogDescription>
         </DialogHeader>
 
@@ -83,7 +83,7 @@ export default function ManageUsers() {
                       disabled={isPending}
                       size={"sm"}
                     >
-                      {isPending ? "removing..." : <X />}
+                      {isPending ? "Removing..." : <X />}
                     </Button>
                   )}
               </div>

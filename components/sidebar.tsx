@@ -5,7 +5,6 @@ import { useCollection } from "react-firebase-hooks/firestore";
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "./ui/sheet";
@@ -34,7 +33,7 @@ export default function Sidebar() {
     owner: [],
     editor: [],
   });
-  const [data, loading, error] = useCollection(
+  const [data] = useCollection(
     user && collection(db, "users", user.id, "rooms"),
   );
 
@@ -78,7 +77,7 @@ export default function Sidebar() {
         <NewDocument />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 space-y-6">
+      <div className="flex-1 overflow-y-auto px-2 space-y-6 border-t border-gray-600 pt-4">
         {groupedData.owner.length === 0 && groupedData.editor.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <p className="text-sm">no documentes yet</p>
@@ -125,10 +124,10 @@ export default function Sidebar() {
   );
 
   return (
-    <div className="h-full bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-900 border-r border-gray-600 dark:border-gray-800">
       <div className="md:hidden p-2">
         <Sheet>
-          <SheetTrigger>
+          <SheetTrigger asChild>
             <Button variant={"ghost"} size={"icon"}>
               <MenuIcon className="w-5 h-5" />
             </Button>

@@ -4,8 +4,6 @@ import { useRoom, useSelf } from "@liveblocks/react/suspense";
 import { useEffect, useState } from "react";
 import * as Y from "yjs";
 import { LiveblocksYjsProvider } from "@liveblocks/yjs";
-import { MessageSquare, X } from "lucide-react";
-import { Button } from "../ui/button";
 import { BlockNoteView } from "@blocknote/shadcn";
 import { BlockNoteEditor } from "@blocknote/core";
 import "@blocknote/core/fonts/inter.css";
@@ -15,7 +13,6 @@ import stringToColor from "@/lib/stringToColor";
 import DeleteDocument from "./delete-document";
 import InviteUser from "../user/invite-user";
 import CommentsPanel from "../documents/comments-panel";
-import { cn } from "@/lib/utils";
 import VersionHistory from "./version-history";
 
 type EditorProps = {
