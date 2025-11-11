@@ -104,7 +104,7 @@ export default function Sidebar() {
             {groupedData.editor.length > 0 && (
               <div>
                 <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">
-                  Shared with me
+                  Shared With Me
                 </h2>
                 <div className="space-y-1">
                   {groupedData.editor.map((doc) => (

@@ -7,10 +7,9 @@ import { auth } from "@clerk/nextjs/server";
 export async function createNewDocument() {
   auth.protect();
 
-  const { sessionClaims } = await auth();
-  const email = sessionClaims?.email as string;
+  const { sessionClaims, userId } = await auth();
 
-  if (!email) {
+  if (!userId) {
     throw new Error("Unable to determine user ID");
   }
 
@@ -22,11 +21,11 @@ export async function createNewDocument() {
 
   await adminDB
     .collection("users")
-    .doc(email)
+    .doc(userId)
     .collection("rooms")
     .doc(docRef.id)
     .set({
-      userId: email,
+      userId: userId,
       role: "owner",
       createdAt: new Date(),
       roomId: docRef.id,
