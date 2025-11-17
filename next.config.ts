@@ -1,15 +1,19 @@
-import {withSentryConfig} from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
-    optimizePackageImports: ['@blocknote/react', '@blocknote/shadcn', '@blocknote/core'],
+    optimizePackageImports: [
+      "@blocknote/react",
+      "@blocknote/shadcn",
+      "@blocknote/core",
+    ],
   },
   webpack: (config, { isServer }) => {
     // Suppress webpack cache warnings in development
     config.infrastructureLogging = {
-      level: 'error',
+      level: "error",
     };
     return config;
   },
@@ -37,7 +41,8 @@ export default withSentryConfig(nextConfig, {
   // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
   // side errors will fail.
   // Disabled in development to avoid conflicts
-  tunnelRoute: process.env.NODE_ENV === "production" ? "/monitoring" : undefined,
+  tunnelRoute:
+    process.env.NODE_ENV === "production" ? "/monitoring" : undefined,
 
   // Automatically tree-shake Sentry logger statements to reduce bundle size
   disableLogger: true,
@@ -46,5 +51,5 @@ export default withSentryConfig(nextConfig, {
   // See the following for more information:
   // https://docs.sentry.io/product/crons/
   // https://vercel.com/docs/cron-jobs
-  automaticVercelMonitors: true
+  automaticVercelMonitors: true,
 });

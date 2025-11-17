@@ -2,12 +2,7 @@
 
 import { MenuIcon } from "lucide-react";
 import { useCollection } from "react-firebase-hooks/firestore";
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "./ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
 import { useUser } from "@clerk/nextjs";
 import { DocumentData, collection } from "firebase/firestore";
 import { db } from "@/firebase";
@@ -16,6 +11,7 @@ import SidebarOption from "./sidebar-option";
 import { Button } from "./ui/button";
 import SearchDialog from "./search-dialog";
 import NewDocument from "./documents/new-document";
+import Link from "next/link";
 
 interface RoomDocument extends DocumentData {
   createdAt: string;
@@ -86,8 +82,8 @@ export default function Sidebar() {
           <>
             {groupedData.owner.length > 0 && (
               <div>
-                <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">
-                  My Documents
+                <h2 className="text-xs font-semibold text-gray-500 hover:text-gray-900 uppercase tracking-wider mb-2 px-2">
+                  <Link href={"/documents"}>My Documents</Link>
                 </h2>
                 <div className="space-y-1">
                   {groupedData.owner.map((doc) => (

@@ -25,13 +25,19 @@ export async function inviteUser(roomId: string, email: string) {
   auth.protect();
 
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      throw new Error("Unable to determine user ID");
+    }
+
     await adminDB
       .collection("users")
-      .doc(email)
+      .doc(userId)
       .collection("rooms")
       .doc(roomId)
       .set({
-        userId: email,
+        userId: userId,
         role: "editor",
         createdAt: new Date(),
         roomId,

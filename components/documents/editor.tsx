@@ -13,7 +13,6 @@ import stringToColor from "@/lib/stringToColor";
 import DeleteDocument from "./delete-document";
 import InviteUser from "../user/invite-user";
 import CommentsPanel from "../documents/comments-panel";
-import VersionHistory from "./version-history";
 
 type EditorProps = {
   doc: Y.Doc;
@@ -64,7 +63,6 @@ export default function Editor() {
             <CommentsPanel />
             <DeleteDocument />
             <InviteUser />
-            <VersionHistory />
           </div>
 
           {document && provider && (

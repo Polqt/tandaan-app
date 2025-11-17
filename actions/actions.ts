@@ -7,7 +7,7 @@ import { auth } from "@clerk/nextjs/server";
 export async function createNewDocument() {
   auth.protect();
 
-  const { sessionClaims, userId } = await auth();
+  const { userId } = await auth();
 
   if (!userId) {
     throw new Error("Unable to determine user ID");

@@ -9,6 +9,7 @@ import {
   useUser,
 } from "@clerk/nextjs";
 import { Button } from "./ui/button";
+import VersionHistory from "./documents/version-history";
 
 export default function Header() {
   const { user } = useUser();
@@ -22,7 +23,8 @@ export default function Header() {
         </h1>
       )}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
+        <VersionHistory />
         <SignedOut>
           <SignInButton mode="modal">
             <Button variant={"outline"}>Sign In</Button>

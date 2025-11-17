@@ -4,7 +4,14 @@ import { useThreads } from "@liveblocks/react/suspense";
 import { Composer, Thread } from "@liveblocks/react-ui";
 import { useEffect, useState } from "react";
 import { Spinner } from "../ui/spinner";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "../ui/sheet";
 import { Button } from "../ui/button";
 import { MessageSquare } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
@@ -26,7 +33,6 @@ export default function CommentsPanel() {
     );
   }
 
-
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
@@ -36,26 +42,26 @@ export default function CommentsPanel() {
         </Button>
       </SheetTrigger>
       <SheetContent>
-        <SheetHeader>
+        <SheetHeader className="border-b border-gray-600">
           <SheetTitle>Comment Panel</SheetTitle>
           <SheetDescription>
             View and add comments to the document.
           </SheetDescription>
-          <ScrollArea className="mt-6 space-y-4 h-[calc(110vh-180px)] pr-4">
-            <div className="space-y-4">
-              {threads.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center mt-8">
-                  No comments yet. Select text and add a comment to start.
-                </p>
-              ) : (
-                threads.map((thread) => (
-                  <Thread key={thread.id} thread={thread} />
-                ))
-              )}
-              <Composer />
-            </div>
-          </ScrollArea>
         </SheetHeader>
+        <ScrollArea className="mt-4 h-[calc(100vh-180px)] pr-4">
+          <div className="space-y-4">
+            {threads.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center mt-8">
+                No comments yet. <br /> Select text and add a comment to start.
+              </p>
+            ) : (
+              threads.map((thread) => (
+                <Thread key={thread.id} thread={thread} className="thread" />
+              ))
+            )}
+            <Composer className="composer" />
+          </div>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );
