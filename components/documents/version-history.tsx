@@ -14,20 +14,17 @@ import { Button } from "../ui/button";
 import { History } from "lucide-react";
 import { getUserDocuments } from "@/actions/actions";
 
-
 export default function VersionHistory() {
   const [versions, setVersions] = useState<Version[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  
 
   const loadVersions = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       const docs = await getUserDocuments(userId);
-      
     } catch (error) {
-      console.error("Error loading versions: ", error)
+      console.error("Error loading versions: ", error);
     } finally {
       setIsLoading(false);
     }
@@ -52,13 +49,13 @@ export default function VersionHistory() {
         <div className="">
           {isLoading && <p>Loading versions...</p>}
           {versions.length === 0 && !isLoading ? (
-            <p className="text-sm text-muted-foreground text-center mt-8">No previous versions found.</p>
+            <p className="text-sm text-muted-foreground text-center mt-8">
+              No previous versions found.
+            </p>
           ) : (
             <>
               {versions.map((version) => (
-                <div>
-
-                </div>
+                <div></div>
               ))}
             </>
           )}

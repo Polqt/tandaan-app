@@ -38,7 +38,33 @@ export async function deleteDocument(roomId: string) {
   auth.protect();
 
   try {
-    await adminDB.collection("documents").doc(roomId).delete();
+    const { userId } = await auth();
+
+    if (!userId) {
+      throw new Error("Unable to determine user ID");
+    }
+
+    const docRef = await adminDB.collection("documents").doc(roomId);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      throw new Error("Document does not exist");
+    }
+
+    const data = doc.data();
+
+    await adminDB
+      .collection("trash")
+      .doc(roomId)
+      .set({
+        ...data,
+        deleteAt: new Date(),
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        userId,
+        roomId,
+      });
+
+    await docRef.delete();
 
     const query = await adminDB
       .collectionGroup("rooms")
@@ -46,7 +72,7 @@ export async function deleteDocument(roomId: string) {
       .where("userId", "==", (await auth()).userId)
       .get();
 
-    const batch = adminDB.batch();  
+    const batch = adminDB.batch();
 
     query.forEach((doc) => {
       batch.delete(doc.ref);
@@ -58,6 +84,43 @@ export async function deleteDocument(roomId: string) {
     return { success: true };
   } catch (error) {
     console.error("Error deleting document:", error);
+    return { success: false };
+  }
+}
+
+export async function restoreDocument(roomId: string) {
+  auth.protect();
+
+  try {
+    const { userId } = await auth();
+
+    const trashRef = adminDB.collection("trash").doc(roomId);
+    const trashDoc = await trashRef.get();
+
+    if (!trashDoc.exists) {
+      throw new Error("Trash document does not exist");
+    }
+
+    const data = trashDoc.data();
+
+    if (!data) {
+      throw new Error("No data found in trash document");
+    }
+
+    await adminDB
+      .collection("documents")
+      .doc(roomId)
+      .set({
+        ...data,
+        restoredAt: new Date(),
+        restoredBy: userId,
+      });
+
+    await trashRef.delete();
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error restoring document: ", error);
     return { success: false };
   }
 }

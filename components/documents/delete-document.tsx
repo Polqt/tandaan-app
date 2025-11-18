@@ -41,14 +41,16 @@ export default function DeleteDocument() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <Button asChild variant={"ghost"} className="hover:text-red-800">
-        <DialogTrigger><Trash2Icon className="w-5 h-5" /></DialogTrigger>
+        <DialogTrigger>
+          <Trash2Icon className="w-5 h-5" />
+        </DialogTrigger>
       </Button>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Are you sure you want to delete?</DialogTitle>
           <DialogDescription>
-            This action cannot be undone. This will permanently delete your
-            document and remove your data from our servers.
+            This action cannot be undone. This will delete in 30 days and remove
+            access for all users.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="sm:justify-end gap-2">

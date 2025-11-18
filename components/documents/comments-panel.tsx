@@ -36,7 +36,12 @@ export default function CommentsPanel() {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant={"ghost"} size={"sm"} onClick={() => setIsOpen(true)} className="hover:text-green-800">
+        <Button
+          variant={"ghost"}
+          size={"sm"}
+          onClick={() => setIsOpen(true)}
+          className="hover:text-green-800"
+        >
           <MessageSquare className="w-5 h-5" />
         </Button>
       </SheetTrigger>

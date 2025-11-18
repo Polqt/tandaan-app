@@ -7,5 +7,3 @@ export default function PageLayout({
 }) {
   return <LiveBlocksProvider>{children}</LiveBlocksProvider>;
 }
-
-

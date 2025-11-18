@@ -33,7 +33,7 @@ export async function inviteUser(roomId: string, email: string) {
 
     const invited = await (await clerkClient()).users.getUserList({
       emailAddress: [email],
-    })
+    });
 
     if (invited.data.length === 0) {
       throw new Error("User with the provided email does not exist");

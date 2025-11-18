@@ -66,7 +66,9 @@ export default function InviteUser() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <Button asChild variant={"ghost"} className="hover:text-blue-800">
-        <DialogTrigger><Users2 className="w-5 h-5" /></DialogTrigger>
+        <DialogTrigger>
+          <Users2 className="w-5 h-5" />
+        </DialogTrigger>
       </Button>
       <DialogContent>
         <DialogHeader>

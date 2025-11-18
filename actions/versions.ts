@@ -14,12 +14,12 @@ export async function getDocumentVersion(roomId: string) {
       .orderBy("timeStamp", "desc")
       .get();
 
-      const versions = (await versionRef).docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }))
+    const versions = (await versionRef).docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
 
-      return { success: true, versions };
+    return { success: true, versions };
   } catch (error) {
     console.error("Error getting document versions:", error);
     return { success: false };
@@ -35,7 +35,7 @@ export async function saveDocumentVersion(roomId: string, content: any) {
       .doc(roomId)
       .collection("versions")
       .doc();
-      
+
     await versionRef.set({
       content,
       timeStamp: new Date(),
@@ -63,9 +63,9 @@ export async function restoreDocumentVersion(
       .doc(versionId)
       .get();
 
-      if (!(await versionRef).exists) {
-        throw new Error("Version not found");
-      }
+    if (!(await versionRef).exists) {
+      throw new Error("Version not found");
+    }
 
     return { success: true, content: (await versionRef).data()?.content };
   } catch (error) {

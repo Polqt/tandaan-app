@@ -49,8 +49,6 @@ export default function Document({ id }: { id: string }) {
 
           {isOwner && (
             <>
-              <InviteUser />
-              <DeleteDocument />
               <p>i own this document</p>
             </>
           )}
