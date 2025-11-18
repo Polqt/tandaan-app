@@ -25,19 +25,29 @@ export async function inviteUser(roomId: string, email: string) {
   auth.protect();
 
   try {
-    const { userId } = await auth();
+    const { userId: ownerId } = await auth();
 
-    if (!userId) {
+    if (!ownerId) {
       throw new Error("Unable to determine user ID");
     }
 
+    const invited = await (await clerkClient()).users.getUserList({
+      emailAddress: [email],
+    })
+
+    if (invited.data.length === 0) {
+      throw new Error("User with the provided email does not exist");
+    }
+
+    const userIdToInvite = invited.data[0].id;
+
     await adminDB
       .collection("users")
-      .doc(userId)
+      .doc(userIdToInvite)
       .collection("rooms")
       .doc(roomId)
       .set({
-        userId: userId,
+        userId: userIdToInvite,
         role: "editor",
         createdAt: new Date(),
         roomId,

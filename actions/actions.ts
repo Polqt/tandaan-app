@@ -43,9 +43,10 @@ export async function deleteDocument(roomId: string) {
     const query = await adminDB
       .collectionGroup("rooms")
       .where("roomId", "==", roomId)
+      .where("userId", "==", (await auth()).userId)
       .get();
 
-    const batch = adminDB.batch();
+    const batch = adminDB.batch();  
 
     query.forEach((doc) => {
       batch.delete(doc.ref);

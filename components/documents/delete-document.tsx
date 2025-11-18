@@ -15,6 +15,7 @@ import { Button } from "../ui/button";
 import { usePathname, useRouter } from "next/navigation";
 import { deleteDocument } from "@/actions/actions";
 import { toast } from "sonner";
+import { Trash2Icon } from "lucide-react";
 
 export default function DeleteDocument() {
   const router = useRouter();
@@ -39,8 +40,8 @@ export default function DeleteDocument() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant={"destructive"}>
-        <DialogTrigger>Delete</DialogTrigger>
+      <Button asChild variant={"ghost"} className="hover:text-red-800">
+        <DialogTrigger><Trash2Icon className="w-5 h-5" /></DialogTrigger>
       </Button>
       <DialogContent>
         <DialogHeader>
@@ -50,7 +51,6 @@ export default function DeleteDocument() {
             document and remove your data from our servers.
           </DialogDescription>
         </DialogHeader>
-
         <DialogFooter className="sm:justify-end gap-2">
           <Button
             type="button"

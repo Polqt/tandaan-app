@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createNewDocument } from "@/actions/actions";
 import { Plus } from "lucide-react";
 import { Button } from "../ui/button";
+import { toast } from "sonner";
 
 export default function NewDocument() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function NewDocument() {
   const handleCreateNewDocument = () => {
     startTransition(async () => {
       const { docId } = await createNewDocument();
+      toast.success("New document created!");
       router.push(`/documents/${docId}`);
     });
   };

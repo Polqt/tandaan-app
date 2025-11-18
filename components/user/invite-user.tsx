@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Input } from "../ui/input";
 import { User } from "@/types/user";
 import { useUser } from "@clerk/nextjs";
+import { Users2 } from "lucide-react";
 
 export default function InviteUser() {
   const [isOpen, setIsOpen] = useState(false);
@@ -64,8 +65,8 @@ export default function InviteUser() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant={"outline"}>
-        <DialogTrigger>Invite</DialogTrigger>
+      <Button asChild variant={"ghost"} className="hover:text-blue-800">
+        <DialogTrigger><Users2 className="w-5 h-5" /></DialogTrigger>
       </Button>
       <DialogContent>
         <DialogHeader>
