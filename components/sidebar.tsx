@@ -48,12 +48,10 @@ export default function Sidebar() {
         const json = await res.json();
         const rooms = json.rooms ?? [];
 
-        // Group the data immediately
         const owner: RoomDocument[] = [];
         const editor: RoomDocument[] = [];
 
         rooms.forEach((doc: any) => {
-          // Normalize the document structure
           const item: RoomDocument = {
             id: doc.roomId || doc.id,
             roomId: doc.roomId || doc.id,
@@ -72,7 +70,6 @@ export default function Sidebar() {
 
         setGroupedData({ owner, editor });
       } catch (err) {
-        console.error("Error fetching rooms:", err);
         setError(err instanceof Error ? err : new Error("Unknown error"));
       } finally {
         setLoading(false);
