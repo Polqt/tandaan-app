@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createNewDocument } from "@/actions/actions";
+import { createNewDocument } from "@/services/actions";
 import { Plus } from "lucide-react";
 import { Button } from "../ui/button";
 import { toast } from "sonner";

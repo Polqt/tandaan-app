@@ -13,7 +13,7 @@ import {
 } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { usePathname, useRouter } from "next/navigation";
-import { deleteDocument } from "@/actions/actions";
+import { deleteDocument } from "@/services/actions";
 import { toast } from "sonner";
 
 export default function DeleteDocument() {

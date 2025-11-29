@@ -1,11 +1,8 @@
 "use client";
 
 import { MenuIcon } from "lucide-react";
-import { useCollection } from "react-firebase-hooks/firestore";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
 import { useUser } from "@clerk/nextjs";
-import { DocumentData, collection } from "firebase/firestore";
-import { db } from "@/firebase";
 import { useEffect, useState } from "react";
 import SidebarOption from "./sidebar-option";
 import { Button } from "./ui/button";
@@ -13,11 +10,13 @@ import SearchDialog from "./search-dialog";
 import NewDocument from "./documents/new-document";
 import Link from "next/link";
 
-interface RoomDocument extends DocumentData {
+interface RoomDocument {
+  id: string;
+  roomId: string;
   createdAt: string;
   role: "owner" | "editor";
-  roomId: string;
   userId: string;
+  document?: any;
 }
 
 export default function Sidebar() {
@@ -29,37 +28,59 @@ export default function Sidebar() {
     owner: [],
     editor: [],
   });
-  const [data] = useCollection(
-    user && collection(db, "users", user.id, "rooms"),
-  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!data) return;
+    if (!user?.id) return;
 
-    const docs = data.docs.reduce<{
-      owner: RoomDocument[];
-      editor: RoomDocument[];
-    }>(
-      (acc, curr) => {
-        const roomData = curr.data() as RoomDocument;
-
-        if (roomData.role === "owner") {
-          acc.owner.push({
-            id: curr.id,
-            ...roomData,
-          });
-        } else {
-          acc.editor.push({
-            id: curr.id,
-            ...roomData,
-          });
+    const fetchRooms = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const res = await fetch("/api/rooms");
+        
+        if (!res.ok) {
+          throw new Error(`Failed to fetch rooms: ${res.statusText}`);
         }
-        return acc;
-      },
-      { owner: [], editor: [] },
-    );
-    setGroupedData(docs);
-  }, [data]);
+        
+        const json = await res.json();
+        const rooms = json.rooms ?? [];
+
+        // Group the data immediately
+        const owner: RoomDocument[] = [];
+        const editor: RoomDocument[] = [];
+
+        rooms.forEach((doc: any) => {
+          // Normalize the document structure
+          const item: RoomDocument = {
+            id: doc.roomId || doc.id,
+            roomId: doc.roomId || doc.id,
+            userId: doc.userId,
+            role: doc.role,
+            createdAt: doc.createdAt || new Date().toISOString(),
+            document: doc.document,
+          };
+
+          if (item.role === "owner") {
+            owner.push(item);
+          } else if (item.role === "editor") {
+            editor.push(item);
+          }
+        });
+
+        setGroupedData({ owner, editor });
+      } catch (err) {
+        console.error("Error fetching rooms:", err);
+        setError(err instanceof Error ? err : new Error("Unknown error"));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRooms();
+  }, [user?.id]);
 
   const menuOptions = (
     <div className="flex flex-col h-full">
@@ -74,16 +95,24 @@ export default function Sidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 space-y-6 border-t border-gray-600 pt-4">
-        {groupedData.owner.length === 0 && groupedData.editor.length === 0 ? (
+        {loading ? (
           <div className="text-center py-8 text-gray-400">
-            <p className="text-sm">no documentes yet</p>
+            <p className="text-sm">Loading documents...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8 text-red-400">
+            <p className="text-sm">Error loading documents</p>
+          </div>
+        ) : groupedData.owner.length === 0 && groupedData.editor.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">
+            <p className="text-sm">No documents yet</p>
           </div>
         ) : (
           <>
             {groupedData.owner.length > 0 && (
               <div>
                 <h2 className="text-xs font-semibold text-gray-500 hover:text-gray-900 uppercase tracking-wider mb-2 px-2">
-                  <Link href={"/documents"}>My Documents</Link>
+                  <Link href="/documents">My Documents</Link>
                 </h2>
                 <div className="space-y-1">
                   {groupedData.owner.map((doc) => (
@@ -124,13 +153,12 @@ export default function Sidebar() {
       <div className="md:hidden p-2">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant={"ghost"} size={"icon"}>
+            <Button variant="ghost" size="icon">
               <MenuIcon className="w-5 h-5" />
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-72 p-0">
-            {" "}
-            <SheetTitle>menu</SheetTitle>
+            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
             <div className="h-full">{menuOptions}</div>
           </SheetContent>
         </Sheet>

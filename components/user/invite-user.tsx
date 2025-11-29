@@ -11,7 +11,7 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { usePathname } from "next/navigation";
-import { getAllUsers, getRoomUsers, inviteUser } from "@/actions/users";
+import { getAllUsers, getRoomUsers, inviteUser } from "@/services/users";
 import { toast } from "sonner";
 import { Input } from "../ui/input";
 import { User } from "@/types/user";

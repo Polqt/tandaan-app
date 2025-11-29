@@ -11,7 +11,7 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { ArchiveRestore } from "lucide-react";
-import { restoreDocument } from "@/actions/actions";
+import { restoreDocument } from "@/services/actions";
 import { toast } from "sonner";
 import { usePathname, useRouter } from "next/navigation";
 

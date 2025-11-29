@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,7 @@ import { useCollection } from "react-firebase-hooks/firestore";
 import { db } from "@/firebase";
 import { X } from "lucide-react";
 import { toast } from "sonner";
-import { removeUser } from "@/actions/users";
+import { removeUser } from "@/services/users";
 
 export default function ManageUsers() {
   const { user } = useUser();

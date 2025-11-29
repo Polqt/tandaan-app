@@ -18,8 +18,6 @@ export default function SidebarOption({
   const pathname = usePathname();
   const isActive = href.includes(pathname) && pathname !== "/";
 
-  if (!data) return null;
-
   return (
     <Link
       href={href}
@@ -36,7 +34,7 @@ export default function SidebarOption({
         className={`w-4 h-4 shrink-0 ${isActive ? "text-blue-600" : "text-gray-400"}`}
       />
       <span className="truncate flex-1 text-left">
-        {data.title || "Untitled"}
+        {data?.title || "New Document"}
       </span>
     </Link>
   );

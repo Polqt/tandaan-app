@@ -12,7 +12,7 @@ import {
 } from "../ui/sheet";
 import { Button } from "../ui/button";
 import { History } from "lucide-react";
-import { getUserDocuments } from "@/actions/actions";
+import { getUserDocuments } from "@/services/actions";
 
 export default function VersionHistory() {
   const [versions, setVersions] = useState<Version[]>([]);
