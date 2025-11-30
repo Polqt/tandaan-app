@@ -37,14 +37,14 @@ export default function Sidebar() {
     const fetchRooms = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         const res = await fetch("/api/rooms");
-        
+
         if (!res.ok) {
           throw new Error(`Failed to fetch rooms: ${res.statusText}`);
         }
-        
+
         const json = await res.json();
         const rooms = json.rooms ?? [];
 
@@ -100,7 +100,8 @@ export default function Sidebar() {
           <div className="text-center py-8 text-red-400">
             <p className="text-sm">Error loading documents</p>
           </div>
-        ) : groupedData.owner.length === 0 && groupedData.editor.length === 0 ? (
+        ) : groupedData.owner.length === 0 &&
+          groupedData.editor.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <p className="text-sm">No documents yet</p>
           </div>
@@ -114,6 +115,7 @@ export default function Sidebar() {
                 <div className="space-y-1">
                   {groupedData.owner.map((doc) => (
                     <SidebarOption
+                      title={doc.document?.title ?? "Untitled Document"}
                       key={doc.id}
                       id={doc.id}
                       href={`/documents/${doc.id}`}
@@ -131,6 +133,7 @@ export default function Sidebar() {
                 <div className="space-y-1">
                   {groupedData.editor.map((doc) => (
                     <SidebarOption
+                      title={doc.document?.title ?? "Untitled Document"}
                       key={doc.id}
                       id={doc.id}
                       href={`/documents/${doc.id}`}

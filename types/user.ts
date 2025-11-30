@@ -4,3 +4,10 @@ export type User = {
   email: string;
   image: string;
 };
+
+export type RoomUser = {
+  id: string;
+  userId: string;
+  role: "owner" | "editor";
+  roomId: string;
+};

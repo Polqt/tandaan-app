@@ -1,38 +1,66 @@
 "use client";
 
 import { FormEvent, useEffect, useState, useTransition } from "react";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "@/firebase";
-import { useDocumentData } from "react-firebase-hooks/firestore";
 import useOwner from "@/lib/useOwner";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import InviteUser from "../user/invite-user";
 import ManageUsers from "../user/manage-users";
 import Avatars from "../avatars";
 import Editor from "./editor";
-import DeleteDocument from "./delete-document";
+import { DocumentData } from "@/types/documents";
 
 export default function Document({ id }: { id: string }) {
   const [input, setInput] = useState("");
   const [update, startTransition] = useTransition();
-  const [data] = useDocumentData(doc(db, "documents", id));
+  const [, setLoading] = useState(true);
+  const [, setData] = useState<DocumentData | null>(null);
   const isOwner = useOwner();
 
   useEffect(() => {
-    if (data) {
-      setInput(data.title);
-    }
-  }, [data]);
+    const fetchDocument = async () => {
+      try {
+        const response = await fetch(`/api/documents/${id}`);
+        if (response.ok) {
+          const json = await response.json();
+          setInput(json.document);
+          setInput(json?.document.title || "Untitled Document");
+        }
+      } catch (error) {
+        console.error("Error fetching document data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDocument();
+  }, [id]);
 
-  const updateTitle = (e: FormEvent) => {
+  const updateTitle = async (e: FormEvent) => {
     e.preventDefault();
 
     if (input.trim()) {
       startTransition(async () => {
-        await updateDoc(doc(db, "documents", id), {
-          title: input,
-        });
+        try {
+          const response = await fetch(`/api/documents/${id}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ title: input.trim() }),
+          });
+
+          if (response.ok) {
+            setData((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    title: input,
+                  }
+                : null,
+            );
+          }
+        } catch (error) {
+          console.error("Error updating document title:", error);
+        }
       });
     }
   };
@@ -49,7 +77,7 @@ export default function Document({ id }: { id: string }) {
 
           {isOwner && (
             <>
-              <p>i own this document</p>
+              <p>I own this document</p>
             </>
           )}
         </form>
