@@ -8,60 +8,28 @@ import ManageUsers from "../user/manage-users";
 import Avatars from "../avatars";
 import Editor from "./editor";
 import { DocumentData } from "@/types/documents";
+import { useDocument, useUpdateDocument } from "@/hooks/useDocument";
 
 export default function Document({ id }: { id: string }) {
   const [input, setInput] = useState("");
-  const [update, startTransition] = useTransition();
-  const [, setLoading] = useState(true);
-  const [, setData] = useState<DocumentData | null>(null);
+  const { data } = useDocument(id);
+  const { mutate: updateDocument, isPending } = useUpdateDocument();
   const isOwner = useOwner();
 
   useEffect(() => {
-    const fetchDocument = async () => {
-      try {
-        const response = await fetch(`/api/documents/${id}`);
-        if (response.ok) {
-          const json = await response.json();
-          setInput(json.document);
-          setInput(json?.document.title || "Untitled Document");
-        }
-      } catch (error) {
-        console.error("Error fetching document data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDocument();
-  }, [id]);
+    if (data?.title) {
+      setInput(data.title);
+    }
+  }, [data?.title]);
 
   const updateTitle = async (e: FormEvent) => {
     e.preventDefault();
 
     if (input.trim()) {
-      startTransition(async () => {
-        try {
-          const response = await fetch(`/api/documents/${id}`, {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ title: input.trim() }),
-          });
-
-          if (response.ok) {
-            setData((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    title: input,
-                  }
-                : null,
-            );
-          }
-        } catch (error) {
-          console.error("Error updating document title:", error);
-        }
-      });
+      updateDocument({
+        id,
+        data: { title: input.trim() }
+      })
     }
   };
 
@@ -71,8 +39,8 @@ export default function Document({ id }: { id: string }) {
         <form className="flex flex-1 space-x-2" onSubmit={updateTitle}>
           <Input value={input} onChange={(e) => setInput(e.target.value)} />
 
-          <Button disabled={update} type="submit">
-            {update ? "Updating..." : "Update"}
+          <Button disabled={isPending} type="submit">
+            {isPending ? "Updating..." : "Update"}
           </Button>
 
           {isOwner && (

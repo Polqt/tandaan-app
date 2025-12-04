@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 
 const db = getFirestore(adminApp);
 
-export async function GET({ params }: { params: { id: string } }) {
+export async function GET( request: Request, { params }: { params: { id: string } }) {
   auth.protect();
 
   try {
@@ -14,7 +14,7 @@ export async function GET({ params }: { params: { id: string } }) {
     if (!userId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { id } = params;
+    const { id } = await params;
 
     const roomRef = db
       .collection("users")
@@ -46,7 +46,7 @@ export async function GET({ params }: { params: { id: string } }) {
 
     const documentData = docSnap.data();
     const documentId = docSnap.id;
-    
+
     return NextResponse.json({
       id: documentId,
       ...roomData,
@@ -66,7 +66,7 @@ export async function GET({ params }: { params: { id: string } }) {
 
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } },
 ) {
   auth.protect();
 

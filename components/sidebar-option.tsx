@@ -21,7 +21,7 @@ export default function SidebarOption({
   useEffect(() => {
     const fetchDocument = async () => {
       try {
-        const response = await fetch(`/api/documents`);
+        const response = await fetch(`/api/documents/${id}`);
         const json = await response.json();
         setDocs(json.documents);
       } catch (error) {

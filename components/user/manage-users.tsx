@@ -69,7 +69,7 @@ export default function ManageUsers() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <Button asChild variant={"outline"}>
         <DialogTrigger>
-          users ({loading ? "..." : usersInRoom.length})
+          users {loading ? "..." : usersInRoom.length}
         </DialogTrigger>
       </Button>
       <DialogContent>
