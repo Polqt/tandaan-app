@@ -5,8 +5,6 @@ import liveblocks from "@/lib/liveblocks";
 import { auth } from "@clerk/nextjs/server";
 
 export async function createNewDocument() {
-  auth.protect();
-
   const { userId } = await auth();
 
   if (!userId) {
@@ -35,8 +33,6 @@ export async function createNewDocument() {
 }
 
 export async function deleteDocument(roomId: string) {
-  auth.protect();
-
   try {
     const { userId } = await auth();
 
@@ -89,8 +85,6 @@ export async function deleteDocument(roomId: string) {
 }
 
 export async function restoreDocument(roomId: string) {
-  auth.protect();
-
   try {
     const { userId } = await auth();
 

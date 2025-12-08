@@ -4,7 +4,10 @@ import { adminDB } from "@/firebase-admin";
 import { auth } from "@clerk/nextjs/server";
 
 export async function getDocumentVersion(roomId: string) {
-  auth.protect();
+  const { userId } = await auth();
+  if (!userId) {
+    return { success: false, error: "Authentication required" };
+  }
 
   try {
     const versionRef = adminDB
@@ -27,7 +30,10 @@ export async function getDocumentVersion(roomId: string) {
 }
 
 export async function saveDocumentVersion(roomId: string, content: any) {
-  auth.protect();
+  const { userId } = await auth();
+  if (!userId) {
+    return { success: false, error: "Authentication required" };
+  }
 
   try {
     const versionRef = adminDB
@@ -39,7 +45,7 @@ export async function saveDocumentVersion(roomId: string, content: any) {
     await versionRef.set({
       content,
       timeStamp: new Date(),
-      userId: (await auth()).userId,
+      userId,
     });
 
     return { success: true };
@@ -53,7 +59,10 @@ export async function restoreDocumentVersion(
   roomId: string,
   versionId: string,
 ) {
-  auth.protect();
+  const { userId } = await auth();
+  if (!userId) {
+    return { success: false, error: "Authentication required" };
+  }
 
   try {
     const versionRef = adminDB

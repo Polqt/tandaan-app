@@ -37,17 +37,17 @@ export default function ManageUsers() {
 
         if (response.ok) {
           const { users } = await response.json();
+          console.log("Fetched users in room:", users);
           setUsersInRoom(users);
         }
       } catch (error) {
         console.error("Error fetching users in room:", error);
-        setLoading(false);
       } finally {
         setLoading(false);
       }
     };
     fetchUsers();
-  }, []);
+  }, [room.id]);
 
   const handleDelete = (userId: string) => {
     startTransition(async () => {
@@ -57,13 +57,19 @@ export default function ManageUsers() {
 
       if (success) {
         toast.success("User removed from the room successfully");
+        // Refresh the users list after removing
+        const response = await fetch(`/api/rooms/${room.id}/users`);
+        if (response.ok) {
+          const { users } = await response.json();
+          setUsersInRoom(users);
+        }
       } else {
         toast.error("Failed to remove user from the room");
       }
     });
   };
 
-  const currentUserEmail = user?.emailAddresses[0]?.emailAddress;
+  const currentUserId = user?.id;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -91,7 +97,7 @@ export default function ManageUsers() {
             usersInRoom.map((doc) => (
               <div key={doc.id} className="flex items-center justify-between">
                 <p className="font-light">
-                  {doc.userId === currentUserEmail
+                  {doc.userId === currentUserId
                     ? `You (${doc.userId})`
                     : doc.userId}
                 </p>
@@ -99,7 +105,7 @@ export default function ManageUsers() {
                 <div className="flex items-center gap-2">
                   <Button variant={"outline"}>{doc.role}</Button>
 
-                  {isOwner && doc.userId !== currentUserEmail && (
+                  {isOwner && doc.userId !== currentUserId && (
                     <Button
                       variant={"destructive"}
                       onClick={() => handleDelete(doc.userId)}

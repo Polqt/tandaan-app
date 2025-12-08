@@ -10,8 +10,6 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } },
 ) {
-  auth.protect();
-
   try {
     const { userId } = await auth();
     if (!userId)
@@ -71,8 +69,6 @@ export async function PATCH(
   request: Request,
   { params }: { params: { id: string } },
 ) {
-  auth.protect();
-
   try {
     const { userId } = await auth();
     if (!userId)

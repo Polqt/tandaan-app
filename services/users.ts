@@ -4,7 +4,10 @@ import { adminDB } from "@/firebase-admin";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 
 export async function getAllUsers() {
-  auth.protect();
+  const { userId } = await auth();
+  if (!userId) {
+    return { users: [] };
+  }
 
   try {
     const client = await clerkClient();
@@ -22,21 +25,19 @@ export async function getAllUsers() {
 }
 
 export async function inviteUser(roomId: string, email: string) {
-  auth.protect();
+  const { userId: ownerId } = await auth();
+
+  if (!ownerId) {
+    return { success: false, error: "Authentication required" };
+  }
 
   try {
-    const { userId: ownerId } = await auth();
-
-    if (!ownerId) {
-      throw new Error("Unable to determine user ID");
-    }
-
     const invited = await (await clerkClient()).users.getUserList({
       emailAddress: [email],
     });
 
     if (invited.data.length === 0) {
-      throw new Error("User with the provided email does not exist");
+      return { success: false, error: "User with the provided email does not exist" };
     }
 
     const userIdToInvite = invited.data[0].id;
@@ -60,13 +61,17 @@ export async function inviteUser(roomId: string, email: string) {
   }
 }
 
-export async function removeUser(roomId: string, email: string) {
-  auth.protect();
+export async function removeUser(roomId: string, userId: string) {
+  const { userId: currentUserId } = await auth();
+
+  if (!currentUserId) {
+    return { success: false, error: "Authentication required" };
+  }
 
   try {
     await adminDB
       .collection("users")
-      .doc(email)
+      .doc(userId)
       .collection("rooms")
       .doc(roomId)
       .delete();
@@ -79,7 +84,11 @@ export async function removeUser(roomId: string, email: string) {
 }
 
 export async function getRoomUsers(roomId: string) {
-  auth.protect();
+  const { userId } = await auth();
+
+  if (!userId) {
+    return { users: [] };
+  }
 
   try {
     const roomUsers = await adminDB

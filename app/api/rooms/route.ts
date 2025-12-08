@@ -6,8 +6,6 @@ import { NextResponse } from "next/server";
 const db = getFirestore(adminApp);
 
 export async function GET() {
-  auth.protect();
-
   try {
     const { userId } = await auth();
     if (!userId)

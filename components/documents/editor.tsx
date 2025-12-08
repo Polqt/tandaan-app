@@ -1,7 +1,7 @@
 "use client";
 
 import { useRoom, useSelf } from "@liveblocks/react/suspense";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useRef, memo } from "react";
 import * as Y from "yjs";
 import { LiveblocksYjsProvider } from "@liveblocks/yjs";
 import { BlockNoteView } from "@blocknote/shadcn";
@@ -17,41 +17,48 @@ import CommentsPanel from "../documents/comments-panel";
 type EditorProps = {
   doc: Y.Doc;
   provider: any;
+  userInfo: {
+    name: string;
+    color: string;
+  };
 };
 
-function BlockNote({ doc, provider }: EditorProps) {
-  const userInfo = useSelf((i) => i.info);
-
-  const user = useMemo(
-    () => ({
-      name: userInfo?.name || "Anonymous",
-      color: stringToColor(userInfo?.email || "1"),
-    }),
-    [userInfo?.name, userInfo?.email],
-  );
-
+const BlockNote = memo(function BlockNote({ doc, provider, userInfo }: EditorProps) {
   const editor: BlockNoteEditor = useCreateBlockNote({
     collaboration: {
       provider,
       fragment: doc.getXmlFragment("document-store"),
-      user: {
-        name: userInfo?.name || "Anonymous",
-        color: stringToColor(userInfo?.email || "1"),
-      },
+      user: userInfo,
     },
   });
 
   return (
     <div className="relative max-w-6xl mx-auto">
-      <BlockNoteView className="min-h-screen" editor={editor} />
+      <BlockNoteView className="min-h-screen" editor={editor} theme="light" />
     </div>
   );
-}
+});
 
 export default function Editor() {
   const room = useRoom();
   const [document, setDocument] = useState<Y.Doc>();
   const [provider, setProvider] = useState<LiveblocksYjsProvider>();
+  const [userInfo, setUserInfo] = useState<{ name: string; color: string } | null>(null);
+  
+  // Get user info only once when component mounts
+  const selfInfo = useSelf((i) => i.info);
+  const initializedRef = useRef(false);
+
+  useEffect(() => {
+    if (!initializedRef.current && selfInfo) {
+      setUserInfo({
+        name: selfInfo.name || "Anonymous",
+        color: stringToColor(selfInfo.email || "1"),
+      });
+      initializedRef.current = true;
+    }
+  }, [selfInfo]);
+
   useEffect(() => {
     const yDoc = new Y.Doc();
     const yProvider = new LiveblocksYjsProvider(room, yDoc);
@@ -74,8 +81,8 @@ export default function Editor() {
             <InviteUser />
           </div>
 
-          {document && provider && (
-            <BlockNote doc={document} provider={provider} />
+          {document && provider && userInfo && (
+            <BlockNote doc={document} provider={provider} userInfo={userInfo} />
           )}
         </div>
       </div>

@@ -3,7 +3,10 @@
 import { auth } from "@clerk/nextjs/server";
 
 export async function createDocumentFromTemplate(templateId: string) {
-  auth.protect();
+  const { userId } = await auth();
+  if (!userId) {
+    return { success: false, error: "Authentication required" };
+  }
 
   try {
   } catch (error) {
@@ -13,7 +16,10 @@ export async function createDocumentFromTemplate(templateId: string) {
 }
 
 export async function getTempalates() {
-  auth.protect();
+  const { userId } = await auth();
+  if (!userId) {
+    return { success: false, error: "Authentication required" };
+  }
 
   try {
   } catch (error) {
@@ -28,7 +34,10 @@ export async function saveAsTemplate(
   description: string,
   category: string,
 ) {
-  auth.protect();
+  const { userId } = await auth();
+  if (!userId) {
+    return { success: false, error: "Authentication required" };
+  }
 
   try {
   } catch (error) {

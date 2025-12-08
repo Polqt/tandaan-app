@@ -5,28 +5,16 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    auth.protect();
-
     const { sessionClaims, userId: clerkUserId } = await auth();
-    const { room } = await req.json();
 
-    const email = sessionClaims?.email as string;
-
-    if (!email) {
-      return NextResponse.json(
-        { message: "Unable to determine user ID." },
-        { status: 400 },
-      );
-    }
-
-    const userId = sessionClaims?.email || clerkUserId;
-
-    if (!userId) {
+    if (!clerkUserId) {
       return NextResponse.json(
         { message: "Authentication required." },
         { status: 401 },
       );
     }
+
+    const { room } = await req.json();
 
     if (!room) {
       return NextResponse.json(
@@ -35,25 +23,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const userIdString = userId as string;
-
-    const session = liveblocks.prepareSession(userIdString, {
+    const session = liveblocks.prepareSession(clerkUserId, {
       userInfo: {
         name: (sessionClaims?.fullName as string) || "Anonymous",
-        email: (sessionClaims?.email as string) || userIdString,
+        email: (sessionClaims?.email as string) || clerkUserId,
         avatar: sessionClaims?.image as string,
       },
     });
 
     const userDocumentRef = adminDB
       .collection("users")
-      .doc(email)
+      .doc(clerkUserId)
       .collection("rooms")
       .doc(room);
 
     const userDocument = await userDocumentRef.get();
 
-    if (userDocument) {
+    if (userDocument.exists) {
       session.allow(room, session.FULL_ACCESS);
       const { body, status } = await session.authorize();
 
@@ -65,7 +51,7 @@ export async function POST(req: NextRequest) {
       );
     }
   } catch (error) {
-    console.error("Error inviting user:", error);
+    console.error("Error in auth-endpoint:", error);
     return NextResponse.json({ success: false }, { status: 500 });
   }
 }
