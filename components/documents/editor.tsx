@@ -63,6 +63,7 @@ export default function Editor() {
   const initializedRef = useRef(false);
   const providerRef = useRef<LiveblocksYjsProvider | null>(null);
   const docRef = useRef<Y.Doc | null>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!initializedRef.current && selfInfo) {
@@ -102,7 +103,11 @@ export default function Editor() {
 
   // Debounced save to Firebase
   const handleContentChange = useCallback((content: string) => {
-    setTimeout(async () => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    saveTimeoutRef.current = setTimeout(async () => {
       try {
         await fetch(`/api/documents/${room.id}`, {
           method: "PATCH",
@@ -116,6 +121,14 @@ export default function Editor() {
       }
     }, 1000);
   }, [room.id]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    }
+  }, [])
 
 
   return (
