@@ -1,7 +1,7 @@
 "use client";
 
 import { useRoom, useSelf } from "@liveblocks/react/suspense";
-import { useEffect, useState, useRef, memo } from "react";
+import { useEffect, useState, useRef, memo, useCallback } from "react";
 import * as Y from "yjs";
 import { LiveblocksYjsProvider } from "@liveblocks/yjs";
 import { BlockNoteView } from "@blocknote/shadcn";
@@ -21,9 +21,10 @@ type EditorProps = {
     name: string;
     color: string;
   };
+  onContentChange: (content: string) => void;
 };
 
-const BlockNote = memo(function BlockNote({ doc, provider, userInfo }: EditorProps) {
+const BlockNote = memo(function BlockNote({ doc, provider, userInfo, onContentChange }: EditorProps) {
   const editor: BlockNoteEditor = useCreateBlockNote({
     collaboration: {
       provider,
@@ -31,6 +32,20 @@ const BlockNote = memo(function BlockNote({ doc, provider, userInfo }: EditorPro
       user: userInfo,
     },
   });
+
+  useEffect(() => {
+    const handleChange = () => {
+      const content = JSON.stringify(editor.document);
+      onContentChange(content);
+    };
+
+    const fragment = doc.getXmlFragment("document-store");
+    fragment.observeDeep(handleChange);
+
+    return () => {
+      fragment.unobserveDeep(handleChange);
+    };
+  }, [doc, editor, onContentChange]);
 
   return (
     <div className="relative max-w-6xl mx-auto">
@@ -41,13 +56,13 @@ const BlockNote = memo(function BlockNote({ doc, provider, userInfo }: EditorPro
 
 export default function Editor() {
   const room = useRoom();
-  const [document, setDocument] = useState<Y.Doc>();
-  const [provider, setProvider] = useState<LiveblocksYjsProvider>();
+  const [document, setDocument] = useState<Y.Doc | null>(null);
+  const [provider, setProvider] = useState<LiveblocksYjsProvider | null>(null);
   const [userInfo, setUserInfo] = useState<{ name: string; color: string } | null>(null);
-  
-  // Get user info only once when component mounts
   const selfInfo = useSelf((i) => i.info);
   const initializedRef = useRef(false);
+  const providerRef = useRef<LiveblocksYjsProvider | null>(null);
+  const docRef = useRef<Y.Doc | null>(null);
 
   useEffect(() => {
     if (!initializedRef.current && selfInfo) {
@@ -60,16 +75,48 @@ export default function Editor() {
   }, [selfInfo]);
 
   useEffect(() => {
+    if (docRef.current) return;
+
     const yDoc = new Y.Doc();
     const yProvider = new LiveblocksYjsProvider(room, yDoc);
+    
+    docRef.current = yDoc;
+    providerRef.current = yProvider;
+    
     setDocument(yDoc);
     setProvider(yProvider);
 
     return () => {
-      yProvider?.destroy();
-      yDoc?.destroy();
+      if (providerRef.current) {
+        providerRef.current.destroy();
+        providerRef.current = null;
+      }
+      if (docRef.current) {
+        docRef.current.destroy();
+        docRef.current = null;
+      }
+      setDocument(null);
+      setProvider(null);
     };
   }, [room]);
+
+  // Debounced save to Firebase
+  const handleContentChange = useCallback((content: string) => {
+    setTimeout(async () => {
+      try {
+        await fetch(`/api/documents/${room.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ content }),
+        });
+      } catch (error) {
+        console.error("Error saving document:", error);
+      }
+    }, 1000);
+  }, [room.id]);
+
 
   return (
     <div className="flex h-screen">
@@ -82,7 +129,12 @@ export default function Editor() {
           </div>
 
           {document && provider && userInfo && (
-            <BlockNote doc={document} provider={provider} userInfo={userInfo} />
+            <BlockNote 
+              doc={document} 
+              provider={provider} 
+              userInfo={userInfo} 
+              onContentChange={handleContentChange}
+            />
           )}
         </div>
       </div>

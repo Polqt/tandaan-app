@@ -8,32 +8,39 @@ export default function useOwner() {
   const { user } = useUser();
   const room = useRoom();
   const [isOwner, setIsOwner] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.emailAddresses[0]?.emailAddress || !room.id) {
+    if (!user?.id || !room.id) {
       setIsOwner(false);
       setLoading(false);
       return;
     }
 
+    const controller = new AbortController();
+
     const checkOwnership = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/rooms/${room.id}/users`);
+        const response = await fetch(`/api/rooms/${room.id}/users`, {
+          signal: controller.signal,
+        });
 
         if (!response.ok) {
           throw new Error("Failed to fetch room users");
         }
 
         const { users } = await response.json();
-        const userEmail = user.emailAddresses[0].emailAddress;
 
+        // Check using Clerk userId (not email) since that's what we store in Firestore
         const isUserOwner = users.some(
-          (u: any) => u.userId === userEmail && u.role === "owner",
+          (u: any) => u.userId === user.id && u.role === "owner",
         );
         setIsOwner(isUserOwner);
       } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") {
+          return;
+        }
         console.error("Error checking ownership:", error);
         setIsOwner(false);
       } finally {
@@ -42,7 +49,11 @@ export default function useOwner() {
     };
 
     checkOwnership();
-  }, [user, room?.id]);
+
+    return () => {
+      controller.abort();
+    };
+  }, [user?.id, room.id]);
 
   return isOwner;
 }
