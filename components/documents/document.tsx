@@ -1,13 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useState, useTransition } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import useOwner from "@/lib/useOwner";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import ManageUsers from "../user/manage-users";
 import Avatars from "../avatars";
 import Editor from "./editor";
-import { DocumentData } from "@/types/documents";
 import { useDocument, useUpdateDocument } from "@/hooks/useDocument";
 
 export default function Document({ id }: { id: string }) {
@@ -28,8 +27,8 @@ export default function Document({ id }: { id: string }) {
     if (input.trim()) {
       updateDocument({
         id,
-        data: { title: input.trim() }
-      })
+        data: { title: input.trim() },
+      });
     }
   };
 

@@ -8,7 +8,7 @@ export function useDocument(documentId: string) {
     queryFn: async () => {
       const response = await fetch(`/api/documents/${documentId}`);
       if (!response.ok) {
-        throw new Error("Failed to fetch document`")
+        throw new Error("Failed to fetch document`");
       }
       const json = await response.json();
       return json.document;
@@ -37,39 +37,42 @@ export function useUpdateDocument() {
       return response.json();
     },
     onMutate: async ({ id, data }) => {
-      await queryClient.cancelQueries({ queryKey: ["document", id ] });
+      await queryClient.cancelQueries({ queryKey: ["document", id] });
       await queryClient.cancelQueries({ queryKey: ["rooms"] });
 
       const previousDocument = queryClient.getQueryData(["document", id]);
-      const previousRooms = queryClient.getQueryData(["rooms"])
+      const previousRooms = queryClient.getQueryData(["rooms"]);
 
       queryClient.setQueryData(["documents", id], (old: any) => ({
         ...old,
-        ...data
+        ...data,
       }));
 
       queryClient.setQueryData(["rooms"], (old: any) => {
         if (!old?.rooms) return old;
         return {
-          rooms: old.rooms.map((room: any) => 
+          rooms: old.rooms.map((room: any) =>
             room.id === id || room.roomId === id
-            ? {
-              ...room,
-              document: {
-                ...room.document,
-                ...data
-              },
-            }
-            : room
-          )
-        }
+              ? {
+                  ...room,
+                  document: {
+                    ...room.document,
+                    ...data,
+                  },
+                }
+              : room,
+          ),
+        };
       });
-      
+
       return { previousDocument, previousRooms };
     },
     onError: (err, variables, context) => {
       if (context?.previousDocument) {
-        queryClient.setQueryData(["document", variables.id], context.previousDocument);
+        queryClient.setQueryData(
+          ["document", variables.id],
+          context.previousDocument,
+        );
       }
       if (context?.previousRooms) {
         queryClient.setQueryData(["rooms"], context.previousRooms);
@@ -78,6 +81,6 @@ export function useUpdateDocument() {
     onSettled: (data, error, variables) => {
       queryClient.invalidateQueries({ queryKey: ["document", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
-    }
+    },
   });
 }

@@ -6,7 +6,10 @@ import { NextResponse } from "next/server";
 
 const db = getFirestore(adminApp);
 
-export async function GET( request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } },
+) {
   auth.protect();
 
   try {

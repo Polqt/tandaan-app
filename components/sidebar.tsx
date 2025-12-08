@@ -2,13 +2,13 @@
 
 import { MenuIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
-import { useUser } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import SidebarOption from "./sidebar-option";
 import { Button } from "./ui/button";
 import SearchDialog from "./search-dialog";
 import NewDocument from "./documents/new-document";
 import Link from "next/link";
+import { useRooms } from "@/hooks/useRooms";
 
 interface RoomDocument {
   id: string;
@@ -20,64 +20,34 @@ interface RoomDocument {
 }
 
 export default function Sidebar() {
-  const { user } = useUser();
-  const [groupedData, setGroupedData] = useState<{
-    owner: RoomDocument[];
-    editor: RoomDocument[];
-  }>({
-    owner: [],
-    editor: [],
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const { data, isLoading, error } = useRooms();
 
-  useEffect(() => {
-    if (!user?.id) return;
+  const groupedData = useMemo(() => {
+    if (!data?.rooms || !Array.isArray(data.rooms)) {
+      return { owner: [], editor: [] };
+    }
+    const owner: RoomDocument[] = [];
+    const editor: RoomDocument[] = [];
 
-    const fetchRooms = async () => {
-      setLoading(true);
-      setError(null);
+    data.rooms.forEach((doc: any) => {
+      const item: RoomDocument = {
+        id: doc.roomid || doc.id,
+        roomId: doc.roomId || doc.id,
+        createdAt: doc.createdAt,
+        role: doc.role,
+        userId: doc.userId,
+        document: doc.document,
+      };
 
-      try {
-        const res = await fetch("/api/rooms");
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch rooms: ${res.statusText}`);
-        }
-
-        const json = await res.json();
-        const rooms = json.rooms ?? [];
-
-        const owner: RoomDocument[] = [];
-        const editor: RoomDocument[] = [];
-
-        rooms.forEach((doc: any) => {
-          const item: RoomDocument = {
-            id: doc.roomId || doc.id,
-            roomId: doc.roomId || doc.id,
-            userId: doc.userId,
-            role: doc.role,
-            createdAt: doc.createdAt || new Date().toISOString(),
-            document: doc.document,
-          };
-
-          if (item.role === "owner") {
-            owner.push(item);
-          } else if (item.role === "editor") {
-            editor.push(item);
-          }
-        });
-
-        setGroupedData({ owner, editor });
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error("Unknown error"));
-      } finally {
-        setLoading(false);
+      if (item.role === "owner") {
+        owner.push(item);
+      } else if (item.role === "editor") {
+        editor.push(item);
       }
-    };
+    });
 
-    fetchRooms();
-  }, [user?.id]);
+    return { owner, editor };
+  }, [data?.rooms]);
 
   const menuOptions = (
     <div className="flex flex-col h-full">
@@ -92,7 +62,7 @@ export default function Sidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 space-y-6 border-t border-gray-600 pt-4">
-        {loading ? (
+        {isLoading ? (
           <div className="text-center py-8 text-gray-400">
             <p className="text-sm">Loading documents...</p>
           </div>

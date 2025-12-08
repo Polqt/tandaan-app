@@ -10,24 +10,24 @@ export async function GET() {
 
   try {
     const { userId } = await auth();
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!userId)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const roomRef = db.collection("users").doc(userId).collection("rooms");
     const roomSnap = await roomRef.get();
 
     const documents = await Promise.all(
-        roomSnap.docs.map(async (doc) => {
-            const roomId = doc.id;
-            const docSnap = await db.collection("documents").doc(roomId).get();
-            const data = docSnap.data();
+      roomSnap.docs.map(async (doc) => {
+        const roomId = doc.id;
+        const docSnap = await db.collection("documents").doc(roomId).get();
+        const data = docSnap.data();
 
-            return {
-                id: roomId,
-                title: data?.title ?? "Untitled Document"
-            }
-        })
-    )
-
+        return {
+          id: roomId,
+          title: data?.title ?? "Untitled Document",
+        };
+      }),
+    );
 
     return NextResponse.json({ documents });
   } catch (error) {

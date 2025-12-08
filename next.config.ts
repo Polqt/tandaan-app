@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
     config.infrastructureLogging = {
       level: "error",
     };
+
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      yjs: require.resolve("yjs"),
+    };
     return config;
   },
 };

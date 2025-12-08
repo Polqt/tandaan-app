@@ -1,6 +1,7 @@
 "use client";
 
 import Document from "@/components/documents/document";
+import RoomProvider from "@/components/providers/room-provider";
 import { use } from "react";
 
 export default function DocumentPage({
@@ -11,7 +12,9 @@ export default function DocumentPage({
   const { id } = use(params);
   return (
     <div className="flex flex-col flex-1 min-h-screen">
-      <Document id={id} />
+      <RoomProvider roomId={id}>
+        <Document id={id} />
+      </RoomProvider>
     </div>
   );
 }

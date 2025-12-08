@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 export default function SidebarOption({
   id,
   href,
-  title
+  title,
 }: {
   id: string;
   href: string;
@@ -16,7 +16,7 @@ export default function SidebarOption({
 }) {
   const pathname = usePathname();
   const isActive = href.includes(pathname) && pathname !== "/";
-  const [docs, setDocs] = useState([])
+  const [docs, setDocs] = useState([]);
 
   useEffect(() => {
     const fetchDocument = async () => {
@@ -28,7 +28,7 @@ export default function SidebarOption({
         console.error("Error fetching document data: ", error);
       }
     };
-    fetchDocument()
+    fetchDocument();
   }, []);
 
   return (
@@ -46,7 +46,9 @@ export default function SidebarOption({
       <FileText
         className={`w-4 h-4 shrink-0 ${isActive ? "text-blue-600" : "text-gray-400"}`}
       />
-      <span className="truncate flex-1 text-left">{title ?? "New Document"}</span>
+      <span className="truncate flex-1 text-left">
+        {title ?? "New Document"}
+      </span>
     </Link>
   );
 }

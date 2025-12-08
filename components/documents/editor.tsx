@@ -1,7 +1,7 @@
 "use client";
 
 import { useRoom, useSelf } from "@liveblocks/react/suspense";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import * as Y from "yjs";
 import { LiveblocksYjsProvider } from "@liveblocks/yjs";
 import { BlockNoteView } from "@blocknote/shadcn";
@@ -21,6 +21,15 @@ type EditorProps = {
 
 function BlockNote({ doc, provider }: EditorProps) {
   const userInfo = useSelf((i) => i.info);
+
+  const user = useMemo(
+    () => ({
+      name: userInfo?.name || "Anonymous",
+      color: stringToColor(userInfo?.email || "1"),
+    }),
+    [userInfo?.name, userInfo?.email],
+  );
+
   const editor: BlockNoteEditor = useCreateBlockNote({
     collaboration: {
       provider,

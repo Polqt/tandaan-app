@@ -1,13 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -24,7 +18,6 @@ export default function SearchDialog() {
   const { user } = useUser();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
   const [data] = useCollection(
     user && collection(db, "users", user.id, "rooms"),
   );
