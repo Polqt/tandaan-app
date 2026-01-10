@@ -9,7 +9,11 @@ import Avatars from "../avatars";
 import Editor from "./editor";
 import { useDocument, useUpdateDocument } from "@/hooks/useDocument";
 
-export default function Document({ id }: { id: string }) {
+interface DocumentProps {
+  id: string;
+}
+
+export default function Document({ id }: DocumentProps) {
   const [input, setInput] = useState("");
   const { data } = useDocument(id);
   const { mutate: updateDocument, isPending } = useUpdateDocument();

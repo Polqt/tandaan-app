@@ -66,14 +66,12 @@ export default function Editor() {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!initializedRef.current && selfInfo) {
-      setUserInfo({
-        name: selfInfo.name || "Anonymous",
-        color: stringToColor(selfInfo.email || "1"),
-      });
-      initializedRef.current = true;
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
     }
-  }, [selfInfo]);
+  }, []);
 
   useEffect(() => {
     if (docRef.current) return;

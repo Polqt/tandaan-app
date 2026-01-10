@@ -30,29 +30,21 @@ export async function GET(
       );
     }
 
-    const userSnapshot = await db.collection("users").get();
+    const roomUsersSnapshot = await db
+      .collectionGroup("rooms")
+      .where("roomId", "==", roomId)
+      .get();
 
-    const users: any[] = [];
-
-    for (const userDoc of userSnapshot.docs) {
-      const roomDoc = await db
-        .collection("users")
-        .doc(userDoc.id)
-        .collection("rooms")
-        .doc(roomId)
-        .get();
-
-      if (roomDoc.exists) {
-        const data = roomDoc.data();
-        users.push({
-          id: roomDoc.id,
-          userId: userDoc.id,
-          roomId: data?.roomId || roomId,
-          role: data?.role,
-          createdAt: data?.createdAt,
-        })
+    const users = roomUsersSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        userId: doc.ref.parent.parent?.id || "",
+        roomId: data.roomId || roomId,
+        role: data.role,
+        createdAt: data.createdAt,
       }
-    }
+    })
     
     return NextResponse.json({ users });
   } catch (error) {

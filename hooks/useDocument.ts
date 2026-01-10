@@ -43,7 +43,7 @@ export function useUpdateDocument() {
       const previousDocument = queryClient.getQueryData(["document", id]);
       const previousRooms = queryClient.getQueryData(["rooms"]);
 
-      queryClient.setQueryData(["documents", id], (old: any) => ({
+      queryClient.setQueryData(["document", id], (old: any) => ({
         ...old,
         ...data,
       }));

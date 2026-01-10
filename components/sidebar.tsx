@@ -49,7 +49,7 @@ export default function Sidebar() {
     return { owner, editor };
   }, [data?.rooms]);
 
-  const menuOptions = (
+  const menuOptions = useMemo(() => (
     <div className="flex flex-col h-full">
       <div className="p-2 mb-2">
         <div className="relative">
@@ -116,7 +116,7 @@ export default function Sidebar() {
         )}
       </div>
     </div>
-  );
+  ), [isLoading, error, groupedData]);
 
   return (
     <div className="min-h-full bg-gray-50 dark:bg-gray-900 border-r border-gray-600 dark:border-gray-800">
