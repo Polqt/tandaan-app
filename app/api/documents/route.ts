@@ -1,5 +1,5 @@
 import { adminApp } from "@/firebase-admin";
-import { auth } from "@clerk/nextjs/server";
+import { requireAuth, apiErrorResponse } from "@/lib/api-utils";
 import { getFirestore } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 
@@ -7,11 +7,12 @@ const db = getFirestore(adminApp);
 
 export async function GET() {
   try {
-    const { userId } = await auth();
-    if (!userId)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await requireAuth();
+    if (!auth.authorized) {
+      return auth.error;
+    }
 
-    const roomRef = db.collection("users").doc(userId).collection("rooms");
+    const roomRef = db.collection("users").doc(auth.userId!).collection("rooms");
     const roomSnap = await roomRef.get();
 
     const documents = await Promise.all(
@@ -30,8 +31,6 @@ export async function GET() {
     return NextResponse.json({ documents });
   } catch (error) {
     console.error("Error fetching documents:", error);
-    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-      status: 500,
-    });
+    return apiErrorResponse("Internal Server Error", 500);
   }
 }
