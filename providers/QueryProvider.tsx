@@ -16,7 +16,8 @@ export default function QueryProvider({
           queries: {
             staleTime: 60 * 1000,
             refetchOnWindowFocus: false,
-            retry: 1,
+            retry: 3,
+            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
           },
         },
       }),

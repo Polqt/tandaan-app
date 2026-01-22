@@ -3,6 +3,10 @@
 import { adminDB } from "@/firebase-admin";
 import liveblocks from "@/lib/liveblocks";
 import { auth } from "@clerk/nextjs/server";
+import { DocumentData, TrashDocument } from "@/types/documents";
+
+const TRASH_RETENTION_DAYS = 30;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export async function createNewDocument() {
   const { userId } = await auth();
@@ -47,7 +51,11 @@ export async function deleteDocument(roomId: string) {
       throw new Error("Document does not exist");
     }
 
-    const data = doc.data();
+    const data = doc.data() as DocumentData | undefined;
+
+    if (!data) {
+      throw new Error("Unable to fetch document data");
+    }
 
     await adminDB
       .collection("trash")
@@ -55,7 +63,7 @@ export async function deleteDocument(roomId: string) {
       .set({
         ...data,
         deleteAt: new Date(),
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        expiresAt: new Date(Date.now() + TRASH_RETENTION_DAYS * MS_PER_DAY),
         userId,
         roomId,
       });
@@ -95,7 +103,7 @@ export async function restoreDocument(roomId: string) {
       throw new Error("Trash document does not exist");
     }
 
-    const data = trashDoc.data();
+    const data = trashDoc.data() as DocumentData | undefined;
 
     if (!data) {
       throw new Error("No data found in trash document");

@@ -52,12 +52,19 @@ export default function InviteUser() {
       const roomId = pathname.split("/").pop();
       if (!roomId) return;
 
-      const [allUsers, existingUsers] = await Promise.all([
-        getAllUsers(),
-        getRoomUsers(roomId),
-      ]);
+      const allUsersList = await getAllUsers();
+      const existingUsers = await getRoomUsers(roomId);
+
+      // Filter out users that are already in the room
+      const availableUsers = (allUsersList || []).filter(
+        (user: User) => !existingUsers.includes(user.id)
+      );
+
+      setUsers(availableUsers);
+      setRoomUsers(existingUsers);
     } catch (error) {
-      toast.error("failed to load users");
+      console.error("Error loading users:", error);
+      toast.error("Failed to load users");
     } finally {
       setLoading(false);
     }
