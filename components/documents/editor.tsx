@@ -13,6 +13,7 @@ import stringToColor from "@/lib/stringToColor";
 import DeleteDocument from "./delete-document";
 import InviteUser from "../user/invite-user";
 import CommentsPanel from "../documents/comments-panel";
+import { toast } from "sonner";
 
 type EditorProps = {
   doc: Y.Doc;
@@ -35,8 +36,12 @@ const BlockNote = memo(function BlockNote({ doc, provider, userInfo, onContentCh
 
   useEffect(() => {
     const handleChange = () => {
-      const content = JSON.stringify(editor.document);
-      onContentChange(content);
+      try {
+        const content = JSON.stringify(editor.document);
+        onContentChange(content);
+      } catch (error) {
+        console.error("Error serializing document:", error);
+      }
     };
 
     const fragment = doc.getXmlFragment("document-store");
@@ -60,7 +65,6 @@ export default function Editor() {
   const [provider, setProvider] = useState<LiveblocksYjsProvider | null>(null);
   const [userInfo, setUserInfo] = useState<{ name: string; color: string } | null>(null);
   const selfInfo = useSelf((i) => i.info);
-  const initializedRef = useRef(false);
   const providerRef = useRef<LiveblocksYjsProvider | null>(null);
   const docRef = useRef<Y.Doc | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -70,7 +74,7 @@ export default function Editor() {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-    }
+    };
   }, []);
 
   useEffect(() => {
@@ -78,10 +82,10 @@ export default function Editor() {
 
     const yDoc = new Y.Doc();
     const yProvider = new LiveblocksYjsProvider(room, yDoc);
-    
+
     docRef.current = yDoc;
     providerRef.current = yProvider;
-    
+
     setDocument(yDoc);
     setProvider(yProvider);
 
@@ -99,35 +103,31 @@ export default function Editor() {
     };
   }, [room]);
 
-  // Debounced save to Firebase
+  // Debounced save to Firebase with error handling
   const handleContentChange = useCallback((content: string) => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-    
+
     saveTimeoutRef.current = setTimeout(async () => {
       try {
-        await fetch(`/api/documents/${room.id}`, {
+        const response = await fetch(`/api/documents/${room.id}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ content }),
         });
+
+        if (!response.ok) {
+          throw new Error("Failed to save document");
+        }
       } catch (error) {
         console.error("Error saving document:", error);
+        toast.error("Failed to save document. Changes may be lost.");
       }
     }, 1000);
   }, [room.id]);
-
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    }
-  }, [])
-
 
   return (
     <div className="flex h-screen">
@@ -140,10 +140,10 @@ export default function Editor() {
           </div>
 
           {document && provider && userInfo && (
-            <BlockNote 
-              doc={document} 
-              provider={provider} 
-              userInfo={userInfo} 
+            <BlockNote
+              doc={document}
+              provider={provider}
+              userInfo={userInfo}
               onContentChange={handleContentChange}
             />
           )}

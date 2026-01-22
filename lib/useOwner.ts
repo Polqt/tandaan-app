@@ -4,16 +4,20 @@ import { useUser } from "@clerk/nextjs";
 import { useRoom } from "@liveblocks/react/suspense";
 import { useEffect, useState } from "react";
 
-export default function useOwner() {
+/**
+ * Hook to check if the current user is the owner of the current room/document
+ * @returns boolean indicating if user is the owner
+ */
+export default function useIsOwner() {
   const { user } = useUser();
   const room = useRoom();
   const [isOwner, setIsOwner] = useState(false);
-  const [, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!user?.id || !room.id) {
       setIsOwner(false);
-      setLoading(false);
+      setIsLoading(false);
       return;
     }
 
@@ -21,7 +25,7 @@ export default function useOwner() {
 
     const checkOwnership = async () => {
       try {
-        setLoading(true);
+        setIsLoading(true);
         const response = await fetch(`/api/rooms/${room.id}/users`, {
           signal: controller.signal,
         });
@@ -44,7 +48,7 @@ export default function useOwner() {
         console.error("Error checking ownership:", error);
         setIsOwner(false);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 

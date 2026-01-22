@@ -35,7 +35,10 @@ export default function SearchDialog() {
   }, []);
 
   const filteredDocs = data?.docs.filter((doc) => {
-    return true;
+    if (!query.trim()) return false;
+    
+    const docTitle = doc.data()?.document?.title || "";
+    return docTitle.toLowerCase().includes(query.toLowerCase());
   });
 
   return (
