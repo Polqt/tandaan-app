@@ -1,6 +1,5 @@
-import { db } from "@/firebase";
+import { DocumentData } from "@/types/documents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 export function useDocument(documentId: string) {
   return useQuery({
@@ -8,10 +7,10 @@ export function useDocument(documentId: string) {
     queryFn: async () => {
       const response = await fetch(`/api/documents/${documentId}`);
       if (!response.ok) {
-        throw new Error("Failed to fetch document`");
+        throw new Error("Failed to fetch document");
       }
       const json = await response.json();
-      return json.document;
+      return json.document as DocumentData;
     },
     staleTime: 30 * 60 * 1000,
     enabled: !!documentId,
@@ -21,7 +20,7 @@ export function useDocument(documentId: string) {
 export function useUpdateDocument() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+    mutationFn: async ({ id, data }: { id: string; data: Partial<DocumentData> }) => {
       const response = await fetch(`/api/documents/${id}`, {
         method: "PATCH",
         headers: {
@@ -39,9 +38,11 @@ export function useUpdateDocument() {
     onMutate: async ({ id, data }) => {
       await queryClient.cancelQueries({ queryKey: ["document", id] });
       await queryClient.cancelQueries({ queryKey: ["rooms"] });
+      await queryClient.cancelQueries({ queryKey: ["documents"] });
 
       const previousDocument = queryClient.getQueryData(["document", id]);
       const previousRooms = queryClient.getQueryData(["rooms"]);
+      const previousDocuments = queryClient.getQueryData(["documents"]);
 
       queryClient.setQueryData(["document", id], (old: any) => ({
         ...old,
@@ -65,7 +66,7 @@ export function useUpdateDocument() {
         };
       });
 
-      return { previousDocument, previousRooms };
+      return { previousDocument, previousRooms, previousDocuments };
     },
     onError: (err, variables, context) => {
       if (context?.previousDocument) {
@@ -75,7 +76,11 @@ export function useUpdateDocument() {
         );
       }
       if (context?.previousRooms) {
+      if (context?.previousDocuments) {
+        queryClient.setQueryData(["documents"], context.previousDocuments);
+      }
         queryClient.setQueryData(["rooms"], context.previousRooms);
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
       }
     },
     onSettled: (data, error, variables) => {
