@@ -7,12 +7,15 @@ const db = getFirestore(adminApp);
 
 export async function GET() {
   try {
-    const auth = await requireAuth();
-    if (!auth.authorized) {
-      return auth.error;
+    const authResult = await requireAuth();
+    if (!authResult.authorized) {
+      return authResult.error;
     }
 
-    const roomRef = db.collection("users").doc(auth.userId!).collection("rooms");
+    const roomRef = db
+      .collection("users")
+      .doc(authResult.userId)
+      .collection("rooms");
     const roomSnap = await roomRef.get();
 
     const documents = await Promise.all(

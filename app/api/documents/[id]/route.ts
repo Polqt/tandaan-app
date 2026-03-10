@@ -6,20 +6,20 @@ import { NextResponse } from "next/server";
 const db = getFirestore(adminApp);
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } },
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireAuth();
-    if (!auth.authorized) {
-      return auth.error;
+    const authResult = await requireAuth();
+    if (!authResult.authorized) {
+      return authResult.error;
     }
 
     const { id } = await params;
 
     const roomRef = db
       .collection("users")
-      .doc(auth.userId!)
+      .doc(authResult.userId)
       .collection("rooms")
       .doc(id);
     const roomSnap = await roomRef.get();
@@ -56,12 +56,12 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireAuth();
-    if (!auth.authorized) {
-      return auth.error;
+    const authResult = await requireAuth();
+    if (!authResult.authorized) {
+      return authResult.error;
     }
 
     const { id } = await params;
@@ -69,7 +69,7 @@ export async function PATCH(
 
     const roomRef = db
       .collection("users")
-      .doc(auth.userId!)
+      .doc(authResult.userId)
       .collection("rooms")
       .doc(id);
     const roomSnap = await roomRef.get();

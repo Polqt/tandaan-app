@@ -1,5 +1,9 @@
 import { withSentryConfig } from "@sentry/nextjs";
+import { createRequire } from "node:module";
 import type { NextConfig } from "next";
+
+const require = createRequire(import.meta.url);
+const yjsPath = require.resolve("yjs");
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -10,15 +14,10 @@ const nextConfig: NextConfig = {
       "@blocknote/core",
     ],
   },
-  webpack: (config, { isServer }) => {
-    // Suppress webpack cache warnings in development
-    config.infrastructureLogging = {
-      level: "error",
-    };
-
+  webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      yjs: require.resolve("yjs"),
+      yjs: yjsPath,
     };
     return config;
   },

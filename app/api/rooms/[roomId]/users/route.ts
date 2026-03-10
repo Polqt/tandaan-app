@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 const db = getFirestore(adminApp);
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ roomId: string }> },
 ) {
   try {
@@ -43,9 +43,9 @@ export async function GET(
         roomId: data.roomId || roomId,
         role: data.role,
         createdAt: data.createdAt,
-      }
-    })
-    
+      };
+    });
+
     return NextResponse.json({ users });
   } catch (error) {
     console.error("Error fetching room users:", error);
