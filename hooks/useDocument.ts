@@ -1,32 +1,62 @@
-import { DocumentData } from "@/types/documents";
+import type { DocumentData } from "@/types/documents";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+type UpdateDocumentInput = {
+  data: Partial<DocumentData>;
+  id: string;
+};
+
+type RoomDocumentRecord = {
+  document?: Partial<DocumentData>;
+  id: string;
+  roomId?: string;
+};
+
+type RoomsQueryResult = {
+  rooms: RoomDocumentRecord[];
+};
+
+type DocumentsQueryResult = {
+  documents: Array<{
+    id: string;
+    title?: string;
+  }>;
+};
+
+type MutationContext = {
+  previousDocument?: DocumentData;
+  previousDocuments?: DocumentsQueryResult;
+  previousRooms?: RoomsQueryResult;
+};
 
 export function useDocument(documentId: string) {
   return useQuery({
-    queryKey: ["document", documentId],
+    enabled: Boolean(documentId),
     queryFn: async () => {
       const response = await fetch(`/api/documents/${documentId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch document");
       }
-      const json = await response.json();
-      return json.document as DocumentData;
+
+      const payload = await response.json();
+      return payload.document as DocumentData;
     },
+    queryKey: ["document", documentId],
     staleTime: 30 * 60 * 1000,
-    enabled: !!documentId,
   });
 }
 
 export function useUpdateDocument() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<DocumentData> }) => {
+
+  return useMutation<unknown, Error, UpdateDocumentInput, MutationContext>({
+    mutationFn: async ({ data, id }: UpdateDocumentInput) => {
       const response = await fetch(`/api/documents/${id}`, {
-        method: "PATCH",
+        body: JSON.stringify(data),
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        method: "PATCH",
       });
 
       if (!response.ok) {
@@ -35,57 +65,77 @@ export function useUpdateDocument() {
 
       return response.json();
     },
-    onMutate: async ({ id, data }) => {
+    onError: (_error, variables, context) => {
+      if (context?.previousDocument) {
+        queryClient.setQueryData(["document", variables.id], context.previousDocument);
+      }
+
+      if (context?.previousRooms) {
+        queryClient.setQueryData(["rooms"], context.previousRooms);
+      }
+
+      if (context?.previousDocuments) {
+        queryClient.setQueryData(["documents"], context.previousDocuments);
+      }
+    },
+    onMutate: async ({ data, id }): Promise<MutationContext> => {
       await queryClient.cancelQueries({ queryKey: ["document", id] });
       await queryClient.cancelQueries({ queryKey: ["rooms"] });
       await queryClient.cancelQueries({ queryKey: ["documents"] });
 
-      const previousDocument = queryClient.getQueryData(["document", id]);
-      const previousRooms = queryClient.getQueryData(["rooms"]);
-      const previousDocuments = queryClient.getQueryData(["documents"]);
+      const previousDocument = queryClient.getQueryData<DocumentData>(["document", id]);
+      const previousRooms = queryClient.getQueryData<RoomsQueryResult>(["rooms"]);
+      const previousDocuments = queryClient.getQueryData<DocumentsQueryResult>(["documents"]);
 
-      queryClient.setQueryData(["document", id], (old: any) => ({
-        ...old,
-        ...data,
-      }));
+      queryClient.setQueryData<DocumentData | undefined>(
+        ["document", id],
+        (existingDocument) => (existingDocument ? { ...existingDocument, ...data } : existingDocument),
+      );
 
-      queryClient.setQueryData(["rooms"], (old: any) => {
-        if (!old?.rooms) return old;
+      queryClient.setQueryData<RoomsQueryResult | undefined>(["rooms"], (existingRooms) => {
+        if (!existingRooms?.rooms) {
+          return existingRooms;
+        }
+
         return {
-          rooms: old.rooms.map((room: any) =>
-            room.id === id || room.roomId === id
-              ? {
-                  ...room,
-                  document: {
-                    ...room.document,
-                    ...data,
-                  },
-                }
-              : room,
-          ),
+          rooms: existingRooms.rooms.map((room) => {
+            const isTargetRoom = room.id === id || room.roomId === id;
+            if (!isTargetRoom) {
+              return room;
+            }
+
+            return {
+              ...room,
+              document: {
+                ...(room.document || {}),
+                ...data,
+              },
+            };
+          }),
         };
       });
 
-      return { previousDocument, previousRooms, previousDocuments };
+      queryClient.setQueryData<DocumentsQueryResult | undefined>(
+        ["documents"],
+        (existingDocuments) => {
+          if (!existingDocuments?.documents || !data.title) {
+            return existingDocuments;
+          }
+
+          return {
+            documents: existingDocuments.documents.map((document) =>
+              document.id === id ? { ...document, title: data.title } : document,
+            ),
+          };
+        },
+      );
+
+      return { previousDocument, previousDocuments, previousRooms };
     },
-    onError: (err, variables, context) => {
-      if (context?.previousDocument) {
-        queryClient.setQueryData(
-          ["document", variables.id],
-          context.previousDocument,
-        );
-      }
-      if (context?.previousRooms) {
-      if (context?.previousDocuments) {
-        queryClient.setQueryData(["documents"], context.previousDocuments);
-      }
-        queryClient.setQueryData(["rooms"], context.previousRooms);
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
-      }
-    },
-    onSettled: (data, error, variables) => {
+    onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({ queryKey: ["document", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
     },
   });
 }

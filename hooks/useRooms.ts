@@ -1,7 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
+import type { DocumentData } from "@/types/documents";
 
-export function useRooms() {
-  return useQuery({
+type RoomRecord = {
+  createdAt?: string;
+  document?: Partial<DocumentData>;
+  id: string;
+  role: "owner" | "editor";
+  roomId?: string;
+  roomid?: string;
+  userId: string;
+};
+
+type RoomsQueryResult = {
+  rooms: RoomRecord[];
+};
+
+export function useRooms(enabled = true) {
+  return useQuery<RoomsQueryResult>({
+    enabled,
     queryKey: ["rooms"],
     queryFn: async () => {
       const response = await fetch(`/api/rooms`);

@@ -7,7 +7,10 @@ export type User = {
 
 export type RoomUser = {
   id: string;
+  image?: string;
+  name?: string;
   userId: string;
   role: "owner" | "editor";
   roomId: string;
+  email?: string;
 };
