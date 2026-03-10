@@ -2,11 +2,12 @@
 
 import { adminDB } from "@/firebase-admin";
 import { auth } from "@clerk/nextjs/server";
+import type { Version } from "@/types/version";
 
 export async function getDocumentVersion(roomId: string) {
   const { userId } = await auth();
   if (!userId) {
-    return { success: false, error: "Authentication required" };
+    return { success: false, error: "Authentication required", versions: [] as Version[] };
   }
 
   try {
@@ -22,10 +23,10 @@ export async function getDocumentVersion(roomId: string) {
       ...doc.data(),
     }));
 
-    return { success: true, versions };
+    return { success: true, versions: versions as Version[] };
   } catch (error) {
     console.error("Error getting document versions:", error);
-    return { success: false };
+    return { success: false, error: "Failed to fetch versions", versions: [] as Version[] };
   }
 }
 
@@ -61,7 +62,7 @@ export async function restoreDocumentVersion(
 ) {
   const { userId } = await auth();
   if (!userId) {
-    return { success: false, error: "Authentication required" };
+    return { success: false, error: "Authentication required", content: null };
   }
 
   try {
@@ -76,9 +77,9 @@ export async function restoreDocumentVersion(
       throw new Error("Version not found");
     }
 
-    return { success: true, content: (await versionRef).data()?.content };
+    return { success: true, content: (await versionRef).data()?.content ?? null };
   } catch (error) {
     console.error("Error restoring document version:", error);
-    return { success: false };
+    return { success: false, error: "Failed to restore version", content: null };
   }
 }

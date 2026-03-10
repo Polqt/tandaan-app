@@ -15,7 +15,6 @@ import { getAllUsers, getRoomUsers, inviteUser } from "@/services/users";
 import { toast } from "sonner";
 import { Input } from "../ui/input";
 import { User } from "@/types/user";
-import { useUser } from "@clerk/nextjs";
 import { Users2 } from "lucide-react";
 
 export default function InviteUser() {
@@ -24,9 +23,8 @@ export default function InviteUser() {
   const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
   const [users, setUsers] = useState<User[]>([]);
-  const [roomUsers, setRoomUsers] = useState<string[]>([]);
+  const [roomUserIds, setRoomUserIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const { user: currentUser } = useUser();
 
   const handleInvite = async (e: FormEvent) => {
     e.preventDefault();
@@ -56,12 +54,12 @@ export default function InviteUser() {
       const existingUsers = await getRoomUsers(roomId);
 
       // Filter out users that are already in the room
-      const availableUsers = (allUsersList || []).filter(
-        (user: User) => !existingUsers.includes(user.id)
+      const availableUsers = allUsersList.filter(
+        (user) => !existingUsers.includes(user.id),
       );
 
       setUsers(availableUsers);
-      setRoomUsers(existingUsers);
+      setRoomUserIds(existingUsers);
     } catch (error) {
       console.error("Error loading users:", error);
       toast.error("Failed to load users");
@@ -71,7 +69,15 @@ export default function InviteUser() {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (open) {
+          void loadUsers();
+        }
+      }}
+    >
       <Button asChild variant={"ghost"} className="hover:text-blue-800">
         <DialogTrigger>
           <Users2 className="w-5 h-5" />
@@ -97,6 +103,20 @@ export default function InviteUser() {
             {isPending ? "Inviting..." : "Invite User"}
           </Button>
         </form>
+        {isOpen && (
+          <div className="mt-4 space-y-2">
+            <p className="text-sm text-muted-foreground">
+              {loading
+                ? "Loading users..."
+                : `${users.length} available user${users.length === 1 ? "" : "s"} to invite`}
+            </p>
+            {roomUserIds.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {roomUserIds.length} user{roomUserIds.length === 1 ? "" : "s"} already in this room.
+              </p>
+            )}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

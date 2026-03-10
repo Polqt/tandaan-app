@@ -1,13 +1,24 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-export async function requireAuth() {
+type AuthorizedAuth = {
+  authorized: true;
+  userId: string;
+};
+
+type UnauthorizedAuth = {
+  authorized: false;
+  error: NextResponse<{ error: string }>;
+};
+
+export type AuthResult = AuthorizedAuth | UnauthorizedAuth;
+
+export async function requireAuth(): Promise<AuthResult> {
   const { userId } = await auth();
-  
+
   if (!userId) {
     return {
       authorized: false,
-      userId: null,
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
     };
   }
@@ -15,7 +26,6 @@ export async function requireAuth() {
   return {
     authorized: true,
     userId,
-    error: null,
   };
 }
 

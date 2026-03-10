@@ -1,6 +1,6 @@
 export interface Version {
   id: string;
-  timestamp: Date;
+  timeStamp: Date | string | { toDate: () => Date };
   userId: string;
-  content: any;
+  content: unknown;
 }

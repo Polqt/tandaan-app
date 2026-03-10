@@ -2,11 +2,12 @@
 
 import { adminDB } from "@/firebase-admin";
 import { auth, clerkClient } from "@clerk/nextjs/server";
+import type { User } from "@/types/user";
 
-export async function getAllUsers() {
+export async function getAllUsers(): Promise<User[]> {
   const { userId } = await auth();
   if (!userId) {
-    return { users: [] };
+    return [];
   }
 
   try {
@@ -15,12 +16,13 @@ export async function getAllUsers() {
 
     return users.map((user) => ({
       id: user.id,
+      fullName: user.fullName || user.firstName || "Anonymous",
       email: user.emailAddresses[0]?.emailAddress || "",
-      name: user.fullName || user.firstName || "Anonymous",
+      image: user.imageUrl || "",
     }));
   } catch (error) {
     console.error("Error getting users:", error);
-    return { users: [] };
+    return [];
   }
 }
 
@@ -87,7 +89,7 @@ export async function getRoomUsers(roomId: string) {
   const { userId } = await auth();
 
   if (!userId) {
-    return { users: [] };
+    return [];
   }
 
   try {
@@ -96,11 +98,13 @@ export async function getRoomUsers(roomId: string) {
       .where("roomId", "==", roomId)
       .get();
 
-    const emails = roomUsers.docs.map((doc) => doc.data().userId);
+    const userIds = roomUsers.docs
+      .map((doc) => doc.data().userId)
+      .filter((value): value is string => typeof value === "string");
 
-    return { success: true, emails };
+    return userIds;
   } catch (error) {
     console.error("Error getting room users:", error);
-    return { users: [] };
+    return [];
   }
 }
