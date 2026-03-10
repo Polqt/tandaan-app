@@ -1,16 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
-import { Button } from "./ui/button";
+import { useUser } from "@clerk/nextjs";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
-import { useCollection } from "react-firebase-hooks/firestore";
-import { collection } from "firebase/firestore";
-import { db } from "@/firebase";
-import { Input } from "./ui/input";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useRooms } from "@/hooks/useRooms";
 import SearchResultItem from "./search-result-item";
+import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import { Input } from "./ui/input";
 import { Kbd } from "./ui/kbd";
 
 export default function SearchDialog() {
@@ -18,15 +16,14 @@ export default function SearchDialog() {
   const { user } = useUser();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [data] = useCollection(
-    user && collection(db, "users", user.id, "rooms"),
-  );
+  const deferredQuery = useDeferredValue(query);
+  const { data } = useRooms(Boolean(user?.id) && open);
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setOpen((open) => !open);
+    const down = (event: KeyboardEvent) => {
+      if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        setOpen((currentOpen) => !currentOpen);
       }
     };
 
@@ -34,59 +31,66 @@ export default function SearchDialog() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  const filteredDocs = data?.docs.filter((doc) => {
-    if (!query.trim()) return false;
-    
-    const docTitle = doc.data()?.document?.title || "";
-    return docTitle.toLowerCase().includes(query.toLowerCase());
-  });
+  const filteredRooms = useMemo(() => {
+    const normalizedQuery = deferredQuery.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return [];
+    }
+
+    return (data?.rooms ?? []).filter((room) => {
+      const title = room.document?.title?.toLowerCase() ?? "";
+      return title.includes(normalizedQuery);
+    });
+  }, [data?.rooms, deferredQuery]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
           variant="ghost"
-          className="w-full justify-start text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="h-11 w-full justify-start rounded-xl border border-transparent px-3 text-stone-600 hover:border-[#e8e6e1] hover:bg-white hover:text-stone-900"
         >
-          <Search className="w-4 h-4 mr-2" />
+          <Search className="mr-2 h-4 w-4 text-stone-400" />
           <span className="flex-1 text-left">Search</span>
-          <Kbd className="border pointer-events-none">⌘ K</Kbd>
+          <Kbd className="pointer-events-none border border-[#e6e2dc] bg-[#fbfbfa] text-stone-500">
+            Ctrl K
+          </Kbd>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl p-0 gap-0">
-        <div className="flex items-center border-b px-4 py-3">
-          <Search className="w-5 h-5 text-gray-400 mr-3" />
+      <DialogContent className="max-w-2xl gap-0 overflow-hidden rounded-[24px] border border-[#ebe9e6] bg-white p-0">
+        <div className="flex items-center border-b border-[#f1efeb] px-4 py-3">
+          <Search className="mr-3 h-5 w-5 text-stone-400" />
           <Input
-            placeholder="search docucments..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="border-0 focus-visible:ring-0 text-base"
             autoFocus
+            className="border-0 text-base focus-visible:ring-0"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search your notes..."
+            value={query}
           />
         </div>
 
         <div className="max-h-[400px] overflow-y-auto p-2">
           {!query ? (
-            <div className="px-4 py-8 text-center text-sm text-gray-500">
-              <p>start typing to search documents</p>
+            <div className="px-4 py-8 text-center text-sm text-stone-500">
+              <p>Start typing to search documents.</p>
             </div>
-          ) : filteredDocs && filteredDocs.length > 0 ? (
+          ) : filteredRooms.length > 0 ? (
             <div className="space-y-1">
-              {filteredDocs.map((doc) => (
+              {filteredRooms.map((room) => (
                 <SearchResultItem
-                  key={doc.id}
-                  docId={doc.id}
-                  query={query}
+                  key={room.id}
+                  createdAt={room.createdAt}
                   onClick={() => {
-                    router.push(`/documents/${doc.id}`);
+                    router.push(`/documents/${room.id}`);
                     setOpen(false);
                   }}
+                  title={room.document?.title ?? "Untitled Document"}
                 />
               ))}
             </div>
           ) : (
-            <div className="px-4 py-8 text-center text-sm text-gray-500">
-              <p>no documents found</p>
+            <div className="px-4 py-8 text-center text-sm text-stone-500">
+              <p>No documents found.</p>
             </div>
           )}
         </div>

@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useRoom } from "@liveblocks/react/suspense";
+import { Users } from "lucide-react";
+import { useCallback, useEffect, useState, useTransition } from "react";
+import { toast } from "sonner";
+import useOwner from "@/lib/useOwner";
+import { removeUser } from "@/services/users";
+import type { RoomUser } from "@/types/user";
+import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,13 +17,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { Button } from "../ui/button";
-import { useUser } from "@clerk/nextjs";
-import useOwner from "@/lib/useOwner";
-import { useRoom } from "@liveblocks/react/suspense";
-import { toast } from "sonner";
-import { removeUser } from "@/services/users";
-import { RoomUser } from "@/types/user";
 
 export default function ManageUsers() {
   const { user } = useUser();
@@ -23,101 +24,112 @@ export default function ManageUsers() {
   const room = useRoom();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [usersInRoom, setUsersInRoom] = useState<RoomUser[]>([]);
 
-  useEffect(() => {
-    if (!room.id) return;
+  const loadUsers = useCallback(async () => {
+    if (!room.id) {
+      return;
+    }
 
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
+    try {
+      setIsLoading(true);
 
-        const response = await fetch(`/api/rooms/${room.id}/users`);
-
-        if (response.ok) {
-          const { users } = await response.json();
-          console.log("Fetched users in room:", users);
-          setUsersInRoom(users);
-        }
-      } catch (error) {
-        console.error("Error fetching users in room:", error);
-      } finally {
-        setLoading(false);
+      const response = await fetch(`/api/rooms/${room.id}/users`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch room users");
       }
-    };
-    fetchUsers();
+
+      const payload = (await response.json()) as { users: RoomUser[] };
+      setUsersInRoom(payload.users);
+    } catch (error) {
+      console.error("Error fetching users in room:", error);
+      setUsersInRoom([]);
+      toast.error("Unable to load collaborators.");
+    } finally {
+      setIsLoading(false);
+    }
   }, [room.id]);
 
-  const handleDelete = (userId: string) => {
-    startTransition(async () => {
-      if (!user) return;
+  useEffect(() => {
+    void loadUsers();
+  }, [loadUsers]);
 
+  function handleDelete(userId: string) {
+    startTransition(async () => {
       const { success } = await removeUser(room.id, userId);
 
-      if (success) {
-        toast.success("User removed from the room successfully");
-        // Refresh the users list after removing
-        const response = await fetch(`/api/rooms/${room.id}/users`);
-        if (response.ok) {
-          const { users } = await response.json();
-          setUsersInRoom(users);
-        }
-      } else {
-        toast.error("Failed to remove user from the room");
+      if (!success) {
+        toast.error("Failed to remove collaborator.");
+        return;
       }
-    });
-  };
 
-  const currentUserId = user?.id;
+      toast.success("Collaborator removed.");
+      await loadUsers();
+    });
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant={"outline"}>
-        <DialogTrigger>
-          users {loading ? "..." : usersInRoom.length}
-        </DialogTrigger>
-      </Button>
-      <DialogContent>
+      <DialogTrigger asChild>
+        <Button className="rounded-full" size="sm" variant="outline">
+          <Users className="h-4 w-4" />
+          People {isLoading ? "..." : usersInRoom.length}
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Invite a user to collaborate</DialogTitle>
+          <DialogTitle>People with access</DialogTitle>
           <DialogDescription>
-            What is the email of the user you want to invite?
+            Review who can open this note and remove collaborators when needed.
           </DialogDescription>
         </DialogHeader>
 
-        <hr className="my-2" />
-
-        <div className="flex flex-col space-y-2">
-          {loading ? (
-            <p className="text-sm text-gray-500">Loading users...</p>
+        <div className="space-y-2">
+          {isLoading ? (
+            <p className="text-sm text-stone-500">Loading collaborators...</p>
           ) : usersInRoom.length === 0 ? (
-            <p className="text-sm text-gray-500">No users found</p>
+            <p className="text-sm text-stone-500">No collaborators found.</p>
           ) : (
-            usersInRoom.map((doc) => (
-              <div key={doc.id} className="flex items-center justify-between">
-                <p className="font-light">
-                  {doc.userId === currentUserId
-                    ? `You (${doc.userId})`
-                    : doc.userId}
-                </p>
+            usersInRoom.map((member) => {
+              const isCurrentUser = member.userId === user?.id;
 
-                <div className="flex items-center gap-2">
-                  <Button variant={"outline"}>{doc.role}</Button>
+              return (
+                <div
+                  className="flex items-center justify-between gap-4 rounded-2xl border border-[#ebe9e6] px-4 py-3"
+                  key={member.id}
+                >
+                  <div>
+                    <p className="text-sm font-medium text-stone-900">
+                      {isCurrentUser
+                        ? "You"
+                        : (member.name ?? member.email ?? member.userId)}
+                    </p>
+                    <p className="text-xs text-stone-500">
+                      {member.email || member.userId}
+                    </p>
+                  </div>
 
-                  {isOwner && doc.userId !== currentUserId && (
-                    <Button
-                      variant={"destructive"}
-                      onClick={() => handleDelete(doc.userId)}
-                      disabled={isPending}
-                      size={"sm"}
-                    >
-                      {isPending ? "Removing..." : "Remove"}
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium capitalize text-stone-600">
+                      {member.role}
+                    </span>
+
+                    {isOwner && !isCurrentUser && (
+                      <Button
+                        disabled={isPending}
+                        onClick={() => handleDelete(member.userId)}
+                        size="sm"
+                        variant="ghost"
+                      >
+                        {isPending ? "Removing..." : "Remove"}
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </DialogContent>

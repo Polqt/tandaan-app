@@ -1,6 +1,12 @@
 "use client";
 
-import { FormEvent, useState, useTransition } from "react";
+import { UserPlus2 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { type FormEvent, useState, useTransition } from "react";
+import { toast } from "sonner";
+import { getAllUsers, getRoomUsers, inviteUser } from "@/services/users";
+import type { User } from "@/types/user";
+import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,13 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { Button } from "../ui/button";
-import { usePathname } from "next/navigation";
-import { getAllUsers, getRoomUsers, inviteUser } from "@/services/users";
-import { toast } from "sonner";
 import { Input } from "../ui/input";
-import { User } from "@/types/user";
-import { Users2 } from "lucide-react";
 
 export default function InviteUser() {
   const [isOpen, setIsOpen] = useState(false);
@@ -78,9 +78,10 @@ export default function InviteUser() {
         }
       }}
     >
-      <Button asChild variant={"ghost"} className="hover:text-blue-800">
+      <Button asChild className="rounded-full" size="sm" variant="outline">
         <DialogTrigger>
-          <Users2 className="w-5 h-5" />
+          <UserPlus2 className="h-4 w-4" />
+          Invite
         </DialogTrigger>
       </Button>
       <DialogContent>
@@ -112,7 +113,8 @@ export default function InviteUser() {
             </p>
             {roomUserIds.length > 0 && (
               <p className="text-xs text-muted-foreground">
-                {roomUserIds.length} user{roomUserIds.length === 1 ? "" : "s"} already in this room.
+                {roomUserIds.length} user{roomUserIds.length === 1 ? "" : "s"}{" "}
+                already in this room.
               </p>
             )}
           </div>

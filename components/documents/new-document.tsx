@@ -21,13 +21,13 @@ export default function NewDocument() {
 
   return (
     <Button
-      onClick={handleCreateNewDocument}
+      className="h-11 w-full justify-start rounded-xl border border-transparent px-3 text-stone-700 hover:border-[#e8e6e1] hover:bg-white"
       disabled={isPending}
-      className="w-full justify-start"
+      onClick={handleCreateNewDocument}
       variant="ghost"
     >
-      <Plus className="w-4 h-4 mr-2" />
-      <span className="text-left flex-1">
+      <Plus className="mr-2 h-4 w-4" />
+      <span className="flex-1 text-left">
         {isPending ? "Creating..." : "New Document"}
       </span>
     </Button>

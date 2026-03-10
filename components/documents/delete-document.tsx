@@ -1,6 +1,11 @@
 "use client";
 
+import { Trash2Icon } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
+import { deleteDocument } from "@/services/actions";
+import { Button } from "../ui/button";
 import {
   Dialog,
   DialogClose,
@@ -11,11 +16,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { Button } from "../ui/button";
-import { usePathname, useRouter } from "next/navigation";
-import { deleteDocument } from "@/services/actions";
-import { toast } from "sonner";
-import { Trash2Icon } from "lucide-react";
 
 export default function DeleteDocument() {
   const router = useRouter();
@@ -40,9 +40,13 @@ export default function DeleteDocument() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant={"ghost"} className="hover:text-red-800">
+      <Button
+        asChild
+        className="rounded-full text-stone-500 hover:text-red-700"
+        variant={"ghost"}
+      >
         <DialogTrigger>
-          <Trash2Icon className="w-5 h-5" />
+          <Trash2Icon className="h-4 w-4" />
         </DialogTrigger>
       </Button>
       <DialogContent>

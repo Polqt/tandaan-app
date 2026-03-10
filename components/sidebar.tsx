@@ -1,139 +1,151 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
 import { MenuIcon } from "lucide-react";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
-import { useMemo } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useRooms } from "@/hooks/useRooms";
+import type { DocumentData } from "@/types/documents";
+import NewDocument from "./documents/new-document";
+import SearchDialog from "./search-dialog";
 import SidebarOption from "./sidebar-option";
 import { Button } from "./ui/button";
-import SearchDialog from "./search-dialog";
-import NewDocument from "./documents/new-document";
-import Link from "next/link";
-import { useRooms } from "@/hooks/useRooms";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
 
 interface RoomDocument {
-  id: string;
-  roomId: string;
   createdAt: string;
+  document?: Partial<DocumentData>;
+  id: string;
   role: "owner" | "editor";
+  roomId: string;
   userId: string;
-  document?: any;
+}
+
+function createGroupedRooms(rooms: RoomDocument[]) {
+  return rooms.reduce(
+    (groups, room) => {
+      if (room.role === "owner") {
+        groups.owner.push(room);
+      } else {
+        groups.editor.push(room);
+      }
+
+      return groups;
+    },
+    { editor: [] as RoomDocument[], owner: [] as RoomDocument[] },
+  );
+}
+
+function SidebarSection({
+  rooms,
+  title,
+}: {
+  rooms: RoomDocument[];
+  title: string;
+}) {
+  if (rooms.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="space-y-2">
+      <p className="px-3 text-[11px] font-medium uppercase tracking-[0.18em] text-stone-400">
+        {title}
+      </p>
+      <div className="space-y-1">
+        {rooms.map((room) => (
+          <SidebarOption
+            href={`/documents/${room.id}`}
+            id={room.id}
+            key={room.id}
+            title={room.document?.title ?? "Untitled Document"}
+          />
+        ))}
+      </div>
+    </section>
+  );
 }
 
 export default function Sidebar() {
-  const { data, isLoading, error } = useRooms();
+  const pathname = usePathname();
+  const { isLoaded, userId } = useAuth();
+  const isReplayPage = pathname.startsWith("/replay/");
+  const { data, error, isLoading } = useRooms(Boolean(userId) && !isReplayPage);
 
-  const groupedData = useMemo(() => {
-    if (!data?.rooms || !Array.isArray(data.rooms)) {
-      return { owner: [], editor: [] };
-    }
-    const owner: RoomDocument[] = [];
-    const editor: RoomDocument[] = [];
+  if (!isLoaded || !userId || isReplayPage) {
+    return null;
+  }
 
-    data.rooms.forEach((doc: any) => {
-      const item: RoomDocument = {
-        id: doc.roomid || doc.id,
-        roomId: doc.roomId || doc.id,
-        createdAt: doc.createdAt,
-        role: doc.role,
-        userId: doc.userId,
-        document: doc.document,
-      };
+  const rooms = (data?.rooms ?? []).map<RoomDocument>((room) => ({
+    createdAt: typeof room.createdAt === "string" ? room.createdAt : "",
+    document:
+      room.document && typeof room.document === "object"
+        ? (room.document as Partial<DocumentData>)
+        : undefined,
+    id: room.roomid || room.id,
+    role: room.role,
+    roomId: room.roomId || room.id,
+    userId: room.userId,
+  }));
 
-      if (item.role === "owner") {
-        owner.push(item);
-      } else if (item.role === "editor") {
-        editor.push(item);
-      }
-    });
+  const groupedRooms = createGroupedRooms(rooms);
 
-    return { owner, editor };
-  }, [data?.rooms]);
+  const content = (
+    <div className="flex h-full flex-col bg-[#f7f6f3]">
+      <div className="border-b border-[#ebe9e6] px-3 pb-4 pt-5">
+        <div className="mb-4 px-3">
+          <Link
+            className="text-[11px] uppercase tracking-[0.2em] text-stone-400"
+            href="/documents"
+          >
+            Workspace
+          </Link>
+        </div>
 
-  const menuOptions = useMemo(() => (
-    <div className="flex flex-col h-full">
-      <div className="p-2 mb-2">
-        <div className="relative">
+        <div className="space-y-2">
           <SearchDialog />
+          <NewDocument />
         </div>
       </div>
 
-      <div className="px-2 mb-4">
-        <NewDocument />
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-2 space-y-6 border-t border-gray-600 pt-4">
+      <div className="flex-1 space-y-6 overflow-y-auto px-3 py-5">
         {isLoading ? (
-          <div className="text-center py-8 text-gray-400">
-            <p className="text-sm">Loading documents...</p>
-          </div>
+          <p className="px-3 text-sm text-stone-500">Loading notes...</p>
         ) : error ? (
-          <div className="text-center py-8 text-red-400">
-            <p className="text-sm">Error loading documents</p>
-          </div>
-        ) : groupedData.owner.length === 0 &&
-          groupedData.editor.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">
-            <p className="text-sm">No documents yet</p>
+          <p className="px-3 text-sm text-red-600">Unable to load notes.</p>
+        ) : rooms.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[#dedbd5] bg-white/70 px-4 py-5 text-sm text-stone-500">
+            Create your first note to start the workspace.
           </div>
         ) : (
           <>
-            {groupedData.owner.length > 0 && (
-              <div>
-                <h2 className="text-xs font-semibold text-gray-500 hover:text-gray-900 uppercase tracking-wider mb-2 px-2">
-                  <Link href="/documents">My Documents</Link>
-                </h2>
-                <div className="space-y-1">
-                  {groupedData.owner.map((doc) => (
-                    <SidebarOption
-                      title={doc.document?.title ?? "Untitled Document"}
-                      key={doc.id}
-                      id={doc.id}
-                      href={`/documents/${doc.id}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {groupedData.editor.length > 0 && (
-              <div>
-                <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">
-                  Shared With Me
-                </h2>
-                <div className="space-y-1">
-                  {groupedData.editor.map((doc) => (
-                    <SidebarOption
-                      title={doc.document?.title ?? "Untitled Document"}
-                      key={doc.id}
-                      id={doc.id}
-                      href={`/documents/${doc.id}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+            <SidebarSection rooms={groupedRooms.owner} title="My Documents" />
+            <SidebarSection
+              rooms={groupedRooms.editor}
+              title="Shared With Me"
+            />
           </>
         )}
       </div>
     </div>
-  ), [isLoading, error, groupedData]);
+  );
 
   return (
-    <div className="min-h-full bg-gray-50 dark:bg-gray-900 border-r border-gray-600 dark:border-gray-800">
-      <div className="md:hidden p-2">
+    <aside className="min-h-full border-r border-[#ebe9e6] bg-[#f7f6f3]">
+      <div className="p-2 md:hidden">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MenuIcon className="w-5 h-5" />
+            <Button size="icon" variant="ghost">
+              <MenuIcon className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0">
+          <SheetContent className="w-72 p-0" side="left">
             <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-            <div className="h-full">{menuOptions}</div>
+            <div className="h-full">{content}</div>
           </SheetContent>
         </Sheet>
       </div>
-      <div className="hidden md:block h-full w-64">{menuOptions}</div>
-    </div>
+      <div className="hidden h-full w-72 md:block">{content}</div>
+    </aside>
   );
 }

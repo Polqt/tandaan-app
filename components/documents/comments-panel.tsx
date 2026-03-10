@@ -2,8 +2,10 @@
 
 import { useThreads } from "@liveblocks/react/suspense";
 import { Composer, Thread } from "@liveblocks/react-ui";
+import { MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Spinner } from "../ui/spinner";
+import { Button } from "../ui/button";
+import { ScrollArea } from "../ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -12,9 +14,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
-import { Button } from "../ui/button";
-import { MessageSquare } from "lucide-react";
-import { ScrollArea } from "../ui/scroll-area";
+import { Spinner } from "../ui/spinner";
 
 export default function CommentsPanel() {
   const { threads } = useThreads();
@@ -37,12 +37,13 @@ export default function CommentsPanel() {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button
-          variant={"ghost"}
+          className="rounded-full"
           size={"sm"}
           onClick={() => setIsOpen(true)}
-          className="hover:text-green-800"
+          variant={"outline"}
         >
-          <MessageSquare className="w-5 h-5" />
+          <MessageSquare className="h-4 w-4" />
+          Comments
         </Button>
       </SheetTrigger>
       <SheetContent>
