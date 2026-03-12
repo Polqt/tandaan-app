@@ -1,36 +1,30 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
-import { getFirestore } from "firebase-admin/firestore";
+import { FieldPath, getFirestore } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { adminApp } from "@/firebase-admin";
 import type { RoomUser } from "@/types/user";
 
 const db = getFirestore(adminApp);
 
-async function getRoomMemberships(roomId: string) {
-  const userRefs = await db.collection("users").listDocuments();
+type MembershipEntry = {
+  membership: FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>;
+  userId: string;
+};
 
-  const membershipResults = await Promise.all(
-    userRefs.map(async (userRef) => {
-      const membership = await userRef.collection("rooms").doc(roomId).get();
-      if (!membership.exists) {
-        return null;
-      }
+async function getRoomMemberships(roomId: string): Promise<MembershipEntry[]> {
+  const memberships = await db
+    .collectionGroup("rooms")
+    .where(FieldPath.documentId(), "==", roomId)
+    .get();
 
-      return {
-        membership,
-        userId: userRef.id,
-      };
-    }),
-  );
+  return memberships.docs.flatMap((membership) => {
+    const userDoc = membership.ref.parent.parent;
+    if (!userDoc) {
+      return [];
+    }
 
-  return membershipResults.filter(
-    (
-      result,
-    ): result is {
-      membership: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>;
-      userId: string;
-    } => result !== null,
-  );
+    return [{ membership, userId: userDoc.id }];
+  });
 }
 
 export async function GET(
@@ -39,8 +33,9 @@ export async function GET(
 ) {
   try {
     const { userId } = await auth();
-    if (!userId)
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const { roomId } = await params;
 
@@ -59,46 +54,50 @@ export async function GET(
     }
 
     const memberships = await getRoomMemberships(roomId);
-    const clerk = await clerkClient();
-
-    const resolvedProfiles = await Promise.all(
-      memberships.map(async ({ userId: memberUserId }) => {
-        try {
-          const user = await clerk.users.getUser(memberUserId);
-          return [
-            memberUserId,
-            {
-              email: user.emailAddresses[0]?.emailAddress || "",
-              image: user.imageUrl || "",
-              name: user.fullName || user.firstName || "Anonymous",
-            },
-          ] as const;
-        } catch (error) {
-          console.error(`Error resolving room user ${memberUserId}:`, error);
-          return [
-            memberUserId,
-            {
-              email: "",
-              image: "",
-              name: "Unknown user",
-            },
-          ] as const;
-        }
-      }),
+    const memberUserIds = Array.from(
+      new Set(memberships.map(({ userId: memberUserId }) => memberUserId)),
     );
 
-    const profilesByUserId = new Map(resolvedProfiles);
+    const profileFallback = {
+      email: "",
+      image: "",
+      name: "Unknown user",
+    };
+
+    const profilesByUserId = new Map(
+      memberUserIds.map((memberUserId) => [memberUserId, profileFallback]),
+    );
+
+    if (memberUserIds.length > 0) {
+      try {
+        const clerk = await clerkClient();
+        const users = await clerk.users.getUserList({
+          limit: memberUserIds.length,
+          userId: memberUserIds,
+        });
+
+        for (const user of users.data) {
+          profilesByUserId.set(user.id, {
+            email: user.emailAddresses[0]?.emailAddress || "",
+            image: user.imageUrl || "",
+            name: user.fullName || user.firstName || "Anonymous",
+          });
+        }
+      } catch (error) {
+        console.error("Error resolving room users:", error);
+      }
+    }
 
     const users = memberships.map<RoomUser>(
       ({ membership, userId: memberUserId }) => {
         const data = membership.data() ?? {};
-        const profile = profilesByUserId.get(memberUserId);
+        const profile = profilesByUserId.get(memberUserId) ?? profileFallback;
 
         return {
-          email: profile?.email || "",
+          email: profile.email,
           id: memberUserId,
-          image: profile?.image || "",
-          name: profile?.name || "Unknown user",
+          image: profile.image,
+          name: profile.name,
           roomId: typeof data.roomId === "string" ? data.roomId : roomId,
           role: data.role === "owner" ? "owner" : "editor",
           userId: typeof data.userId === "string" ? data.userId : memberUserId,

@@ -1,9 +1,8 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useDocument, useUpdateDocument } from "@/hooks/useDocument";
-import useOwner from "@/lib/useOwner";
+import type { DocumentProps } from "@/types/documents";
 import Avatars from "../avatars";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -11,13 +10,12 @@ import InviteUser from "../user/invite-user";
 import ManageUsers from "../user/manage-users";
 import CollaborationReplay from "./collaboration-replay";
 import Editor from "./editor";
-import { DocumentProps } from "@/types/documents";
 
 export default function Document({ id }: DocumentProps) {
   const [input, setInput] = useState("");
   const { data } = useDocument(id);
   const { isPending, mutate: updateDocument } = useUpdateDocument();
-  const isOwner = useOwner();
+  const isOwner = data?.role === "owner";
 
   useEffect(() => {
     if (data?.title) {

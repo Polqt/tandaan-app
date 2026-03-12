@@ -1,7 +1,7 @@
-import { adminApp } from "@/firebase-admin";
-import { requireAuth, apiErrorResponse } from "@/lib/api-utils";
 import { getFirestore } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
+import { adminApp } from "@/firebase-admin";
+import { apiErrorResponse, requireAuth } from "@/lib/api-utils";
 
 const db = getFirestore(adminApp);
 
@@ -18,18 +18,49 @@ export async function GET() {
       .collection("rooms");
     const roomSnap = await roomRef.get();
 
-    const documents = await Promise.all(
-      roomSnap.docs.map(async (doc) => {
-        const roomId = doc.id;
-        const docSnap = await db.collection("documents").doc(roomId).get();
-        const data = docSnap.data();
+    const roomEntries = roomSnap.docs.map((roomDoc) => {
+      const roomData = roomDoc.data() as Record<string, unknown>;
+      const roomId =
+        typeof roomData.roomId === "string" && roomData.roomId.length > 0
+          ? roomData.roomId
+          : roomDoc.id;
 
-        return {
-          id: roomId,
-          title: data?.title ?? "Untitled Document",
-        };
-      }),
+      return {
+        id: roomDoc.id,
+        roomId,
+      };
+    });
+
+    const documentIds = Array.from(
+      new Set(roomEntries.map((entry) => entry.roomId)),
     );
+    const documentRefs = documentIds.map((documentId) =>
+      db.collection("documents").doc(documentId),
+    );
+    const documentSnapshots =
+      documentRefs.length > 0 ? await db.getAll(...documentRefs) : [];
+    const documentsById = new Map(
+      documentSnapshots
+        .filter((documentSnapshot) => documentSnapshot.exists)
+        .map((documentSnapshot) => [
+          documentSnapshot.id,
+          documentSnapshot.data() as Record<string, unknown>,
+        ]),
+    );
+
+    const documents = roomEntries.map(({ roomId }) => {
+      const documentData = documentsById.get(roomId);
+      const title =
+        typeof documentData?.title === "string" &&
+        documentData.title.trim().length > 0
+          ? documentData.title
+          : "Untitled Document";
+
+      return {
+        id: roomId,
+        title,
+      };
+    });
 
     return NextResponse.json({ documents });
   } catch (error) {

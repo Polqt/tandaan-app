@@ -1,0 +1,4 @@
+interface:
+  display_name: "Performance Optimization"
+  short_description: "Measure and remove real app bottlenecks"
+  default_prompt: "Use $performance-optimization to profile this app and make incremental performance improvements."

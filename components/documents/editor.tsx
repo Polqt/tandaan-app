@@ -79,7 +79,10 @@ export default function Editor() {
   const selfInfo = useSelf((self) => self.info);
   const provider = useMemo(() => getYjsProviderForRoom(room), [room]);
   const [isSynced, setIsSynced] = useState(provider.synced);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeSaveControllerRef = useRef<AbortController | null>(null);
+  const saveRevisionRef = useRef(0);
+  const lastSavedContentRef = useRef("");
   const lastSnapshotAtRef = useRef(0);
   const lastSnapshotContentRef = useRef("");
 
@@ -115,6 +118,8 @@ export default function Editor() {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
+
+      activeSaveControllerRef.current?.abort();
     };
   }, []);
 
@@ -157,7 +162,21 @@ export default function Editor() {
         clearTimeout(saveTimeoutRef.current);
       }
 
+      const revision = ++saveRevisionRef.current;
+
       saveTimeoutRef.current = setTimeout(async () => {
+        if (revision !== saveRevisionRef.current) {
+          return;
+        }
+
+        if (!content || content === lastSavedContentRef.current) {
+          return;
+        }
+
+        activeSaveControllerRef.current?.abort();
+        const controller = new AbortController();
+        activeSaveControllerRef.current = controller;
+
         try {
           const response = await fetch(`/api/documents/${room.id}`, {
             body: JSON.stringify({ content }),
@@ -165,16 +184,30 @@ export default function Editor() {
               "Content-Type": "application/json",
             },
             method: "PATCH",
+            signal: controller.signal,
           });
 
           if (!response.ok) {
             throw new Error("Failed to save document");
           }
 
+          if (revision !== saveRevisionRef.current) {
+            return;
+          }
+
+          lastSavedContentRef.current = content;
           await createSnapshot(content);
         } catch (error) {
+          if (error instanceof Error && error.name === "AbortError") {
+            return;
+          }
+
           console.error("Error saving document:", error);
           toast.error("Failed to save document. Changes may be lost.");
+        } finally {
+          if (activeSaveControllerRef.current === controller) {
+            activeSaveControllerRef.current = null;
+          }
         }
       }, DOCUMENT_SAVE_DELAY_MS);
     },

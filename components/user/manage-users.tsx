@@ -3,9 +3,8 @@
 import { useUser } from "@clerk/nextjs";
 import { useRoom } from "@liveblocks/react/suspense";
 import { Users } from "lucide-react";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import useOwner from "@/lib/useOwner";
 import { removeUser } from "@/services/users";
 import type { RoomUser } from "@/types/user";
 import { Button } from "../ui/button";
@@ -20,12 +19,19 @@ import {
 
 export default function ManageUsers() {
   const { user } = useUser();
-  const isOwner = useOwner();
   const room = useRoom();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [usersInRoom, setUsersInRoom] = useState<RoomUser[]>([]);
+
+  const isOwner = useMemo(
+    () =>
+      usersInRoom.some(
+        (member) => member.userId === user?.id && member.role === "owner",
+      ),
+    [user?.id, usersInRoom],
+  );
 
   const loadUsers = useCallback(async () => {
     if (!room.id) {
@@ -51,10 +57,6 @@ export default function ManageUsers() {
     }
   }, [room.id]);
 
-  useEffect(() => {
-    void loadUsers();
-  }, [loadUsers]);
-
   function handleDelete(userId: string) {
     startTransition(async () => {
       const { success } = await removeUser(room.id, userId);
@@ -70,7 +72,15 @@ export default function ManageUsers() {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (open) {
+          void loadUsers();
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button className="rounded-full" size="sm" variant="outline">
           <Users className="h-4 w-4" />

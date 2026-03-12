@@ -1,9 +1,51 @@
-import { adminApp } from "@/firebase-admin";
-import { requireAuth, apiErrorResponse } from "@/lib/api-utils";
 import { getFirestore } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
+import { adminApp } from "@/firebase-admin";
+import { apiErrorResponse, requireAuth } from "@/lib/api-utils";
 
 const db = getFirestore(adminApp);
+
+type FirestoreTimestamp = {
+  toDate: () => Date;
+};
+
+function toIsoTimestamp(value: unknown): string | undefined {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  if (value && typeof value === "object" && "toDate" in value) {
+    return (value as FirestoreTimestamp).toDate().toISOString();
+  }
+
+  return undefined;
+}
+
+function toRoomDocument(
+  id: string,
+  source: Record<string, unknown> | undefined,
+) {
+  if (!source) {
+    return null;
+  }
+
+  const title =
+    typeof source.title === "string" && source.title.trim().length > 0
+      ? source.title
+      : "Untitled Document";
+
+  return {
+    id,
+    replayShareId:
+      typeof source.replayShareId === "string" ? source.replayShareId : null,
+    title,
+    updatedAt: toIsoTimestamp(source.updatedAt) ?? null,
+  };
+}
 
 export async function GET() {
   try {
@@ -18,23 +60,47 @@ export async function GET() {
       .collection("rooms")
       .get();
 
-    // Fetch associated documents for each room
-    const rooms = await Promise.all(
-      snap.docs.map(async (roomDoc) => {
-        const room = roomDoc.data() as any;
-        const docId = room.roomId ?? roomDoc.id;
-        const docSnap = await db.collection("documents").doc(docId).get();
-        const document = docSnap.exists ? docSnap.data() : null;
-        return {
-          id: roomDoc.id,
-          roomId: docId,
-          ...room,
-          document,
-        };
-      }),
+    const roomEntries = snap.docs.map((roomDoc) => {
+      const room = roomDoc.data() as Record<string, unknown>;
+      const roomId =
+        typeof room.roomId === "string" && room.roomId.length > 0
+          ? room.roomId
+          : roomDoc.id;
+
+      return {
+        id: roomDoc.id,
+        room,
+        roomId,
+      };
+    });
+
+    const documentIds = Array.from(
+      new Set(roomEntries.map((entry) => entry.roomId)),
     );
+    const documentRefs = documentIds.map((documentId) =>
+      db.collection("documents").doc(documentId),
+    );
+    const documentSnapshots =
+      documentRefs.length > 0 ? await db.getAll(...documentRefs) : [];
+    const documentsById = new Map(
+      documentSnapshots
+        .filter((documentSnapshot) => documentSnapshot.exists)
+        .map((documentSnapshot) => [
+          documentSnapshot.id,
+          documentSnapshot.data() as Record<string, unknown>,
+        ]),
+    );
+
+    const rooms = roomEntries.map(({ id, room, roomId }) => ({
+      id,
+      ...room,
+      createdAt: toIsoTimestamp(room.createdAt) ?? null,
+      roomId,
+      document: toRoomDocument(roomId, documentsById.get(roomId)),
+    }));
+
     return NextResponse.json({ rooms });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching rooms:", error);
     return apiErrorResponse("Internal Server Error", 500);
   }
