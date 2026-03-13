@@ -17,7 +17,7 @@ export default function SearchDialog() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
-  const { data } = useRooms(Boolean(user?.id) && open);
+  const { data } = useRooms(user?.id, Boolean(user?.id) && open);
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
@@ -57,7 +57,7 @@ export default function SearchDialog() {
           </Kbd>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl gap-0 overflow-hidden rounded-[24px] border border-[#ebe9e6] bg-white p-0">
+      <DialogContent className="max-w-2xl gap-0 overflow-hidden rounded-3xl border border-[#ebe9e6] bg-white p-0">
         <div className="flex items-center border-b border-[#f1efeb] px-4 py-3">
           <Search className="mr-3 h-5 w-5 text-stone-400" />
           <Input

@@ -11,7 +11,11 @@ type LayoutShellProps = {
 
 function isProductRoute(pathname: string) {
   return (
-    pathname === "/" || pathname === "/docs" || pathname.startsWith("/replay/")
+    pathname === "/" ||
+    pathname === "/pricing" ||
+    pathname.startsWith("/docs") ||
+    pathname.startsWith("/blog") ||
+    pathname.startsWith("/replay/")
   );
 }
 
@@ -23,11 +27,11 @@ export default function LayoutShell({ children }: LayoutShellProps) {
     <>
       <Header />
       {isProductExperience ? (
-        <main className="min-h-[calc(100vh-89px)] bg-[radial-gradient(circle_at_top,rgba(24,115,104,0.16),transparent_38%),linear-gradient(180deg,#f8fbfa_0%,#eef3f1_100%)]">
+        <main className="min-h-[calc(100vh-65px)] bg-[radial-gradient(ellipse_at_10%_0%,oklch(0.68_0.19_25/0.08),transparent_40%),radial-gradient(ellipse_at_90%_20%,oklch(0.55_0.2_260/0.07),transparent_35%),linear-gradient(180deg,#f9faf9_0%,#f1f4f2_100%)]">
           {children}
         </main>
       ) : (
-        <div className="flex min-h-[calc(100vh-89px)]">
+        <div className="flex min-h-[calc(100vh-65px)]">
           <Sidebar />
           <main className="flex-1 overflow-y-auto bg-slate-100 p-4">
             {children}

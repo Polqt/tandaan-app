@@ -70,7 +70,10 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { isLoaded, userId } = useAuth();
   const isReplayPage = pathname.startsWith("/replay/");
-  const { data, error, isLoading } = useRooms(Boolean(userId) && !isReplayPage);
+  const { data, error, isLoading } = useRooms(
+    userId,
+    Boolean(userId) && !isReplayPage,
+  );
 
   if (!isLoaded || !userId || isReplayPage) {
     return null;

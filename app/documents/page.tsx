@@ -9,7 +9,7 @@ import { useRooms } from "@/hooks/useRooms";
 
 export default function DocumentsPage() {
   const { userId } = useAuth();
-  const { data, isLoading } = useRooms(Boolean(userId));
+  const { data, isLoading } = useRooms(userId, Boolean(userId));
   const rooms = data?.rooms || [];
 
   if (!userId) {
