@@ -45,6 +45,13 @@
   --color-notion-sidebar: oklch(0.97 0 0);
   --color-notion-text: oklch(0.25 0 0);
   --color-notion-border: oklch(0.92 0 0 / 60%);
+
+  --color-coral: oklch(0.68 0.19 25);
+  --color-coral-light: oklch(0.92 0.06 25);
+  --color-lime: oklch(0.82 0.19 130);
+  --color-lime-light: oklch(0.95 0.06 130);
+  --color-cobalt: oklch(0.55 0.2 260);
+  --color-cobalt-light: oklch(0.92 0.04 260);
 }
 
 .font-display {

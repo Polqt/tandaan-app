@@ -15,22 +15,23 @@ export default function HeroScene() {
 
   return (
     <div
-      className="relative mx-auto h-[28rem] w-full max-w-[34rem] [perspective:1400px]"
+      className="relative mx-auto h-120 w-full max-w-xl perspective-[1400px]"
       style={{ transformStyle: "preserve-3d" }}
     >
-      <div className="absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_center,_rgba(15,118,110,0.16),_transparent_62%)] blur-xl" />
+
+      <div className="absolute inset-0 rounded-[2.5rem] bg-[radial-gradient(circle_at_40%_30%,oklch(0.68_0.19_25/0.14),transparent_55%),radial-gradient(circle_at_70%_70%,oklch(0.55_0.2_260/0.1),transparent_45%)] blur-xl" />
 
       <m.div
         animate={
           shouldReduceMotion
             ? undefined
             : {
-                rotateX: [10, 8, 10],
-                rotateY: [-14, -11, -14],
-                y: [0, -6, 0],
+                rotateX: [10, 7, 10],
+                rotateY: [-14, -10, -14],
+                y: [0, -8, 0],
               }
         }
-        className="absolute inset-x-8 top-10 transform-gpu rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_32px_90px_rgba(15,23,42,0.14)]"
+        className="absolute inset-x-6 top-8 transform-gpu rounded-4xl border border-white/60 bg-white/85 p-6 shadow-[0_32px_100px_rgba(11,17,32,0.16)] backdrop-blur-sm"
         style={{
           transform: "rotateX(10deg) rotateY(-14deg) translateZ(0px)",
           transformStyle: "preserve-3d",
@@ -39,55 +40,54 @@ export default function HeroScene() {
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
               Replay Console
             </p>
-            <h3 className="mt-2 text-2xl font-semibold text-slate-950">
+            <h3 className="mt-2 text-xl font-bold text-slate-950">
               Storyboard every note revision
             </h3>
           </div>
-          <div className="rounded-2xl bg-[#0f766e] p-3 text-white">
+          <div className="rounded-2xl bg-coral p-3 text-white shadow-sm">
             <Layers3 className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-[1.25fr_0.75fr]">
-          <div className="rounded-[1.5rem] border border-slate-200 bg-slate-950 p-5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-            <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-slate-400">
+        <div className="mt-5 grid gap-4 md:grid-cols-[1.25fr_0.75fr]">
+          <div className="rounded-3xl border border-slate-800 bg-[#0b1120] p-5 text-white">
+            <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               <span>Live Session</span>
               <span>12 snapshots</span>
             </div>
-            <div className="mt-6 space-y-3">
-              <div className="h-3 w-10/12 rounded-full bg-white/90" />
-              <div className="h-3 w-8/12 rounded-full bg-white/50" />
-              <div className="h-3 w-6/12 rounded-full bg-[#2dd4bf]" />
+            <div className="mt-5 space-y-2.5">
+              <div className="h-2.5 w-10/12 rounded-full bg-white/90" />
+              <div className="h-2.5 w-8/12 rounded-full bg-white/50" />
+              <div className="h-2.5 w-6/12 rounded-full bg-coral" />
             </div>
-            <div className="mt-8 flex items-end gap-3">
-              {[36, 56, 42, 74, 88, 62].map((height) => (
+            <div className="mt-6 flex items-end gap-2.5">
+              {[36, 56, 42, 74, 88, 62].map((height, i) => (
                 <div
-                  className="w-full rounded-t-full bg-gradient-to-t from-[#14b8a6] to-white/80"
-                  key={height}
+                  className="w-full rounded-t-lg bg-linear-to-t from-coral to-white/70"
+                  key={`bar-${height}-${i}`}
                   style={{ height: `${height}px` }}
                 />
               ))}
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+          <div className="space-y-3">
+            <div className="rounded-3xl border border-slate-200/80 bg-slate-50/80 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                 Portfolio share
               </p>
-              <p className="mt-3 text-sm text-slate-700">
-                Generate a single public replay link without exposing the
-                editor.
+              <p className="mt-2.5 text-sm text-slate-600">
+                Generate a single public replay link without exposing the editor.
               </p>
             </div>
-            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                 Change digest
               </p>
-              <p className="mt-3 text-3xl font-semibold text-slate-950">
+              <p className="font-display mt-2.5 text-2xl font-bold text-slate-950">
                 +4 / ~2 / -1
               </p>
             </div>
@@ -95,13 +95,14 @@ export default function HeroScene() {
         </div>
       </m.div>
 
+      {/* Cobalt floating card */}
       <m.div
         animate={
           shouldReduceMotion
             ? undefined
-            : { rotateZ: [0, 3, 0], y: [0, -10, 0] }
+            : { rotateZ: [0, 3, 0], y: [0, -12, 0] }
         }
-        className="absolute left-0 top-24 w-52 transform-gpu rounded-[1.75rem] border border-[#99f6e4] bg-[#0f766e] p-5 text-white shadow-[0_22px_60px_rgba(15,118,110,0.22)]"
+        className="absolute left-0 top-28 w-48 transform-gpu rounded-[1.75rem] border border-cobalt/30 bg-cobalt p-5 text-white shadow-[0_22px_60px_rgba(55,48,163,0.25)]"
         style={{ transform: "translateZ(90px) rotateY(18deg)" }}
         transition={
           shouldReduceMotion
@@ -110,48 +111,9 @@ export default function HeroScene() {
         }
       >
         <MessageSquareQuote className="h-5 w-5" />
-        <p className="mt-5 text-lg font-semibold">
+        <p className="mt-4 text-[15px] font-bold leading-snug">
           Context stays attached to every revision.
         </p>
-      </m.div>
-
-      <m.div
-        animate={
-          shouldReduceMotion ? undefined : { rotateZ: [0, -3, 0], x: [0, 6, 0] }
-        }
-        className="absolute bottom-2 right-0 w-56 transform-gpu rounded-[1.75rem] border border-white/70 bg-white/95 p-5 shadow-[0_22px_60px_rgba(15,23,42,0.14)]"
-        style={{ transform: "translateZ(70px) rotateY(-18deg)" }}
-        transition={
-          shouldReduceMotion
-            ? undefined
-            : { ...floatingCardTransition, delay: 1.2, duration: 5.2 }
-        }
-      >
-        <div className="flex items-center gap-3 text-slate-950">
-          <div className="rounded-2xl bg-slate-950 p-2 text-white">
-            <Globe2 className="h-4 w-4" />
-          </div>
-          <p className="font-semibold">Ship review-ready demos</p>
-        </div>
-        <p className="mt-3 text-sm text-slate-600">
-          Replay links work for demos, design reviews, and async handoff.
-        </p>
-      </m.div>
-
-      <m.div
-        animate={
-          shouldReduceMotion
-            ? undefined
-            : { opacity: [0.45, 0.7, 0.45], scale: [1, 1.02, 1] }
-        }
-        className="absolute right-20 top-2 flex h-14 w-14 items-center justify-center rounded-full bg-white/75 text-[#0f766e] shadow-[0_20px_60px_rgba(15,118,110,0.18)]"
-        transition={
-          shouldReduceMotion
-            ? undefined
-            : { ...floatingCardTransition, duration: 4.8 }
-        }
-      >
-        <Sparkles className="h-5 w-5" />
       </m.div>
     </div>
   );

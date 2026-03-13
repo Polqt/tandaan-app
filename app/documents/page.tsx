@@ -15,7 +15,7 @@ export default function DocumentsPage() {
   if (!userId) {
     return (
       <div className="mx-auto flex min-h-[70vh] max-w-4xl items-center justify-center px-4 py-10">
-        <div className="w-full rounded-[2rem] border border-white/70 bg-white/90 p-8 text-center shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
+        <div className="w-full rounded-4xl border border-white/70 bg-white/90 p-8 text-center shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-950 text-white">
             <Sparkles className="h-6 w-6" />
           </div>
@@ -38,7 +38,7 @@ export default function DocumentsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-2 py-4">
-      <section className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
+      <section className="rounded-4xl border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
@@ -54,7 +54,7 @@ export default function DocumentsPage() {
           </div>
 
           <div className="w-full max-w-xs">
-            <div className="rounded-[1.5rem] border border-slate-200 bg-slate-950 p-4 text-white">
+            <div className="rounded-3xl border border-slate-200 bg-slate-950 p-4 text-white">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
                 Quick action
               </p>
@@ -67,7 +67,7 @@ export default function DocumentsPage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-[1.5rem] border border-white/70 bg-white/90 p-5 shadow-sm">
+        <div className="rounded-3xl border border-white/70 bg-white/90 p-5 shadow-sm">
           <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
             Documents
           </p>
@@ -75,7 +75,7 @@ export default function DocumentsPage() {
             {isLoading ? "..." : rooms.length}
           </p>
         </div>
-        <div className="rounded-[1.5rem] border border-white/70 bg-white/90 p-5 shadow-sm">
+        <div className="rounded-3xl border border-white/70 bg-white/90 p-5 shadow-sm">
           <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
             Replay ready
           </p>
@@ -83,7 +83,7 @@ export default function DocumentsPage() {
             {isLoading ? "..." : rooms.length > 0 ? "Yes" : "Start"}
           </p>
         </div>
-        <div className="rounded-[1.5rem] border border-white/70 bg-white/90 p-5 shadow-sm">
+        <div className="rounded-3xl border border-white/70 bg-white/90 p-5 shadow-sm">
           <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
             Docs
           </p>
@@ -98,7 +98,7 @@ export default function DocumentsPage() {
         </div>
       </section>
 
-      <section className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
+      <section className="rounded-4xl border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="font-display text-2xl font-semibold text-slate-950">
@@ -115,14 +115,14 @@ export default function DocumentsPage() {
           {isLoading ? (
             <p className="text-sm text-slate-500">Loading documents...</p>
           ) : rooms.length === 0 ? (
-            <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+            <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
               No documents yet. Create one from the panel above to start your
               workspace.
             </div>
           ) : (
             rooms.map((room) => (
               <Link
-                className="flex items-center justify-between gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm"
+                className="flex items-center justify-between gap-4 rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm"
                 href={`/documents/${room.id}`}
                 key={room.id}
               >

@@ -1,0 +1,55 @@
+---
+title: Getting Started
+description: Set up Tandaan locally and run your first replayable note session.
+---
+
+## Prerequisites
+
+You need [Bun](https://bun.sh) (v1.1+) and a Firebase project with Firestore enabled. You will also need a [Clerk](https://clerk.com) application for authentication and a [Liveblocks](https://liveblocks.io) project for realtime sync.
+
+## Installation
+
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/your-org/tandaan-app.git
+cd tandaan-app
+bun install
+```
+
+Copy the environment template and fill in your keys:
+
+```bash
+cp .env.example .env.local
+```
+
+Start the development server:
+
+```bash
+bun run dev
+```
+
+The app is now running at `http://localhost:3000`.
+
+## Create your first replayable note
+
+1. **Open the workspace** — Navigate to `/documents` and sign in with Clerk. You will land on the documents dashboard.
+2. **Create a document** — Click "New Document" in the sidebar. A blank collaborative editor opens, powered by BlockNote and Liveblocks.
+3. **Invite a collaborator** — Use the invite dialog to share the document by email. Both participants see live cursors and presence indicators.
+4. **Capture chapter points** — As you write, mark meaningful transitions. These become named chapters in the replay timeline.
+5. **Generate a replay link** — When the session feels complete, hit "Share Replay" to produce a public link. Recipients can watch the entire editing story unfold, chapter by chapter.
+
+## Project structure
+
+| Path | Purpose |
+|---|---|
+| `app/documents/` | Workspace dashboard and editor pages |
+| `app/api/` | REST API routes for documents, rooms, and users |
+| `components/marketing/` | Landing page, hero scene, docs page |
+| `content/docs/` | MDX documentation files (this site) |
+| `content/blog/` | MDX blog posts |
+
+## Next steps
+
+- Explore [Replay API](/docs/replay-api) to understand how share tokens are generated and what the replay payload looks like.
+- Learn [Timeline Query Concepts](/docs/timeline-query) to query your editing history with natural language.

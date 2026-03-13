@@ -15,12 +15,12 @@ type RoomsQueryResult = {
   rooms: RoomRecord[];
 };
 
-export function useRooms(enabled = true) {
+export function useRooms(userId?: string | null, enabled = true) {
   return useQuery<RoomsQueryResult>({
-    enabled,
-    queryKey: ["rooms"],
-    queryFn: async () => {
-      const response = await fetch(`/api/rooms`);
+    enabled: Boolean(userId) && enabled,
+    queryKey: ["rooms", userId ?? "anonymous"],
+    queryFn: async ({ signal }) => {
+      const response = await fetch(`/api/rooms`, { signal });
       if (!response.ok) {
         throw new Error("Failed to fetch rooms");
       }

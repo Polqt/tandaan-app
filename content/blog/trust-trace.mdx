@@ -1,0 +1,55 @@
+---
+title: Designing trust traces for async teams
+description: Provenance metadata creates confidence in shared replay artifacts.
+---
+
+Trust traces attach provenance directly to replay frames. Every chapter in a Tandaan replay carries metadata about **who** made the change, **when** it happened, **what** sources informed the decision, and **why** the author chose that direction.
+
+This is not just transparency theater. It is a structural solution to a real problem: async teams struggle to trust artifacts they did not witness being created.
+
+## The trust gap in async work
+
+When you are in a meeting and watch someone make an edit, you trust the result because you saw the reasoning in real time. But when you receive a document update overnight from a teammate in a different time zone, you are left guessing:
+
+- Was this change based on customer feedback or personal preference?
+- Did anyone else review this before it landed?
+- Is the edit consistent with the direction we agreed on last week?
+
+Without context, reviewers default to suspicion or rubber-stamping. Neither is good.
+
+## Recommended metadata
+
+Every trust trace in Tandaan captures four dimensions:
+
+| Metadata | Purpose |
+|---|---|
+| **Author ID** | Clerk-authenticated identity of the person who made the edit |
+| **Timestamp** | Exact time the change was captured, synced across participants |
+| **Source references** | Links to Slack threads, Figma files, customer calls, or any external context that informed the decision |
+| **Decision note** | A short, optional annotation explaining the rationale (e.g., "Aligned with Q2 roadmap priorities") |
+
+## How trust traces work in practice
+
+### During editing
+
+As you write in Tandaan, the system automatically captures author ID and timestamp. Source references and decision notes are optional — you add them when a change is significant enough to warrant explanation.
+
+### During review
+
+When a reviewer watches a replay, trust trace metadata surfaces inline. They can see who wrote each section, when it was written, and what informed it. If a decision note exists, it appears as a contextual annotation on the chapter.
+
+### During audit
+
+For compliance-sensitive teams, trust traces create an audit trail that goes beyond "who changed what." They capture the *reasoning* behind changes, which is what auditors actually care about.
+
+## Design principles
+
+We followed three principles when designing trust traces:
+
+1. **Low friction capture.** If adding context is harder than skipping it, people will skip it. Author and timestamp are automatic. Source links and notes are one-click additions.
+2. **Inline, not separate.** Trust metadata lives on the replay frame, not in a separate audit log. Context should appear where you need it, not in a different tool.
+3. **Verifiable, not decorative.** Author identities are Clerk-authenticated. Timestamps are server-generated. Source links are preserved as snapshots.
+
+## The result
+
+When teams can verify context, async collaboration becomes less ambiguous and much faster. Reviewers spend less time asking "why?" and more time building on what exists. Trust compounds — and trust traces are the mechanism that makes it compound across time zones and team changes.

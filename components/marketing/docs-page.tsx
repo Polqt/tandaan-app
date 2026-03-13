@@ -84,7 +84,7 @@ export default function DocsPage() {
                 ? undefined
                 : { opacity: 1, rotateX: 0, rotateY: 0 }
             }
-            className="[perspective:1400px]"
+            className="perspective-[1400px]"
             initial={
               shouldReduceMotion
                 ? undefined
@@ -93,10 +93,10 @@ export default function DocsPage() {
             transition={{ delay: 0.1, duration: 0.6 }}
           >
             <div
-              className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-[0_35px_100px_rgba(15,23,42,0.14)]"
+              className="relative overflow-hidden rounded-4xl border border-white/70 bg-white/85 p-6 shadow-[0_35px_100px_rgba(15,23,42,0.14)]"
               style={{ transform: "rotateX(10deg) rotateY(-14deg)" }}
             >
-              <div className="absolute inset-0 bg-[linear-gradient(130deg,_rgba(15,118,110,0.1),_transparent_36%)]" />
+              <div className="absolute inset-0 bg-[linear-gradient(130deg,rgba(15,118,110,0.1),transparent_36%)]" />
               <div className="relative">
                 <div className="flex items-center justify-between">
                   <div>
@@ -113,7 +113,7 @@ export default function DocsPage() {
                 </div>
 
                 <div className="mt-8 grid gap-4">
-                  <div className="rounded-[1.5rem] border border-slate-200 bg-slate-950 p-5 text-white">
+                  <div className="rounded-3xl border border-slate-200 bg-slate-950 p-5 text-white">
                     <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
                       Editor
                     </p>
@@ -122,7 +122,7 @@ export default function DocsPage() {
                     </p>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+                    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                       <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
                         Replay
                       </p>
@@ -130,7 +130,7 @@ export default function DocsPage() {
                         Timeline + change digest
                       </p>
                     </div>
-                    <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+                    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                       <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
                         Docs
                       </p>
@@ -139,7 +139,7 @@ export default function DocsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="rounded-[1.5rem] border border-[#99f6e4] bg-[#0f766e] p-5 text-white">
+                  <div className="rounded-3xl border border-[#99f6e4] bg-[#0f766e] p-5 text-white">
                     <p className="text-xs uppercase tracking-[0.18em] text-teal-100">
                       Share route
                     </p>
@@ -174,7 +174,7 @@ export default function DocsPage() {
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[2rem] border border-white/70 bg-slate-950 p-8 text-white shadow-[0_28px_80px_rgba(15,23,42,0.14)]">
+          <div className="rounded-4xl border border-white/70 bg-slate-950 p-8 text-white shadow-[0_28px_80px_rgba(15,23,42,0.14)]">
             <div className="flex items-center gap-3">
               <ShieldCheck className="h-5 w-5 text-teal-300" />
               <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
@@ -198,7 +198,7 @@ export default function DocsPage() {
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-white/70 bg-white/85 p-8 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
+          <div className="rounded-4xl border border-white/70 bg-white/85 p-8 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
               Shipping focus
             </p>
@@ -211,7 +211,7 @@ export default function DocsPage() {
               project reads like a cohesive SaaS note product.
             </p>
 
-            <div className="mt-8 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+            <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
                 Next reasonable additions
               </p>

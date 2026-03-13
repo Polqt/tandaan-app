@@ -1,9 +1,17 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import { createRequire } from "node:module";
 import type { NextConfig } from "next";
+import nextra from "nextra";
 
 const require = createRequire(import.meta.url);
 const yjsPath = require.resolve("yjs");
+const withNextra = nextra({
+  defaultShowCopyCode: true,
+  readingTime: true,
+  search: {
+    codeblocks: false,
+  },
+});
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -23,7 +31,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+const nextraConfig = withNextra(nextConfig);
+
+export default withSentryConfig(nextraConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 

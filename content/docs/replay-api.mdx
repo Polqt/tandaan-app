@@ -1,0 +1,52 @@
+---
+title: Replay API Overview
+description: Understand share-link generation, token lifecycle, and replay payload shape.
+---
+
+## Core route
+
+```
+POST /api/documents/:id/replay-share
+```
+
+This endpoint creates a publicly accessible replay link for a given document. The caller must have ownership or edit access.
+
+### Request flow
+
+1. **Authenticate** — The route validates the Clerk session token.
+2. **Authorize** — It checks that the user has access to the document via the room membership model.
+3. **Generate token** — A unique share token is created and persisted alongside document metadata in Firestore.
+4. **Return URL** — The response includes a stable public replay URL that can be shared externally.
+
+### Example response
+
+```json
+{
+  "shareUrl": "https://tandaan.app/replay/abc123",
+  "token": "abc123",
+  "expiresAt": null
+}
+```
+
+Tokens do not expire by default. You can revoke a token by deleting the corresponding Firestore document or calling the revoke endpoint.
+
+## Replay payload essentials
+
+Each replay snapshot contains the following fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `snapshotId` | `string` | Unique identifier for this snapshot |
+| `authorId` | `string` | Clerk user ID of the author |
+| `createdAt` | `timestamp` | When this snapshot was captured |
+| `summary` | `string` | AI-generated or manual chapter summary |
+| `deltaDensity` | `number` | Measure of how much content changed since the previous snapshot |
+
+## Consuming replays
+
+The public replay viewer at `/replay/[shareId]` fetches the snapshot sequence and renders a step-by-step playback. The viewer is read-only and does not require authentication.
+
+Replays support:
+- **Chapter navigation** — Jump to any named chapter in the timeline.
+- **Speed control** — Adjust playback speed between 0.5x and 4x.
+- **Author highlighting** — Color-coded edits so you can see who wrote what.

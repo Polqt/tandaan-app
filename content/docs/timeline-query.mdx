@@ -1,0 +1,60 @@
+---
+title: Timeline Query Concepts
+description: Query your editing history with semantic intent and chapter awareness.
+---
+
+## Ask the timeline
+
+Traditional version history forces you to scrub through diffs manually. Tandaan's timeline query system lets you ask questions in natural language and jump directly to the relevant moment.
+
+Example queries:
+
+- *"When did the pricing section change from three tiers to four?"*
+- *"Who introduced the authentication requirements paragraph?"*
+- *"What chapters had the most rewrite churn last week?"*
+
+## How it works
+
+### 1. Parse intent
+
+The query engine extracts structured intent from your natural language input. It identifies entities (authors, sections, tags) and temporal constraints (date ranges, relative times).
+
+### 2. Filter chapters
+
+The engine searches across all chapters in the document timeline, filtering by:
+
+- **Author** — Match edits by a specific collaborator.
+- **Tags** — Filter by rationale tags, source references, or custom labels.
+- **Time range** — Narrow results to a specific date window.
+- **Content** — Full-text search within snapshot content.
+
+### 3. Return timestamped matches
+
+Results include the matching chapter, the exact timestamp, a rationale snippet explaining the change, and a deep link to the replay viewer at that moment.
+
+```json
+{
+  "matches": [
+    {
+      "chapterId": "ch-007",
+      "timestamp": "2026-03-10T14:32:00Z",
+      "author": "maria@team.com",
+      "snippet": "Changed pricing from 3 tiers to 4 to accommodate enterprise needs",
+      "replayUrl": "/replay/abc123?t=ch-007"
+    }
+  ]
+}
+```
+
+## Use cases
+
+| Scenario | Query |
+|---|---|
+| Onboarding | *"Walk me through how this document evolved"* |
+| Audit | *"Show all changes by external contractors"* |
+| Decision review | *"When did we decide to drop feature X?"* |
+| Conflict resolution | *"Who last edited the compliance section?"* |
+
+## Limitations
+
+Timeline queries work best with documents that have well-defined chapter points. Documents with no chapters will return snapshot-level results, which are coarser and may lack rationale metadata.

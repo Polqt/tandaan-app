@@ -3,212 +3,334 @@
 import { domAnimation, LazyMotion, m, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
+  Bot,
   Clock3,
-  Eye,
-  Link2,
-  PencilLine,
-  Users2,
+  Compass,
+  Orbit,
+  Play,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import HeroScene from "./hero-scene";
 
-const featureCards = [
+const replayChapters = [
   {
-    copy: "Turn every autosaved snapshot into a navigable timeline with authorship and change summaries.",
-    icon: Clock3,
-    title: "Playback note evolution",
+    details:
+      "Capture intent, references, and constraints before drafting starts.",
+    minute: "00:42",
+    title: "Frame The Problem",
   },
   {
-    copy: "Pair Clerk identities with live collaborators so the timeline explains who moved the document forward.",
-    icon: Users2,
-    title: "See who changed what",
+    details:
+      "Highlight decision pivots and who introduced each structural shift.",
+    minute: "03:18",
+    title: "Draft In Public",
   },
   {
-    copy: "Generate a single replay URL for hiring demos, async reviews, or product walkthroughs.",
-    icon: Link2,
-    title: "Share polished public replays",
+    details: "Export replay chapters as a clean narrative for async review.",
+    minute: "06:05",
+    title: "Share The Story",
   },
 ];
 
-const workflowSteps = [
-  "Write together in the editor.",
-  "Autosave snapshots with structural change summaries.",
-  "Open replay to scrub the timeline and inspect revisions.",
-  "Share a public replay link for demos or review.",
+const storytellingRows = [
+  {
+    body: "Automatically segment long writing sessions into understandable chapters. Stakeholders can jump straight to decision moments instead of replaying everything.",
+    icon: Orbit,
+    kicker: "Narrative Replay",
+    title: "Version history that reads like a storyline.",
+    accent: "coral",
+  },
+  {
+    body: "Track the rationale behind meaningful edits. Every chapter can carry context tags, sources, and owner notes so future teammates can understand why changes happened.",
+    icon: Compass,
+    kicker: "Decision Ledger",
+    title: "Keep the why, not only the what.",
+    accent: "cobalt",
+  },
+  {
+    body: 'Ask "When did this become policy?" and jump to exact replay timestamps. Tandaan answers from your note timeline, not from static final text.',
+    icon: Bot,
+    kicker: "Ask The Timeline",
+    title: "Query your process, not just your content.",
+    accent: "lime",
+  },
 ];
+
 
 export default function LandingPage() {
   const shouldReduceMotion = useReducedMotion();
 
+  const anim = (y = 28, delay = 0) =>
+    shouldReduceMotion
+      ? {}
+      : {
+          initial: { opacity: 0, y },
+          animate: { opacity: 1, y: 0 },
+          transition: {
+            duration: 0.6,
+            ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+            delay,
+          },
+        };
+
   return (
     <LazyMotion features={domAnimation}>
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-20 px-4 py-10 lg:px-6 lg:py-14">
-        <section className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
-          <m.div
-            animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-            className="space-y-8"
-            initial={shouldReduceMotion ? undefined : { opacity: 0, y: 24 }}
-            transition={{ duration: 0.55, ease: "easeOut" }}
-          >
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#99f6e4] bg-white/80 px-4 py-2 text-sm text-slate-700 shadow-sm">
-              <Eye className="h-4 w-4 text-[#0f766e]" />
-              Notes that can explain themselves
-            </div>
+      <div className="relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-32 -top-32 h-[600px] w-[600px] rounded-full bg-coral-light/40 blur-[120px]" />
+          <div className="absolute -right-40 top-[20%] h-[500px] w-[500px] rounded-full bg-cobalt-light/30 blur-[100px]" />
+          <div className="absolute bottom-[10%] left-[30%] h-[400px] w-[400px] rounded-full bg-lime-light/30 blur-[100px]" />
+        </div>
 
-            <div className="space-y-5">
-              <h1 className="font-display max-w-3xl text-5xl font-semibold tracking-tight text-slate-950 md:text-6xl">
-                Collaborative notes with a replay layer built for product demos.
-              </h1>
-              <p className="max-w-2xl text-lg leading-8 text-slate-600">
-                Tandaan captures the working history behind your notes, then
-                turns that history into a clean playback experience for reviews,
-                hiring portfolios, and async handoff.
+        <div className="relative mx-auto flex w-full max-w-7xl flex-col px-5 py-12 lg:px-8 lg:py-16">
+          <section className="grid items-center gap-10 pb-28 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+            <m.div {...anim(32)} className="space-y-8">
+
+              <div className="space-y-6">
+                <h1 className="font-display max-w-[14ch] text-[clamp(2.75rem,6vw,5.5rem)] font-bold leading-[0.95] tracking-tight text-slate-950">
+                  Build ideas.{" "}
+                  <span className="text-coral">Ship the story</span> behind
+                  them.
+                </h1>
+                <p className="max-w-lg text-lg leading-relaxed text-slate-600">
+                  Tandaan transforms collaborative notes into replayable product
+                  narratives so teams review{" "}
+                  <em className="font-medium not-italic text-slate-800">
+                    decisions
+                  </em>
+                  , not just outcomes.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  asChild
+                  className="h-12 rounded-full bg-slate-950 px-7 text-sm font-medium hover:bg-slate-800"
+                >
+                  <Link href="/documents">
+                    Open Workspace
+                    <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  className="h-12 rounded-full border-slate-300 px-7 text-sm font-medium"
+                  variant="outline"
+                >
+                </Button>
+              </div>
+            </m.div>
+
+            <m.div
+              initial={
+                shouldReduceMotion
+                  ? undefined
+                  : { opacity: 0, scale: 0.96 }
+              }
+              animate={
+                shouldReduceMotion
+                  ? undefined
+                  : { opacity: 1, scale: 1 }
+              }
+              transition={
+                shouldReduceMotion
+                  ? undefined
+                  : { duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.15 }
+              }
+            >
+              <HeroScene />
+            </m.div>
+          </section>
+
+          {/* ─── PRODUCT DEMO ─── */}
+          <section className="grid gap-6 pb-32 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+            <m.div
+              {...anim(24)}
+              className="overflow-hidden rounded-4xl border border-white/10 bg-[#0b1120] p-8 text-white shadow-[0_40px_100px_rgba(11,17,32,0.35)]"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                    Product Demo
+                  </p>
+                  <h2 className="font-display mt-3 text-balance text-3xl font-bold lg:text-4xl">
+                    Scroll a story, not a changelog.
+                  </h2>
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 transition hover:bg-white/20">
+                  <Play className="h-5 w-5" />
+                </div>
+              </div>
+
+              <div className="mt-8 space-y-3">
+                {replayChapters.map((chapter, index) => (
+                  <div
+                    className="group grid gap-3 rounded-2xl border border-white/6 bg-white/4 p-4 transition hover:bg-white/8 md:grid-cols-[auto_1fr_auto] md:items-center"
+                    key={chapter.title}
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-coral font-display font-bold text-white">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="font-medium">{chapter.title}</p>
+                      <p className="mt-1 text-sm text-slate-400">
+                        {chapter.details}
+                      </p>
+                    </div>
+                    <p className="font-mono text-xs tracking-wider text-slate-500">
+                      {chapter.minute}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </m.div>
+
+            <m.div {...anim(24, 0.08)} className="grid gap-5">
+              <div className="rounded-[1.75rem] border border-white/60 bg-white/80 p-7 shadow-sm backdrop-blur-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                  Rare by design
+                </p>
+                <h3 className="font-display mt-3 text-2xl font-bold text-slate-950">
+                  Timeline AI that references real revisions.
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  Ask your timeline when a policy changed, why a section was
+                  rewritten, and who drove each decision.
+                </p>
+              </div>
+
+              <div className="rounded-[1.75rem] border border-lime/40 bg-lime-light/60 p-7 shadow-sm">
+                <div className="flex items-center gap-3 text-slate-800">
+                  <Clock3 className="h-5 w-5 text-lime" />
+                  <p className="text-sm font-semibold">
+                    Replay confidence score
+                  </p>
+                </div>
+                <p className="font-display mt-5 text-5xl font-bold text-slate-950">
+                  93%
+                </p>
+                <p className="mt-2 text-sm text-slate-600">
+                  Based on chapter coverage, rationale tags, and source links.
+                </p>
+              </div>
+            </m.div>
+          </section>
+
+          <section className="space-y-6 pb-32">
+            <m.div {...anim(20)} className="max-w-2xl pb-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-coral">
+                Features
+              </p>
+              <h2 className="font-display mt-3 text-balance text-4xl font-bold leading-tight text-slate-950 lg:text-5xl">
+                Tools that think in narratives, not file diffs.
+              </h2>
+            </m.div>
+
+            {storytellingRows.map(
+              ({ body, icon: Icon, kicker, title, accent }, index) => {
+                const accentMap: Record<
+                  string,
+                  { bg: string; icon: string; border: string }
+                > = {
+                  coral: {
+                    bg: "bg-coral-light/50",
+                    icon: "bg-coral text-white",
+                    border: "border-coral/20",
+                  },
+                  cobalt: {
+                    bg: "bg-cobalt-light/50",
+                    icon: "bg-cobalt text-white",
+                    border: "border-cobalt/20",
+                  },
+                  lime: {
+                    bg: "bg-lime-light/50",
+                    icon: "bg-lime text-slate-900",
+                    border: "border-lime/30",
+                  },
+                };
+                const colors = accentMap[accent];
+                const flipped = index % 2 === 1;
+
+                return (
+                  <m.article
+                    {...anim(22, index * 0.06)}
+                    className={`group grid items-center gap-6 rounded-4xl border border-white/60 bg-white/80 p-8 shadow-sm backdrop-blur-sm transition hover:shadow-lg lg:grid-cols-[0.85fr_1.15fr] lg:gap-10 ${
+                      flipped ? "lg:[direction:rtl]" : ""
+                    }`}
+                    key={title}
+                  >
+                    <div className={flipped ? "lg:[direction:ltr]" : ""}>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                        {kicker}
+                      </p>
+                      <h3 className="font-display mt-3 text-balance text-2xl font-bold text-slate-950 lg:text-3xl">
+                        {title}
+                      </h3>
+                      <p className="mt-4 text-[15px] leading-7 text-slate-600">
+                        {body}
+                      </p>
+                    </div>
+
+                    <div
+                      className={`relative overflow-hidden rounded-2xl border ${colors.border} ${colors.bg} p-7 ${
+                        flipped ? "lg:[direction:ltr]" : ""
+                      }`}
+                    >
+                      <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/50 blur-md" />
+                      <div className="relative">
+                        <div
+                          className={`flex h-14 w-14 items-center justify-center rounded-2xl ${colors.icon} shadow-sm`}
+                        >
+                          <Icon className="h-6 w-6" />
+                        </div>
+                        <div className="mt-6 space-y-2.5">
+                          <div className="h-3 w-11/12 rounded-full bg-slate-900/80" />
+                          <div className="h-3 w-9/12 rounded-full bg-slate-400/60" />
+                          <div className="h-3 w-7/12 rounded-full bg-slate-300/50" />
+                          <div className="h-3 w-5/12 rounded-full bg-slate-200/40" />
+                        </div>
+                      </div>
+                    </div>
+                  </m.article>
+                );
+              },
+            )}
+          </section>
+
+          <footer className="grid gap-8 rounded-4xl border border-white/10 bg-[#0b1120] p-8 text-white lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
+            <div>
+              <p className="font-display text-lg font-bold tracking-tight">
+                Tandaan
+              </p>
+              <h2 className="font-display mt-4 max-w-md text-balance text-3xl font-bold leading-snug">
+                For teams that care about execution speed{" "}
+                <span className="text-coral">and</span> decision memory.
+              </h2>
+              <p className="mt-4 max-w-md text-[15px] leading-7 text-slate-400">
+                Capture collaborative work, keep rationale visible, and share
+                replay narratives that make asynchronous alignment easier.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <Button asChild className="h-11 rounded-full px-6 text-sm">
-                <Link href="/documents">
-                  Open Workspace
-                  <ArrowRight className="h-4 w-4" />
+            <div className="grid gap-3 text-sm">
+              {[
+                { label: "Open Workspace", href: "/documents" },
+                { label: "Developer Docs", href: "/docs" },
+                { label: "Blog", href: "/blog" },
+                { label: "Public Replay Experience", href: "/docs/replay-api" },
+              ].map((link) => (
+                <Link
+                  key={link.label}
+                  className="rounded-xl border border-white/6 bg-white/4 px-5 py-3.5 font-medium transition hover:bg-white/8"
+                  href={link.href}
+                >
+                  {link.label}
                 </Link>
-              </Button>
-              <Button
-                asChild
-                className="h-11 rounded-full border-slate-300 bg-white/80 px-6 text-sm"
-                variant="outline"
-              >
-                <Link href="/docs">Explore the docs</Link>
-              </Button>
+              ))}
             </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                  Collab
-                </p>
-                <p className="mt-2 text-2xl font-semibold text-slate-950">
-                  Realtime
-                </p>
-              </div>
-              <div className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                  Replay
-                </p>
-                <p className="mt-2 text-2xl font-semibold text-slate-950">
-                  Versioned
-                </p>
-              </div>
-              <div className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                  Sharing
-                </p>
-                <p className="mt-2 text-2xl font-semibold text-slate-950">
-                  Public link
-                </p>
-              </div>
-            </div>
-          </m.div>
-
-          <m.div
-            animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1 }}
-            initial={
-              shouldReduceMotion ? undefined : { opacity: 0, scale: 0.98 }
-            }
-            transition={{ delay: 0.12, duration: 0.45, ease: "easeOut" }}
-          >
-            <HeroScene />
-          </m.div>
-        </section>
-
-        <section className="grid gap-4 lg:grid-cols-3">
-          {featureCards.map(({ copy, icon: Icon, title }, index) => (
-            <m.div
-              animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-              className="rounded-[1.75rem] border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
-              initial={shouldReduceMotion ? undefined : { opacity: 0, y: 18 }}
-              key={title}
-              transition={{ delay: 0.06 + index * 0.06, duration: 0.35 }}
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0f766e] text-white shadow-[0_20px_40px_rgba(15,118,110,0.24)]">
-                <Icon className="h-5 w-5" />
-              </div>
-              <h2 className="font-display mt-5 text-2xl font-semibold text-slate-950">
-                {title}
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-slate-600">{copy}</p>
-            </m.div>
-          ))}
-        </section>
-
-        <section className="grid gap-8 rounded-4xl border border-white/70 bg-slate-950 px-6 py-8 text-white shadow-[0_28px_80px_rgba(15,23,42,0.14)] lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
-          <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-400">
-              Workflow
-            </p>
-            <h2 className="font-display mt-4 text-3xl font-semibold">
-              A product flow, not just a text editor.
-            </h2>
-            <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">
-              The workspace handles drafting, collaboration, replay, and demo
-              sharing in one sequence so the note remains useful after editing
-              stops.
-            </p>
-          </div>
-
-          <div className="grid gap-3">
-            {workflowSteps.map((step, index) => (
-              <div
-                className="flex items-start gap-4 rounded-3xl border border-white/10 bg-white/5 p-4"
-                key={step}
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-950">
-                  {index + 1}
-                </div>
-                <div>
-                  <p className="font-medium">{step}</p>
-                  <p className="mt-1 text-sm text-slate-400">
-                    {index === 0 &&
-                      "Liveblocks-backed editing keeps collaborators in sync."}
-                    {index === 1 &&
-                      "Snapshots store content, timestamp, author, and structural summary."}
-                    {index === 2 &&
-                      "Replay view lets you scrub revisions and inspect change density."}
-                    {index === 3 &&
-                      "A single public route makes the work presentation-ready."}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-              Ready to ship
-            </p>
-            <h2 className="font-display mt-3 text-3xl font-semibold text-slate-950">
-              Use Tandaan as your note workspace and your portfolio walkthrough.
-            </h2>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button asChild className="h-11 rounded-full px-6">
-              <Link href="/documents">
-                Start writing
-                <PencilLine className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              className="h-11 rounded-full px-6"
-              variant="outline"
-            >
-              <Link href="/docs">Read implementation notes</Link>
-            </Button>
-          </div>
-        </section>
+          </footer>
+        </div>
       </div>
     </LazyMotion>
   );
