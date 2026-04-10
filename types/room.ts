@@ -5,7 +5,9 @@ export interface RoomDocument {
   role: "owner" | "editor";
   userId: string;
   document?: {
+    id?: string;
     title?: string;
-    [key: string]: any;
+    replayShareId?: string | null;
+    updatedAt?: string | null;
   };
 }
