@@ -4,6 +4,7 @@ import { adminDB } from "@/firebase-admin";
 import liveblocks from "@/lib/liveblocks";
 import { auth } from "@clerk/nextjs/server";
 import type { DocumentData } from "@/types/documents";
+import { FREE_DOC_LIMIT } from "@/types/billing";
 
 const TRASH_RETENTION_DAYS = 30;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -13,6 +14,17 @@ export async function createNewDocument() {
 
   if (!userId) {
     throw new Error("Unable to determine user ID");
+  }
+
+  // Enforce free plan document limit
+  const [userDoc, roomsSnap] = await Promise.all([
+    adminDB.collection("users").doc(userId).get(),
+    adminDB.collection("users").doc(userId).collection("rooms").get(),
+  ]);
+
+  const plan = userDoc.data()?.plan ?? "free";
+  if (plan === "free" && roomsSnap.size >= FREE_DOC_LIMIT) {
+    return { error: "upgrade_required" as const };
   }
 
   // Generate a doc ID upfront so both writes can go in one atomic batch

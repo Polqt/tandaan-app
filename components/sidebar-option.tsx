@@ -19,20 +19,20 @@ export default function SidebarOption({
   return (
     <Link
       className={cn(
-        "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
+        "group flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors",
         isActive
-          ? "bg-white text-stone-950 shadow-[0_1px_0_rgba(15,23,42,0.04)]"
-          : "text-stone-600 hover:bg-white/70 hover:text-stone-900",
+          ? "bg-white font-medium text-stone-950 shadow-[0_1px_3px_rgba(15,23,42,0.06)]"
+          : "text-stone-500 hover:bg-white/60 hover:text-stone-900",
       )}
       href={href}
     >
       <FileText
         className={cn(
-          "h-4 w-4 shrink-0",
-          isActive ? "text-stone-900" : "text-stone-400",
+          "h-3.5 w-3.5 shrink-0 transition-colors",
+          isActive ? "text-stone-700" : "text-stone-300 group-hover:text-stone-500",
         )}
       />
-      <span className="truncate">{title || "Untitled Document"}</span>
+      <span className="truncate">{title || "Untitled"}</span>
     </Link>
   );
 }

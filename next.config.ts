@@ -5,23 +5,29 @@ import nextra from "nextra";
 
 const require = createRequire(import.meta.url);
 const yjsPath = require.resolve("yjs");
+
 const withNextra = nextra({
   defaultShowCopyCode: true,
   readingTime: true,
-  search: {
-    codeblocks: false,
-  },
+  search: { codeblocks: false },
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
   experimental: {
+    // Tree-shake heavy editor packages at compile time
     optimizePackageImports: [
       "@blocknote/react",
       "@blocknote/shadcn",
       "@blocknote/core",
+      "@liveblocks/react",
+      "@liveblocks/react-ui",
+      "lucide-react",
+      "framer-motion",
     ],
   },
+
+  // Webpack alias for yjs deduplication (needed by BlockNote + Liveblocks)
+  // Turbopack handles this natively — no alias needed there
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -34,36 +40,11 @@ const nextConfig: NextConfig = {
 const nextraConfig = withNextra(nextConfig);
 
 export default withSentryConfig(nextraConfig, {
-  // For all available options, see:
-  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
-
   org: "usls-40",
-
   project: "tandaan",
-
-  // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
-
-  // For all available options, see:
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
-
-  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // This can increase your server load as well as your hosting bill.
-  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-  // side errors will fail.
-  // Disabled in development to avoid conflicts
-  tunnelRoute:
-    process.env.NODE_ENV === "production" ? "/monitoring" : undefined,
-
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
+  tunnelRoute: process.env.NODE_ENV === "production" ? "/monitoring" : undefined,
   disableLogger: true,
-
-  // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-  // See the following for more information:
-  // https://docs.sentry.io/product/crons/
-  // https://vercel.com/docs/cron-jobs
   automaticVercelMonitors: true,
 });

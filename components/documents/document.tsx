@@ -18,9 +18,7 @@ export default function Document({ id }: DocumentProps) {
   const isOwner = data?.role === "owner";
 
   useEffect(() => {
-    if (data?.title) {
-      setInput(data.title);
-    }
+    if (data?.title) setInput(data.title);
   }, [data?.title]);
 
   const savedTitle = data?.title?.trim() ?? "";
@@ -32,68 +30,60 @@ export default function Document({ id }: DocumentProps) {
 
   function handleUpdateTitle(event: FormEvent) {
     event.preventDefault();
-
-    if (!hasTitleChange) {
-      return;
-    }
-
-    updateDocument({
-      data: { title: nextTitle },
-      id,
-    });
+    if (!hasTitleChange) return;
+    updateDocument({ data: { title: nextTitle }, id });
   }
 
   return (
     <main className="min-h-screen bg-[#fbfbfa]">
-      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-5 pb-10 pt-8 lg:px-10">
-        <header className="space-y-6">
-          <div className="space-y-4">
-            <form
-              className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
-              onSubmit={handleUpdateTitle}
-            >
-              <div className="min-w-0 flex-1">
-                <Input
-                  className="h-auto border-none bg-transparent px-0 text-4xl font-semibold tracking-tight text-stone-950 shadow-none focus-visible:ring-0"
-                  onChange={(event) => setInput(event.target.value)}
-                  value={input}
-                />
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-500">
-                  Draft in real time, keep the full editing history, and turn a
-                  working note into a clean replay when you need to present the
-                  story behind the work.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {isOwner && (
-                  <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600">
-                    Owner
-                  </span>
-                )}
-                <Button
-                  className="rounded-full px-4"
-                  disabled={!hasTitleChange || isPending}
-                  type="submit"
-                  variant="outline"
-                >
-                  {isPending ? "Saving..." : "Save title"}
-                </Button>
-              </div>
-            </form>
+      {/* Document toolbar */}
+      <div className="sticky top-0 z-10 border-b border-[#ebe9e6] bg-[#fbfbfa]/95 backdrop-blur-sm">
+        <div className="mx-auto flex w-full max-w-[900px] items-center justify-between gap-4 px-6 py-2.5">
+          <div className="flex items-center gap-2">
+            <ManageUsers />
+            <InviteUser />
+            <CollaborationReplay />
           </div>
-
-          <div className="flex flex-col gap-4 border-y border-[#ebe9e6] py-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-wrap items-center gap-2">
-              <ManageUsers />
-              <InviteUser />
-              <CollaborationReplay />
-            </div>
+          <div className="flex items-center gap-3">
             <Avatars />
+            {isOwner && (
+              <span className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-0.5 text-[11px] font-medium text-stone-500">
+                Owner
+              </span>
+            )}
           </div>
-        </header>
+        </div>
+      </div>
 
-        <Editor />
+      {/* Document body */}
+      <div className="mx-auto w-full max-w-[900px] px-6 pb-20 pt-12">
+        {/* Title */}
+        <form onSubmit={handleUpdateTitle} className="group mb-2">
+          <div className="flex items-start gap-3">
+            <Input
+              className="h-auto flex-1 border-none bg-transparent px-0 text-[2.25rem] font-bold leading-tight tracking-tight text-stone-950 shadow-none placeholder:text-stone-300 focus-visible:ring-0"
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Untitled"
+              value={input}
+            />
+            {hasTitleChange && (
+              <Button
+                className="mt-1 rounded-full px-3 py-1.5 text-xs font-medium"
+                disabled={isPending}
+                size="sm"
+                type="submit"
+                variant="outline"
+              >
+                {isPending ? "Saving…" : "Save"}
+              </Button>
+            )}
+          </div>
+        </form>
+
+        {/* Editor area */}
+        <div className="mt-6">
+          <Editor />
+        </div>
       </div>
     </main>
   );
