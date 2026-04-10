@@ -33,6 +33,6 @@ export function apiErrorResponse(message: string, status: number = 500) {
   return NextResponse.json({ error: message }, { status });
 }
 
-export function apiSuccessResponse(data: any) {
+export function apiSuccessResponse<T>(data: T) {
   return NextResponse.json(data);
 }
