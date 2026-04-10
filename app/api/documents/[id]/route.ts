@@ -1,5 +1,6 @@
 import { adminApp } from "@/firebase-admin";
 import { requireAuth, apiErrorResponse } from "@/lib/api-utils";
+import { patchDocumentSchema, parseBody } from "@/lib/schemas";
 import { getFirestore } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 
@@ -65,7 +66,8 @@ export async function PATCH(
     }
 
     const { id } = await params;
-    const body = await request.json();
+    const parsed = await parseBody(request, patchDocumentSchema);
+    if (!parsed.success) return parsed.response;
 
     const roomRef = db
       .collection("users")
@@ -84,9 +86,7 @@ export async function PATCH(
     await db
       .collection("documents")
       .doc(docId)
-      .update({
-        ...body,
-      });
+      .update({ ...parsed.data, updatedAt: new Date() });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminDB } from "@/firebase-admin";
 import { apiErrorResponse, requireAuth } from "@/lib/api-utils";
+import { createVersionSchema, parseBody } from "@/lib/schemas";
 import { computeVersionSummary } from "@/lib/version-utils";
 import {
   getReplayTimelineForUser,
@@ -10,19 +11,6 @@ import {
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
-
-type CreateVersionPayload = {
-  content: string;
-};
-
-function isCreateVersionPayload(value: unknown): value is CreateVersionPayload {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  const payload = value as Record<string, unknown>;
-  return typeof payload.content === "string" && payload.content.length > 0;
-}
 
 export async function GET(_request: Request, { params }: RouteContext) {
   try {
@@ -60,10 +48,8 @@ export async function POST(request: Request, { params }: RouteContext) {
       return apiErrorResponse("Document not found", 404);
     }
 
-    const body = await request.json();
-    if (!isCreateVersionPayload(body)) {
-      return apiErrorResponse("Invalid version payload", 400);
-    }
+    const parsed = await parseBody(request, createVersionSchema);
+    if (!parsed.success) return parsed.response;
 
     const versionsCollection = adminDB
       .collection("documents")
@@ -76,11 +62,11 @@ export async function POST(request: Request, { params }: RouteContext) {
     const previousContent = latestVersionSnapshot.empty
       ? null
       : (latestVersionSnapshot.docs[0].data().content as string | null);
-    const summary = computeVersionSummary(body.content, previousContent);
+    const summary = computeVersionSummary(parsed.data.content, previousContent);
 
     const versionRef = versionsCollection.doc();
     await versionRef.set({
-      content: body.content,
+      content: parsed.data.content,
       summary,
       timeStamp: new Date(),
       userId: authResult.userId,
