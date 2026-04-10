@@ -1,0 +1,65 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    // True if the requester is signed in via Firebase Auth (unused here since
+    // Tandaan uses the Admin SDK exclusively on the server — but kept for
+    // future mobile/direct-SDK access patterns).
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwnerOf(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function hasRoomAccess(userId, roomId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(userId)/rooms/$(roomId));
+    }
+
+    function isRoomOwner(userId, roomId) {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(userId)/rooms/$(roomId)).data.role == "owner";
+    }
+
+    // ── Users ─────────────────────────────────────────────────────────────────
+    // Only the owning user can read/write their own profile.
+    // All writes go through the Admin SDK (server-side), so client writes are
+    // blocked entirely.
+    match /users/{userId} {
+      allow read: if isOwnerOf(userId);
+      allow write: if false; // Admin SDK only
+
+      // Rooms subcollection — user can read their own room entries.
+      // All writes (invite, remove, create) go through the Admin SDK.
+      match /rooms/{roomId} {
+        allow read: if isOwnerOf(userId);
+        allow write: if false; // Admin SDK only
+      }
+    }
+
+    // ── Documents ─────────────────────────────────────────────────────────────
+    // Documents are read/written exclusively via the Admin SDK (API routes).
+    // Block all direct client access to prevent data leakage.
+    match /documents/{documentId} {
+      allow read: if false;  // Admin SDK only — API routes enforce access
+      allow write: if false; // Admin SDK only
+
+      // Versions subcollection — same policy
+      match /versions/{versionId} {
+        allow read: if false;
+        allow write: if false;
+      }
+    }
+
+    // ── Trash ─────────────────────────────────────────────────────────────────
+    match /trash/{documentId} {
+      allow read: if false;
+      allow write: if false;
+    }
+  }
+}

@@ -2,28 +2,9 @@ import { getFirestore } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { adminApp } from "@/firebase-admin";
 import { apiErrorResponse, requireAuth } from "@/lib/api-utils";
+import { toIsoTimestampOrNull } from "@/lib/timestamp-utils";
 
 const db = getFirestore(adminApp);
-
-type FirestoreTimestamp = {
-  toDate: () => Date;
-};
-
-function toIsoTimestamp(value: unknown): string | undefined {
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-
-  if (value && typeof value === "object" && "toDate" in value) {
-    return (value as FirestoreTimestamp).toDate().toISOString();
-  }
-
-  return undefined;
-}
 
 function toRoomDocument(
   id: string,
@@ -43,7 +24,7 @@ function toRoomDocument(
     replayShareId:
       typeof source.replayShareId === "string" ? source.replayShareId : null,
     title,
-    updatedAt: toIsoTimestamp(source.updatedAt) ?? null,
+    updatedAt: toIsoTimestampOrNull(source.updatedAt),
   };
 }
 
@@ -94,7 +75,7 @@ export async function GET() {
     const rooms = roomEntries.map(({ id, room, roomId }) => ({
       id,
       ...room,
-      createdAt: toIsoTimestamp(room.createdAt) ?? null,
+      createdAt: toIsoTimestampOrNull(room.createdAt),
       roomId,
       document: toRoomDocument(roomId, documentsById.get(roomId)),
     }));

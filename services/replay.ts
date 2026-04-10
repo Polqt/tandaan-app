@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { clerkClient } from "@clerk/nextjs/server";
 import { adminDB } from "@/firebase-admin";
+import { toIsoTimestamp } from "@/lib/timestamp-utils";
 import type {
   ReplayProfilesByUserId,
   ReplayTimeline,
@@ -11,26 +12,6 @@ import type {
 } from "@/types/version";
 
 const VERSION_LIMIT = 200;
-
-type FirestoreTimestamp = {
-  toDate: () => Date;
-};
-
-function toIsoTimestamp(value: unknown) {
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-
-  if (value && typeof value === "object" && "toDate" in value) {
-    return (value as FirestoreTimestamp).toDate().toISOString();
-  }
-
-  return new Date(0).toISOString();
-}
 
 function mapVersion(id: string, data: Record<string, unknown>): Version {
   return {
