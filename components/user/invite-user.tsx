@@ -2,9 +2,9 @@
 
 import { UserPlus2 } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { type FormEvent, useState, useTransition } from "react";
+import { type FormEvent, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { getAllUsers, getRoomUsers, inviteUser } from "@/services/users";
+import { getRoomUsers, inviteUser, searchUsers } from "@/services/users";
 import type { User } from "@/types/user";
 import { Button } from "../ui/button";
 import {
@@ -26,46 +26,47 @@ export default function InviteUser() {
   const [roomUserIds, setRoomUserIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const roomId = pathname.split("/").pop();
+
+  // Load current room members once when the modal opens
+  useEffect(() => {
+    if (!isOpen || !roomId) return;
+    getRoomUsers(roomId).then(setRoomUserIds).catch(console.error);
+  }, [isOpen, roomId]);
+
+  // Search users as the email input changes (debounced via useEffect)
+  useEffect(() => {
+    if (!isOpen || !roomId) return;
+
+    const timeout = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const results = await searchUsers(email);
+        setUsers(results.filter((u) => !roomUserIds.includes(u.id)));
+      } catch {
+        toast.error("Failed to search users");
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [email, isOpen, roomId, roomUserIds]);
+
   const handleInvite = async (e: FormEvent) => {
     e.preventDefault();
-
-    const roomId = pathname.split("/").pop();
     if (!roomId) return;
 
     startTransition(async () => {
-      const { success } = await inviteUser(roomId, email);
-      if (success) {
+      const result = await inviteUser(roomId, email);
+      if (result.success) {
         setIsOpen(false);
         setEmail("");
-        toast.success("user invited successfully");
+        toast.success("User invited successfully");
       } else {
-        toast.error("failed to invite the user");
+        toast.error(result.error ?? "Failed to invite the user");
       }
     });
-  };
-
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
-      const roomId = pathname.split("/").pop();
-      if (!roomId) return;
-
-      const allUsersList = await getAllUsers();
-      const existingUsers = await getRoomUsers(roomId);
-
-      // Filter out users that are already in the room
-      const availableUsers = allUsersList.filter(
-        (user) => !existingUsers.includes(user.id),
-      );
-
-      setUsers(availableUsers);
-      setRoomUserIds(existingUsers);
-    } catch (error) {
-      console.error("Error loading users:", error);
-      toast.error("Failed to load users");
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -73,9 +74,7 @@ export default function InviteUser() {
       open={isOpen}
       onOpenChange={(open) => {
         setIsOpen(open);
-        if (open) {
-          void loadUsers();
-        }
+        if (!open) setEmail("");
       }}
     >
       <Button asChild className="rounded-full" size="sm" variant="outline">
@@ -88,7 +87,7 @@ export default function InviteUser() {
         <DialogHeader>
           <DialogTitle>Invite a user to collaborate</DialogTitle>
           <DialogDescription>
-            What is the email of the user you want to invite?
+            Enter the email address of the user you want to invite.
           </DialogDescription>
         </DialogHeader>
 
@@ -101,20 +100,20 @@ export default function InviteUser() {
             onChange={(e) => setEmail(e.target.value)}
           />
           <Button type="submit" disabled={!email || isPending}>
-            {isPending ? "Inviting..." : "Invite User"}
+            {isPending ? "Inviting..." : "Invite"}
           </Button>
         </form>
+
         {isOpen && (
           <div className="mt-4 space-y-2">
             <p className="text-sm text-muted-foreground">
               {loading
-                ? "Loading users..."
-                : `${users.length} available user${users.length === 1 ? "" : "s"} to invite`}
+                ? "Searching..."
+                : `${users.length} user${users.length === 1 ? "" : "s"} found`}
             </p>
             {roomUserIds.length > 0 && (
               <p className="text-xs text-muted-foreground">
-                {roomUserIds.length} user{roomUserIds.length === 1 ? "" : "s"}{" "}
-                already in this room.
+                {roomUserIds.length} user{roomUserIds.length === 1 ? "" : "s"} already in this document.
               </p>
             )}
           </div>
