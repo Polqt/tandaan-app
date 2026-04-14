@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  SignedIn,
-  SignedOut,
-  UserButton,
-  useAuth,
-} from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
+import { PenBox } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "./ui/button";
@@ -28,39 +24,42 @@ export default function Header() {
   const isBlogRoute = pathname.startsWith("/blog");
   const isPricingRoute = pathname === "/pricing";
 
-  // Marketing / public header
   if (isMarketing) {
     return (
-      <header className="sticky top-0 z-40 border-b border-white/40 bg-[#f8faf9]/80 backdrop-blur-2xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 lg:px-8">
-          <div className="flex items-center gap-8">
-            <Link className="group flex items-center gap-2" href="/" aria-label="Tandaan home">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-950 text-white text-xs font-bold">
-                T
-              </div>
-              <div>
-                <p className="font-display text-[15px] font-bold tracking-tight text-slate-950 leading-none">
-                  Tandaan
-                </p>
-              </div>
+      <header className="relative z-40 bg-transparent">
+        <div className="mx-auto flex max-w-[90rem] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-10">
+            <Link
+              className="group flex items-center gap-2"
+              href="/"
+              aria-label="Tandaan home"
+            >
+              <PenBox className="size-[15px] text-[var(--color-es-soft-ink)]" />
+              <p className="font-display text-[15px] font-semibold leading-none tracking-[-0.04em] text-[var(--color-es-ink)] sm:text-[16px]">
+                Tandaan
+              </p>
             </Link>
 
             <nav
-              className="hidden items-center gap-0.5 rounded-full border border-slate-200/80 bg-white/70 p-1 backdrop-blur-sm md:flex"
+              className="hidden items-center gap-12 md:flex"
               aria-label="Main navigation"
             >
               {[
-                { label: "Product", href: "/", active: pathname === "/" },
-                { label: "Pricing", href: "/pricing", active: isPricingRoute },
-                { label: "Docs", href: "/docs", active: isDocsRoute },
+                { label: "Features", href: "/", active: pathname === "/" },
+                {
+                  label: "Templates",
+                  href: "/pricing",
+                  active: isPricingRoute,
+                },
                 { label: "Blog", href: "/blog", active: isBlogRoute },
+                { label: "Docs", href: "/docs", active: isDocsRoute },
               ].map((item) => (
                 <Link
                   key={item.label}
-                  className={`rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all ${
+                  className={`text-[11px] font-semibold uppercase tracking-[0.24em] transition ${
                     item.active
-                      ? "bg-slate-950 text-white shadow-sm"
-                      : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-800"
+                      ? "text-[var(--color-es-ink)]"
+                      : "text-[var(--color-es-soft-ink)] hover:text-[var(--color-es-ink)]"
                   }`}
                   href={item.href}
                   aria-current={item.active ? "page" : undefined}
@@ -74,7 +73,10 @@ export default function Header() {
           <div className="flex items-center gap-2">
             {userId ? (
               <>
-                <Button asChild className="h-8 rounded-full px-4 text-[13px] font-semibold">
+                <Button
+                  asChild
+                  className="h-10 rounded-[3px] border border-[var(--color-es-primary)] bg-[var(--color-es-primary)] px-5 text-[13px] font-semibold text-white hover:bg-[var(--color-es-ink)]"
+                >
                   <Link href="/documents">Open Workspace</Link>
                 </Button>
                 <UserButton
@@ -87,11 +89,14 @@ export default function Header() {
                 <Button
                   asChild
                   variant="ghost"
-                  className="h-8 rounded-full px-3 text-[13px] font-medium text-slate-600"
+                  className="h-9 px-2 text-[13px] font-medium text-[var(--color-es-soft-ink)]"
                 >
                   <Link href="/sign-in">Sign in</Link>
                 </Button>
-                <Button asChild className="h-8 rounded-full px-4 text-[13px] font-semibold">
+                <Button
+                  asChild
+                  className="h-10 rounded-[3px] border border-[var(--color-es-primary)] bg-[var(--color-es-primary)] px-6 text-[13px] font-semibold text-white hover:bg-[var(--color-es-ink)]"
+                >
                   <Link href="/pricing">Get started</Link>
                 </Button>
               </>
@@ -102,7 +107,6 @@ export default function Header() {
     );
   }
 
-  // In-app header (shown above the sidebar+content layout for documents/*)
   return (
     <header className="flex h-[50px] items-center justify-between border-b border-[#ebe9e6] bg-[#fbfbfa] px-4">
       <Link
@@ -117,7 +121,11 @@ export default function Header() {
 
       <div className="flex items-center gap-2">
         <SignedOut>
-          <Button asChild variant="outline" className="h-7 rounded-full px-3 text-xs">
+          <Button
+            asChild
+            variant="outline"
+            className="h-7 rounded-full px-3 text-xs"
+          >
             <Link href="/sign-in">Sign In</Link>
           </Button>
         </SignedOut>
