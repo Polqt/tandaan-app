@@ -31,6 +31,10 @@ export async function POST() {
           currency: "PHP",
           description: "Tandaan Pro — monthly subscription",
           remarks: userId,        // store userId so webhook can identify who paid
+          redirect: {
+            success: `${APP_URL}/billing?status=success`,
+            failed: `${APP_URL}/billing?status=failed`,
+          },
         },
       },
     }),

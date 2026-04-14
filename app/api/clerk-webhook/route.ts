@@ -49,13 +49,36 @@ export async function POST(req: Request) {
   }
 
   const { id, email_addresses, first_name, last_name } = event.data;
+  const email = email_addresses[0]?.email_address ?? "";
 
+  // Create user profile
   await adminDB.collection("users").doc(id).set({
-    email: email_addresses[0]?.email_address ?? "",
+    email,
     firstName: first_name ?? "",
     lastName: last_name ?? "",
     createdAt: new Date(),
   });
+
+  // Promote any pending invites for this email to real room memberships
+  if (email) {
+    const pendingSnap = await adminDB
+      .collection("pendingInvites")
+      .where("email", "==", email)
+      .get();
+
+    if (!pendingSnap.empty) {
+      const batch = adminDB.batch();
+      for (const pending of pendingSnap.docs) {
+        const { roomId } = pending.data() as { roomId: string };
+        batch.set(
+          adminDB.collection("users").doc(id).collection("rooms").doc(roomId),
+          { userId: id, role: "editor", createdAt: new Date(), roomId },
+        );
+        batch.delete(pending.ref);
+      }
+      await batch.commit();
+    }
+  }
 
   return NextResponse.json({ success: true });
 }

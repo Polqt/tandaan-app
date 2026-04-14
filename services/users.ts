@@ -54,41 +54,63 @@ export async function inviteUser(roomId: string, email: string) {
   }
 
   try {
-    const invited = await (await clerkClient()).users.getUserList({
-      emailAddress: [email],
+    const client = await clerkClient();
+    const invited = await client.users.getUserList({ emailAddress: [email] });
+
+    // User already exists in Clerk — add them directly
+    if (invited.data.length > 0) {
+      const userIdToInvite = invited.data[0].id;
+
+      const existingSnap = await adminDB
+        .collection("users")
+        .doc(userIdToInvite)
+        .collection("rooms")
+        .doc(roomId)
+        .get();
+
+      if (existingSnap.exists) {
+        return { success: false, error: "User is already a member of this document" };
+      }
+
+      await adminDB
+        .collection("users")
+        .doc(userIdToInvite)
+        .collection("rooms")
+        .doc(roomId)
+        .set({
+          userId: userIdToInvite,
+          role: "editor",
+          createdAt: new Date(),
+          roomId,
+        });
+
+      return { success: true };
+    }
+
+    // User not in Clerk yet — store a pending invite and send a Clerk invitation
+    const pendingRef = adminDB
+      .collection("pendingInvites")
+      .doc(`${roomId}_${email.replace(/[.@]/g, "_")}`);
+
+    const existing = await pendingRef.get();
+    if (existing.exists) {
+      return { success: false, error: "An invite has already been sent to this email" };
+    }
+
+    await pendingRef.set({
+      roomId,
+      email,
+      invitedBy: ownerId,
+      createdAt: new Date(),
     });
 
-    if (invited.data.length === 0) {
-      return { success: false, error: "User with the provided email does not exist" };
-    }
+    // Send a Clerk invitation so the user gets an email to sign up
+    await client.invitations.createInvitation({
+      emailAddress: email,
+      redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/sign-up`,
+    });
 
-    const userIdToInvite = invited.data[0].id;
-
-    // Don't re-invite if already a member
-    const existingSnap = await adminDB
-      .collection("users")
-      .doc(userIdToInvite)
-      .collection("rooms")
-      .doc(roomId)
-      .get();
-
-    if (existingSnap.exists) {
-      return { success: false, error: "User is already a member of this document" };
-    }
-
-    await adminDB
-      .collection("users")
-      .doc(userIdToInvite)
-      .collection("rooms")
-      .doc(roomId)
-      .set({
-        userId: userIdToInvite,
-        role: "editor",
-        createdAt: new Date(),
-        roomId,
-      });
-
-    return { success: true };
+    return { success: true, pending: true };
   } catch (error) {
     console.error("Error inviting user:", error);
     return { success: false, error: "Failed to invite user" };

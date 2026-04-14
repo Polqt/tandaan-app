@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { withRequestHeaders } from "./response";
 
 type AuthorizedAuth = {
   authorized: true;
@@ -35,4 +36,16 @@ export function apiErrorResponse(message: string, status: number = 500) {
 
 export function apiSuccessResponse<T>(data: T) {
   return NextResponse.json(data);
+}
+
+export function apiErrorResponseWithRequestId(
+  message: string,
+  requestId: string,
+  status: number = 500,
+) {
+  return withRequestHeaders(apiErrorResponse(message, status), requestId);
+}
+
+export function apiSuccessResponseWithRequestId<T>(data: T, requestId: string) {
+  return withRequestHeaders(apiSuccessResponse(data), requestId);
 }

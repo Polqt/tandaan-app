@@ -23,6 +23,8 @@ function mapVersion(id: string, data: Record<string, unknown>): Version {
         : undefined,
     timeStamp: toIsoTimestamp(data.timeStamp),
     userId: typeof data.userId === "string" ? data.userId : "unknown",
+    aiSummary: typeof data.aiSummary === "string" ? data.aiSummary : undefined,
+    chapterLabel: typeof data.chapterLabel === "string" ? data.chapterLabel : undefined,
   };
 }
 

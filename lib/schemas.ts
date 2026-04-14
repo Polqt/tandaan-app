@@ -1,12 +1,19 @@
 import { z } from "zod";
 
 // Documents
-export const patchDocumentSchema = z.object({
-  title: z.string().min(1).max(500).trim(),
-});
+export const patchDocumentSchema = z
+  .object({
+    title: z.string().min(1).max(500).trim().optional(),
+    content: z.string().min(1).optional(),
+    idempotencyKey: z.string().min(8).max(128).optional(),
+  })
+  .refine((d) => d.title !== undefined || d.content !== undefined, {
+    message: "At least one of title or content is required",
+  });
 
 export const createVersionSchema = z.object({
   content: z.string().min(1),
+  idempotencyKey: z.string().min(8).max(128).optional(),
 });
 
 // Auth endpoint
