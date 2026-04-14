@@ -7,8 +7,9 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useRooms } from "@/hooks/useRooms";
 import SearchResultItem from "./search-result-item";
 import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Input } from "./ui/input";
+import { VisuallyHidden } from "./ui/visually-hidden";
 import { Kbd } from "./ui/kbd";
 
 export default function SearchDialog() {
@@ -48,16 +49,19 @@ export default function SearchDialog() {
       <DialogTrigger asChild>
         <Button
           variant="ghost"
-          className="h-11 w-full justify-start rounded-xl border border-transparent px-3 text-stone-600 hover:border-[#e8e6e1] hover:bg-white hover:text-stone-900"
+          className="h-8 w-full justify-start rounded-lg px-2 text-sm text-es-muted hover:bg-[#eeede8] hover:text-es-ink"
         >
-          <Search className="mr-2 h-4 w-4 text-stone-400" />
+          <Search className="mr-2 h-3.5 w-3.5" />
           <span className="flex-1 text-left">Search</span>
-          <Kbd className="pointer-events-none border border-[#e6e2dc] bg-[#fbfbfa] text-stone-500">
-            Ctrl K
+          <Kbd className="pointer-events-none border-0 bg-es-faint text-[10px] text-es-muted">
+            ⌘K
           </Kbd>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl gap-0 overflow-hidden rounded-3xl border border-[#ebe9e6] bg-white p-0">
+      <DialogContent aria-describedby={undefined} className="max-w-2xl gap-0 overflow-hidden rounded-3xl border border-[#ebe9e6] bg-white p-0">
+        <VisuallyHidden>
+          <DialogTitle>Search documents</DialogTitle>
+        </VisuallyHidden>
         <div className="flex items-center border-b border-[#f1efeb] px-4 py-3">
           <Search className="mr-3 h-5 w-5 text-stone-400" />
           <Input
