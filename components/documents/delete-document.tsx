@@ -42,11 +42,12 @@ export default function DeleteDocument() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <Button
         asChild
-        className="rounded-full text-stone-500 hover:text-red-700"
-        variant={"ghost"}
+        className="h-8 w-8 rounded-lg text-[#8a8a87] hover:bg-[#eeede8] hover:text-red-600"
+        size="icon"
+        variant="ghost"
       >
         <DialogTrigger>
-          <Trash2Icon className="h-4 w-4" />
+          <Trash2Icon className="h-3.5 w-3.5" />
         </DialogTrigger>
       </Button>
       <DialogContent>

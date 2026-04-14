@@ -2,7 +2,7 @@
 
 import { Plus, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { toast } from "sonner";
 import { createNewDocument } from "@/services/actions";
 import { Button } from "../ui/button";
@@ -14,11 +14,23 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 
-export default function NewDocument() {
+export default function NewDocument({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "n" && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
+        e.preventDefault();
+        handleCreate();
+      }
+    };
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCreate = () => {
     startTransition(async () => {
@@ -51,17 +63,29 @@ export default function NewDocument() {
 
   return (
     <>
-      <Button
-        className="h-11 w-full justify-start rounded-xl border border-transparent px-3 text-stone-700 hover:border-[#e8e6e1] hover:bg-white"
-        disabled={isPending}
-        onClick={handleCreate}
-        variant="ghost"
-      >
-        <Plus className="mr-2 h-4 w-4" />
-        <span className="flex-1 text-left">
+      {compact ? (
+        <Button
+          className="h-9 rounded-lg bg-[#2f3430] px-4 text-sm font-medium text-white hover:bg-[#3d4239]"
+          disabled={isPending}
+          onClick={handleCreate}
+          variant="default"
+        >
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
           {isPending ? "Creating..." : "New Document"}
-        </span>
-      </Button>
+        </Button>
+      ) : (
+        <Button
+          className="h-9 w-full justify-start rounded-lg bg-[#2f3430] px-3 text-sm font-medium text-white hover:bg-[#3d4239] active:bg-[#2f3430]"
+          disabled={isPending}
+          onClick={handleCreate}
+          variant="default"
+        >
+          <Plus className="mr-2 h-3.5 w-3.5" />
+          <span className="flex-1 text-left">
+            {isPending ? "Creating..." : "New Document"}
+          </span>
+        </Button>
+      )}
 
       <Dialog open={showUpgrade} onOpenChange={setShowUpgrade}>
         <DialogContent className="sm:max-w-md">
