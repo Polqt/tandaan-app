@@ -54,24 +54,24 @@ export default function Avatars() {
   );
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="text-right">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-stone-400">
+    <div className="flex items-center gap-2.5">
+      <div className="text-right hidden sm:block">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-es-muted">
           Active now
         </p>
-        <p className="text-sm text-stone-600">
+        <p className="text-[11px] font-medium text-es-primary">
           {participants.length} collaborator
           {participants.length === 1 ? "" : "s"}
         </p>
       </div>
 
-      <div className="flex -space-x-2">
+      <div className="flex -space-x-1.5">
         {participants.map((participant) => (
           <Tooltip key={participant.id}>
             <TooltipTrigger asChild>
-              <Avatar className="h-10 w-10 border-2 border-[#fbfbfa] shadow-sm">
+              <Avatar className="h-7 w-7 border-2 border-es-canvas">
                 <AvatarImage alt={participant.name} src={participant.avatar} />
-                <AvatarFallback className="bg-stone-100 text-xs font-medium text-stone-700">
+                <AvatarFallback className="bg-[#eeede8] text-[10px] font-medium text-es-primary">
                   {getInitials(participant.name)}
                 </AvatarFallback>
               </Avatar>

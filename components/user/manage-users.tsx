@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useRoomUsers } from "@/hooks/useRoomUsers";
 import { removeUser } from "@/services/users";
 import { Button } from "../ui/button";
+import { Skeleton } from "../ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -50,9 +51,9 @@ export default function ManageUsers() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="rounded-full" size="sm" variant="outline">
-          <Users className="h-4 w-4" />
-          People {isLoading ? "..." : usersInRoom.length}
+        <Button className="h-8 rounded-lg bg-transparent px-2.5 text-xs font-medium text-es-primary hover:bg-[#eeede8] hover:text-es-ink" size="sm" variant="ghost">
+          <Users className="mr-1.5 h-3.5 w-3.5" />
+          People {isLoading ? "…" : usersInRoom.length}
         </Button>
       </DialogTrigger>
 
@@ -66,29 +67,40 @@ export default function ManageUsers() {
 
         <div className="space-y-2">
           {isLoading ? (
-            <p className="text-sm text-stone-500">Loading collaborators...</p>
+            <div className="space-y-2">
+              {[1, 2].map((i) => (
+                <div key={i} className="flex items-center gap-3 rounded-2xl border border-[#ebe9e6] px-4 py-3">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-3 w-2/5 rounded-full" />
+                    <Skeleton className="h-2.5 w-3/5 rounded-full" />
+                  </div>
+                  <Skeleton className="h-6 w-14 rounded-full" />
+                </div>
+              ))}
+            </div>
           ) : usersInRoom.length === 0 ? (
-            <p className="text-sm text-stone-500">No collaborators found.</p>
+            <p className="text-sm text-es-muted">No collaborators found.</p>
           ) : (
             usersInRoom.map((member) => {
               const isCurrentUser = member.userId === user?.id;
 
               return (
                 <div
-                  className="flex items-center justify-between gap-4 rounded-2xl border border-[#ebe9e6] px-4 py-3"
+                  className="flex items-center justify-between gap-4 rounded-2xl bg-es-surface px-4 py-3"
                   key={member.id}
                 >
                   <div>
-                    <p className="text-sm font-medium text-stone-900">
+                    <p className="text-sm font-medium text-es-ink">
                       {isCurrentUser ? "You" : (member.name ?? member.email ?? member.userId)}
                     </p>
-                    <p className="text-xs text-stone-500">
+                    <p className="text-xs text-es-muted">
                       {member.email || member.userId}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium capitalize text-stone-600">
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium capitalize text-es-primary shadow-[0_1px_2px_rgba(47,52,48,0.06)]">
                       {member.role}
                     </span>
 

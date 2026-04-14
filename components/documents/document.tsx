@@ -1,87 +1,80 @@
 "use client";
 
-import { type FormEvent, useEffect, useMemo, useState } from "react";
-import { useDocument, useUpdateDocument } from "@/hooks/useDocument";
+import Link from "next/link";
+import { useDocument } from "@/hooks/useDocument";
 import type { DocumentProps } from "@/types/documents";
 import Avatars from "../avatars";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "../ui/breadcrumb";
 import InviteUser from "../user/invite-user";
 import ManageUsers from "../user/manage-users";
+import ActivityFeed from "./activity-feed";
 import CollaborationReplay from "./collaboration-replay";
+import CommentsPanel from "./comments-panel";
+import DeleteDocument from "./delete-document";
 import Editor from "./editor";
 
 export default function Document({ id }: DocumentProps) {
-  const [input, setInput] = useState("");
   const { data } = useDocument(id);
-  const { isPending, mutate: updateDocument } = useUpdateDocument();
   const isOwner = data?.role === "owner";
-
-  useEffect(() => {
-    if (data?.title) setInput(data.title);
-  }, [data?.title]);
-
-  const savedTitle = data?.title?.trim() ?? "";
-  const nextTitle = input.trim();
-  const hasTitleChange = useMemo(
-    () => Boolean(nextTitle) && nextTitle !== savedTitle,
-    [nextTitle, savedTitle],
-  );
-
-  function handleUpdateTitle(event: FormEvent) {
-    event.preventDefault();
-    if (!hasTitleChange) return;
-    updateDocument({ data: { title: nextTitle }, id });
-  }
+  const title = data?.title?.trim() || "Untitled";
 
   return (
-    <main className="min-h-screen bg-[#fbfbfa]">
+    <main className="min-h-screen bg-[#faf9f6]">
       {/* Document toolbar */}
-      <div className="sticky top-0 z-10 border-b border-[#ebe9e6] bg-[#fbfbfa]/95 backdrop-blur-sm">
-        <div className="mx-auto flex w-full max-w-[900px] items-center justify-between gap-4 px-6 py-2.5">
-          <div className="flex items-center gap-2">
-            <ManageUsers />
-            <InviteUser />
-            <CollaborationReplay />
-          </div>
-          <div className="flex items-center gap-3">
-            <Avatars />
-            {isOwner && (
-              <span className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-0.5 text-[11px] font-medium text-stone-500">
-                Owner
-              </span>
-            )}
+      <div className="sticky top-0 z-10 border-b border-[#e6e9e4]/80 bg-[#faf9f6]/90 backdrop-blur-xl">
+        <div className="px-4 py-2 md:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <Breadcrumb>
+                <BreadcrumbList className="text-[13px]">
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild className="text-es-muted hover:text-es-soft-ink">
+                      <Link href="/documents">Workspace</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild className="text-es-muted hover:text-es-soft-ink">
+                      <Link href="/documents">Documents</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage className="max-w-[140px] truncate font-medium text-es-ink md:max-w-[220px]">
+                      {title}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+
+            <div className="flex items-center rounded-2xl bg-white/70 px-4 py-1.5 shadow-[0_12px_28px_rgba(47,52,48,0.11)] backdrop-blur-sm">
+              <Avatars />
+              <ManageUsers />
+              <div className="mx-2.5 h-6 w-px bg-[#ddd8cf]" />
+              <div className="flex items-center gap-1.5">
+                <ActivityFeed />
+                <CollaborationReplay isOwner={isOwner} />
+                <CommentsPanel iconOnly />
+                <InviteUser iconOnly />
+                <DeleteDocument />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Document body */}
-      <div className="mx-auto w-full max-w-[900px] px-6 pb-20 pt-12">
-        {/* Title */}
-        <form onSubmit={handleUpdateTitle} className="group mb-2">
-          <div className="flex items-start gap-3">
-            <Input
-              className="h-auto flex-1 border-none bg-transparent px-0 text-[2.25rem] font-bold leading-tight tracking-tight text-stone-950 shadow-none placeholder:text-stone-300 focus-visible:ring-0"
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Untitled"
-              value={input}
-            />
-            {hasTitleChange && (
-              <Button
-                className="mt-1 rounded-full px-3 py-1.5 text-xs font-medium"
-                disabled={isPending}
-                size="sm"
-                type="submit"
-                variant="outline"
-              >
-                {isPending ? "Saving…" : "Save"}
-              </Button>
-            )}
-          </div>
-        </form>
-
-        {/* Editor area */}
-        <div className="mt-6">
+      <div className="w-full px-4 pb-16 pt-5 md:px-6">
+        {/* Editor area — open field with minimal spacing */}
+        <div className="pt-2">
           <Editor />
         </div>
       </div>
