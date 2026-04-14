@@ -15,24 +15,37 @@ function isMarketingRoute(pathname: string) {
   );
 }
 
-export default function LayoutShell({ children }: { children: React.ReactNode }) {
+function isAppRoute(pathname: string) {
+  return pathname.startsWith("/documents") || pathname.startsWith("/billing");
+}
+
+export default function LayoutShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const isMarketing = isMarketingRoute(pathname);
+  const isApp = isAppRoute(pathname);
 
   return (
     <>
-      <Header />
+      {!isApp && <Header />}
       {isMarketing ? (
-        <main className="min-h-[calc(100vh-50px)] bg-[radial-gradient(ellipse_at_10%_0%,oklch(0.68_0.19_25/0.07),transparent_40%),radial-gradient(ellipse_at_90%_20%,oklch(0.55_0.2_260/0.06),transparent_35%),linear-gradient(180deg,#f9faf9_0%,#f1f4f2_100%)]">
+        <main className="min-h-[calc(100vh-50px)] bg-[linear-gradient(180deg,#fbfaf7_0%,#f6f3ed_54%,#fbfaf7_100%)]">
           {children}
         </main>
-      ) : (
-        <div className="flex h-[calc(100vh-50px)] overflow-hidden">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto bg-[#fbfbfa]">
+      ) : isApp ? (
+        <div className="flex h-screen overflow-hidden bg-[#f7f6f2]">
+          <div className="h-full shrink-0">
+            <Sidebar />
+          </div>
+          <main className="flex-1 overflow-y-auto bg-[#f7f6f2]">
             {children}
           </main>
         </div>
+      ) : (
+        <main className="flex-1 overflow-y-auto bg-[#fbfbfa]">{children}</main>
       )}
       <Toaster
         position="bottom-right"
