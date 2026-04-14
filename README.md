@@ -126,6 +126,23 @@ FIREBASE_ADMIN_SERVICE_KEY={"type":"service_account","project_id":"...","private
 NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY=pk_...
 LIVEBLOCKS_PRIVATE_KEY=sk_...
 
+# ── Upstash Redis (rate limiting) ─────────────────────────────────────────────
+UPSTASH_REDIS_REST_URL=https://your-upstash-instance.upstash.io
+UPSTASH_REDIS_REST_TOKEN=
+QSTASH_TOKEN=
+SNAPSHOT_TASK_SECRET=
+
+# ── PostHog (analytics + feature flags) ──────────────────────────────────────
+NEXT_PUBLIC_POSTHOG_KEY=phc_...
+NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+LOG_LEVEL=info
+
+# ── E2E smoke auth (optional) ─────────────────────────────────────────────────
+E2E_CLERK_EMAIL=
+E2E_CLERK_PASSWORD=
+
 # ── Sentry (optional but recommended) ───────────────────────────────────────
 NEXT_PUBLIC_SENTRY_DSN=
 SENTRY_AUTH_TOKEN=
@@ -267,6 +284,20 @@ bun format       # Biome format (writes files)
 - **Webhook verification** — the Clerk webhook at `/api/clerk-webhook` verifies the `svix-signature` header before touching Firestore.
 - **Input validation** — every API route that accepts a body uses Zod schemas (`lib/schemas.ts`).
 - **Ownership checks** — delete, restore, and invite operations verify the requester's role in Firestore before executing.
+
+## Observability & Operations
+
+- **Structured logs** — API routes emit JSON logs via `pino` and include `requestId`.
+- **Request correlation** — middleware injects `x-request-id`, and API responses mirror it.
+- **Web vitals + feature flags** — client metrics are captured with PostHog and mirrored to `/api/web-vitals`.
+- **Idempotency replay** — document save/version APIs store response payloads for duplicate-key replays.
+
+## Queue + snapshot verification (staging)
+
+1. Set `QSTASH_TOKEN`, `SNAPSHOT_TASK_SECRET`, and `NEXT_PUBLIC_APP_URL` in staging env.
+2. Trigger a version write via `POST /api/documents/:id/versions` with an `x-idempotency-key`.
+3. Confirm API response includes `{ queued: true, success: true }`.
+4. Confirm `/api/documents/:id/snapshot-task` runs and a new Firestore version document is written.
 
 ---
 
