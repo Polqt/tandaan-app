@@ -7,6 +7,7 @@ import {
 } from "@liveblocks/react/suspense";
 import { Spinner } from "../ui/spinner";
 import LiveCursorProvider from "./livecursor-provider";
+import RoomErrorBoundary from "./room-error-boundary";
 
 export default function RoomProvider({
   roomId,
@@ -16,10 +17,18 @@ export default function RoomProvider({
   children: React.ReactNode;
 }) {
   return (
-    <RoomProviderWrapper id={roomId} initialPresence={{ cursor: null }}>
-      <ClientSideSuspense fallback={<Spinner />}>
-        <LiveCursorProvider>{children}</LiveCursorProvider>
-      </ClientSideSuspense>
-    </RoomProviderWrapper>
+    <RoomErrorBoundary>
+      <RoomProviderWrapper id={roomId} initialPresence={{ cursor: null }}>
+        <ClientSideSuspense
+          fallback={
+            <div className="flex min-h-[60vh] items-center justify-center">
+              <Spinner className="size-5 text-es-primary" />
+            </div>
+          }
+        >
+          <LiveCursorProvider>{children}</LiveCursorProvider>
+        </ClientSideSuspense>
+      </RoomProviderWrapper>
+    </RoomErrorBoundary>
   );
 }

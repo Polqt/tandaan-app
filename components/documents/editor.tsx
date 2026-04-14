@@ -9,13 +9,10 @@ import {
   getYjsProviderForRoom,
   type LiveblocksYjsProvider,
 } from "@liveblocks/yjs";
-import { LoaderCircle } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import stringToColor from "@/lib/stringToColor";
-import { cn } from "@/lib/utils";
-import CommentsPanel from "./comments-panel";
-import DeleteDocument from "./delete-document";
+import { Spinner } from "../ui/spinner";
 
 type EditorIdentity = {
   color: string;
@@ -30,6 +27,10 @@ type BlockNoteProps = {
 
 const DOCUMENT_SAVE_DELAY_MS = 1000;
 const VERSION_SNAPSHOT_INTERVAL_MS = 30000;
+
+function generateIdempotencyKey() {
+  return crypto.randomUUID();
+}
 
 const BlockNote = memo(function BlockNote({
   onContentChange,
@@ -66,7 +67,7 @@ const BlockNote = memo(function BlockNote({
 
   return (
     <BlockNoteView
-      className="min-h-[calc(100vh-20rem)] [&_.bn-container]:border-0 [&_.bn-editor]:bg-transparent [&_.bn-editor]:px-8 [&_.bn-editor]:py-8 [&_.bn-editor]:text-[15px] [&_.bn-editor]:text-stone-800"
+      className="min-h-[calc(100vh-10.5rem)] [&_.bn-container]:border-0 [&_.bn-editor]:bg-transparent [&_.bn-editor]:px-0 [&_.bn-editor]:py-0 [&_.bn-editor]:text-[16px] [&_.bn-editor]:leading-[1.8] [&_.bn-editor]:text-[#2f3430] [&_.bn-editor]:caret-[#5f5e5e] [&_.bn-editor]:focus:outline-none [&_.bn-editor]:pt-2 [&_.bn-side-menu]:hidden [&_.bn-toolbar]:rounded-lg [&_.bn-toolbar]:border-0 [&_.bn-toolbar]:bg-[#f4f4f0]/90 [&_.bn-toolbar]:backdrop-blur-xl"
       editor={editor}
       onChange={handleEditorChange}
       theme="light"
@@ -138,10 +139,12 @@ export default function Editor() {
         return;
       }
 
+      const idempotencyKey = generateIdempotencyKey();
       const response = await fetch(`/api/documents/${room.id}/versions`, {
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, idempotencyKey }),
         headers: {
           "Content-Type": "application/json",
+          "x-idempotency-key": idempotencyKey,
         },
         method: "POST",
       });
@@ -178,10 +181,15 @@ export default function Editor() {
         activeSaveControllerRef.current = controller;
 
         try {
+          const idempotencyKey = generateIdempotencyKey();
           const response = await fetch(`/api/documents/${room.id}`, {
-            body: JSON.stringify({ content }),
+            body: JSON.stringify({
+              content,
+              idempotencyKey,
+            }),
             headers: {
               "Content-Type": "application/json",
+              "x-idempotency-key": idempotencyKey,
             },
             method: "PATCH",
             signal: controller.signal,
@@ -215,36 +223,34 @@ export default function Editor() {
   );
 
   return (
-    <section className="overflow-hidden rounded-[28px] border border-[#ebe9e6] bg-white shadow-[0_1px_0_rgba(15,23,42,0.03)]">
-      <div className="flex flex-col gap-4 border-b border-[#f1efeb] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-3 text-sm text-stone-500">
-          <span
-            className={cn(
-              "h-2.5 w-2.5 rounded-full",
-              isSynced ? "bg-emerald-500" : "bg-amber-500",
-            )}
-          />
-          <span>{isSynced ? "Live and synced" : "Syncing room state..."}</span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <CommentsPanel />
-          <DeleteDocument />
-        </div>
-      </div>
-
+    <section className="w-full">
       {!userInfo ? (
-        <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center text-sm text-stone-500">
-          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-          Loading editor...
+        <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center">
+          <div className="w-full max-w-xs space-y-3">
+            <div className="flex items-center justify-center gap-2 text-xs tracking-wide text-[#8a8a87] uppercase">
+              <Spinner className="size-3.5 text-[#5f5e5e]" />
+              Loading editor
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-[#e6e9e4]">
+              <div className="h-full w-2/3 rounded-full bg-[#5f5e5e] animate-pulse" />
+            </div>
+          </div>
         </div>
       ) : (
-        <BlockNote
-          key={room.id}
-          onContentChange={handleContentChange}
-          provider={provider}
-          userInfo={userInfo}
-        />
+        <>
+          {!isSynced && (
+            <div className="mb-3 inline-flex items-center gap-2 rounded-lg bg-[#e6e9e4] px-3 py-1.5 text-xs text-[#5f5e5e]">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+              Syncing...
+            </div>
+          )}
+          <BlockNote
+            key={room.id}
+            onContentChange={handleContentChange}
+            provider={provider}
+            userInfo={userInfo}
+          />
+        </>
       )}
     </section>
   );

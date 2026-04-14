@@ -1,7 +1,7 @@
 "use client";
 
 import { useOthers, useRoom, useSelf } from "@liveblocks/react/suspense";
-import { History } from "lucide-react";
+import { Code2, History } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -23,7 +23,7 @@ function buildReplayUrl(shareId: string, versionId: string) {
   return url.toString();
 }
 
-export default function CollaborationReplay() {
+export default function CollaborationReplay({ isOwner = false }: { isOwner?: boolean }) {
   const room = useRoom();
   const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
@@ -124,27 +124,47 @@ export default function CollaborationReplay() {
   return (
     <Sheet onOpenChange={setIsOpen} open={isOpen}>
       <SheetTrigger asChild>
-        <Button className="rounded-full" size="sm" variant="outline">
-          <History className="h-4 w-4" />
+        <Button className="h-8 rounded-lg bg-transparent px-3 text-xs font-medium text-[#5f5e5e] hover:bg-[#eeede8] hover:text-[#2f3430]" size="sm" variant="ghost">
+          <History className="mr-1.5 h-3.5 w-3.5" />
           Replay
         </Button>
       </SheetTrigger>
 
       <SheetContent className="w-full overflow-y-auto border-l border-[#ebe9e6] bg-[#fbfbfa] px-0 sm:max-w-[1040px]">
         <SheetHeader className="border-b border-[#ebe9e6] px-6 pb-5 pt-6">
-          <SheetTitle className="text-2xl font-semibold text-stone-950">
-            Collaboration Replay
-          </SheetTitle>
-          <SheetDescription className="max-w-2xl text-sm leading-7 text-stone-500">
-            Review each saved checkpoint, inspect the change summary, and copy a
-            public replay link when the note is ready to share.
-          </SheetDescription>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <SheetTitle className="text-2xl font-semibold text-stone-950">
+                Collaboration Replay
+              </SheetTitle>
+              <SheetDescription className="mt-1 max-w-2xl text-sm leading-7 text-stone-500">
+                Review each saved checkpoint, annotate chapters, and share a public replay link.
+              </SheetDescription>
+            </div>
+            {timeline?.shareId && (
+              <Button
+                className="shrink-0 rounded-full"
+                onClick={() => {
+                  const code = `<iframe src="${typeof window !== "undefined" ? window.location.origin : ""}/replay/${timeline.shareId}/embed" width="100%" height="480" frameborder="0" allowfullscreen></iframe>`;
+                  navigator.clipboard.writeText(code);
+                  toast.success("Embed code copied to clipboard.");
+                }}
+                size="sm"
+                variant="outline"
+              >
+                <Code2 className="mr-1.5 h-4 w-4" />
+                Copy embed
+              </Button>
+            )}
+          </div>
         </SheetHeader>
 
         <div className="px-6 py-6">
           <ReplayViewer
+            documentId={room.id}
             initialVersionId={searchParams.get("version")}
             isLoading={isLoading}
+            isOwner={isOwner}
             onCopyShareLink={copyShareLink}
             participantNames={participantNames}
             profilesByUserId={timeline?.profilesByUserId || {}}
