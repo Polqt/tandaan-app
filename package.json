@@ -9,7 +9,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "biome check",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "loadtest:snapshots": "node scripts/load-test-snapshot-queue.mjs"
   },
   "dependencies": {
     "@blocknote/core": "^0.41.1",
@@ -39,7 +40,6 @@
     "firebase": "^12.6.0",
     "firebase-admin": "^13.5.0",
     "framer-motion": "^12.23.24",
-    "gsap": "^3.15.0",
     "lucide-react": "^0.548.0",
     "next": "16.0.0",
     "next-themes": "^0.4.6",
@@ -55,7 +55,6 @@
     "svix": "^1.90.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.17",
-    "three": "^0.183.2",
     "vaul": "^1.1.2",
     "web-vitals": "^4.2.4",
     "zod": "^4.3.6"
@@ -66,7 +65,6 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/three": "^0.183.1",
     "baseline-browser-mapping": "^2.10.17",
     "typescript": "^5"
   }

@@ -3,8 +3,9 @@ import { Manrope, Sora } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import LayoutShell from "@/components/layout-shell";
+import PostHogUserIdentity from "@/components/analytics/posthog-user-identity";
 import WebVitalsReporter from "@/components/analytics/web-vitals-reporter";
+import AppToaster from "@/components/shell/app-toaster";
 import AppPostHogProvider from "@/providers/PostHogProvider";
 import QueryProvider from "@/providers/QueryProvider";
 
@@ -20,20 +21,11 @@ const sora = Sora({
 
 export const metadata: Metadata = {
   title: "Tandaan",
-  description: "A simple note-taking AI app.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
-  openGraph: {
-    description: "A simple note-taking AI app.",
-    images: ["/og-image.png"],
-    title: "Tandaan",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    description: "A simple note-taking AI app.",
-    images: ["/og-image.png"],
-    title: "Tandaan",
-  },
+  description:
+    "Collaborative documents with replay, comments, and a calm sketchbook interface for teams.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  ),
 };
 
 export default function RootLayout({
@@ -51,7 +43,9 @@ export default function RootLayout({
             <AppPostHogProvider>
               <WebVitalsReporter />
               <QueryProvider>
-                <LayoutShell>{children}</LayoutShell>
+                <PostHogUserIdentity />
+                {children}
+                <AppToaster />
               </QueryProvider>
             </AppPostHogProvider>
           </Suspense>

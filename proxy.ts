@@ -40,13 +40,15 @@ const isPublicRoute = createRouteMatcher([
   "/sitemap.xml",
   "/sign-in(.*)",
   "/sign-up(.*)",
-  "/replay/(.*)",           // public replay viewer + embed — no auth required
-  "/blog(.*)",              // nextra blog
-  "/docs(.*)",              // nextra docs
-  "/pricing(.*)",           // pricing page
-  "/api/clerk-webhook",     // Clerk webhook — verified by svix, not Clerk session
-  "/api/billing/webhook",   // PayMongo webhook — verified by HMAC, not Clerk session
-  "/monitoring(.*)",        // Sentry tunnel
+  "/replay/(.*)",
+  "/features(.*)",
+  "/blog(.*)",
+  "/docs(.*)",
+  "/billing(.*)",
+  "/pricing(.*)",
+  "/api/clerk-webhook",
+  "/api/billing/webhook",
+  "/monitoring(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

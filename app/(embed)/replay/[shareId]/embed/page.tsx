@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { getReplayTimelineByShareId } from "@/services/replay";
 import EmbedReplay from "@/components/documents/embed-replay";
+import { getReplayTimelineByShareId } from "@/services/replay";
 
 // Allow this route to be embedded in iframes from any origin
 export const headers = () => [

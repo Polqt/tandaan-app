@@ -59,10 +59,27 @@
   --color-lime-light: oklch(0.95 0.06 130);
   --color-cobalt: oklch(0.55 0.2 260);
   --color-cobalt-light: oklch(0.92 0.04 260);
+
+  --color-paper-canvas: #f7eddb;
+  --color-paper-sheet: #fff8ea;
+  --color-paper-raised: #fffdf7;
+  --color-paper-ink: #272b26;
+  --color-paper-muted: #625b50;
+  --color-paper-soft: #8a8175;
+  --color-paper-line: #d8cbb9;
+  --color-paper-red: #df3e2d;
+  --color-paper-blue: #2369c9;
+  --color-paper-green: #4f9a63;
+  --color-paper-yellow: #e3b83d;
 }
 
 .font-display {
   font-family: var(--font-sora), var(--font-manrope), sans-serif;
+}
+
+.font-hand {
+  font-family: "Comic Sans MS", "Bradley Hand", "Segoe Print", cursive;
+  letter-spacing: 0;
 }
 
 :root {
@@ -168,299 +185,468 @@
 }
 
 @layer utilities {
-  .paper-noise {
+  .public-page {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at 12% 8%,
+        rgba(255, 255, 255, 0.72),
+        transparent 22rem
+      ),
+      radial-gradient(
+        circle at 92% 4%,
+        rgba(255, 241, 184, 0.45),
+        transparent 18rem
+      ),
+      linear-gradient(180deg, var(--color-paper-canvas), #fbf4e7 48%, #f5ead8);
+    color: var(--color-paper-ink);
+  }
+
+  .public-shell {
+    position: relative;
+    margin-inline: auto;
+    width: min(100% - 2rem, 90rem);
+  }
+
+  .paper-grain {
     background-image:
       radial-gradient(
-        circle at 20% 20%,
-        rgba(120, 112, 100, 0.06) 0,
-        transparent 24%
+        circle at 12% 18%,
+        rgba(39, 43, 38, 0.06) 0 1px,
+        transparent 1px
       ),
       radial-gradient(
-        circle at 80% 10%,
-        rgba(120, 112, 100, 0.04) 0,
-        transparent 22%
+        circle at 78% 20%,
+        rgba(39, 43, 38, 0.04) 0 1px,
+        transparent 1px
       ),
       radial-gradient(
-        circle at 70% 80%,
-        rgba(120, 112, 100, 0.05) 0,
-        transparent 20%
+        circle at 52% 82%,
+        rgba(39, 43, 38, 0.045) 0 1px,
+        transparent 1px
       ),
-      linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.35),
-        rgba(246, 241, 232, 0.18)
+      repeating-linear-gradient(
+        98deg,
+        rgba(39, 43, 38, 0.028) 0 1px,
+        transparent 1px 8px
       );
+    background-size:
+      19rem 19rem,
+      23rem 23rem,
+      17rem 17rem,
+      100% 100%;
     mix-blend-mode: multiply;
   }
 
-  .sketch-outline {
-    position: relative;
-    border: 1.5px solid var(--color-es-line);
-    box-shadow: 4px 4px 0 rgba(217, 212, 203, 0.72);
+  .public-hero {
+    isolation: isolate;
   }
 
-  .sketch-outline::before {
-    content: "";
+  .public-hero-title {
+    font-family: "Comic Sans MS", "Bradley Hand", "Segoe Print", cursive;
+    font-size: clamp(3.35rem, 6.8vw, 6.25rem);
+    font-weight: 700;
+    line-height: 0.88;
+    letter-spacing: 0;
+    text-decoration-line: underline;
+    text-decoration-color: var(--color-paper-red);
+    text-decoration-thickness: 0.07em;
+    text-underline-offset: 0.06em;
+    text-wrap: balance;
+  }
+
+  .hero-object {
+    min-width: 0;
+  }
+
+  .paper-stack-illustration {
+    position: relative;
+    width: min(100%, 42rem);
+    min-height: 32rem;
+    margin-inline: auto;
+  }
+
+  .paper-stack-illustration.is-compact {
+    width: min(100%, 34rem);
+    min-height: 25rem;
+  }
+
+  .paper-stack-board {
     position: absolute;
-    inset: 8px;
-    border: 1px dashed rgba(217, 212, 203, 0.75);
-    border-radius: inherit;
-    pointer-events: none;
+    left: 11%;
+    right: 8%;
+    bottom: 12%;
+    height: 2rem;
+    border: 1.5px solid rgba(39, 43, 38, 0.45);
+    background: #e7ad62;
+    box-shadow: 5px 6px 0 rgba(39, 43, 38, 0.1);
   }
 
-  .sketch-card {
-    position: relative;
-    border-radius: 1.55rem;
-    border: 1.5px solid var(--color-es-line);
-    background: rgba(255, 255, 255, 0.7);
-    box-shadow:
-      0 18px 40px rgba(124, 114, 99, 0.08),
-      3px 3px 0 rgba(217, 212, 203, 0.8);
-  }
-
-  .sketch-card::before {
-    content: "";
+  .paper-stack-tabs {
     position: absolute;
-    inset: 10px;
-    border: 1px dashed rgba(217, 212, 203, 0.72);
-    border-radius: 1.2rem;
-    pointer-events: none;
+    top: 22%;
+    right: 11%;
+    display: grid;
+    gap: 0.55rem;
+    width: 4.8rem;
   }
 
-  .sketch-caption {
-    color: var(--color-es-soft-ink);
-    font-family: var(--font-manrope), sans-serif;
-    font-size: 0.78rem;
-    letter-spacing: 0.08em;
-  }
-
-  .handwritten-note {
-    font-family: "Comic Sans MS", "Bradley Hand", cursive;
-    font-size: 0.95rem;
-    line-height: 1.2;
-  }
-
-  .section-scribble {
-    font-family: "Comic Sans MS", "Bradley Hand", cursive;
-    font-size: clamp(2rem, 5vw, 3.75rem);
-    color: rgba(94, 90, 83, 0.14);
-    letter-spacing: 0.04em;
-  }
-
-  .landing-page {
-    position: relative;
-    overflow: hidden;
-    perspective: 1200px;
-    transform-style: preserve-3d;
-    background:
-      radial-gradient(
-        circle at 20% 8%,
-        rgba(255, 255, 255, 0.92),
-        transparent 22%
-      ), linear-gradient(180deg, #fbfaf7 0%, #f7f4ee 48%, #fbfaf7 100%);
-  }
-
-  .landing-shell {
-    position: relative;
-    margin: 0 auto;
-    display: flex;
-    width: 100%;
-    max-width: 96rem;
-    flex-direction: column;
-    gap: 7rem;
-    padding: 0 1rem 4.5rem;
-  }
-
-  .landing-hero {
-    position: relative;
-    padding: 2.25rem 1rem 4.75rem;
-  }
-
-  .hero-ambient-layer {
-    pointer-events: none;
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    opacity: 0.95;
-  }
-
-  .hero-ambient-canvas {
-    height: 100%;
-    width: 100%;
-  }
-
-  .hero-ambient-canvas canvas {
+  .paper-stack-tabs span {
     display: block;
+    height: 2rem;
+    border: 1px solid rgba(39, 43, 38, 0.35);
   }
 
-  .hero-kicker {
-    font-family: "Comic Sans MS", "Bradley Hand", cursive;
-    font-size: 1.7rem;
-    color: var(--color-es-soft-ink);
-  }
-
-  .hero-title {
-    font-family: var(--font-sora), var(--font-manrope), sans-serif;
-    font-size: clamp(4rem, 9.8vw, 8.4rem);
-    font-weight: 700;
-    line-height: 0.92;
-    letter-spacing: -0.075em;
-    color: var(--color-es-ink);
-    text-wrap: balance;
-  }
-
-  .hero-copy {
-    font-size: clamp(1.25rem, 2vw, 2rem);
-    line-height: 1.55;
-    color: var(--color-es-soft-ink);
-    text-wrap: balance;
-  }
-
-  .hero-ring {
-    border: 1.5px dashed rgba(217, 212, 203, 0.7);
-    opacity: 0.9;
-  }
-
-  .artifact-card {
-    position: relative;
-    min-height: 14rem;
-    transform-style: preserve-3d;
-    will-change: transform, box-shadow;
-    border-radius: 1.45rem;
-    border: 1.45px solid rgba(85, 81, 75, 0.68);
-    background: rgba(255, 255, 255, 0.88);
-    padding: 1.4rem;
+  .paper-stack-sheet {
+    position: absolute;
+    top: 7%;
+    left: 27%;
+    width: min(58%, 24rem);
+    aspect-ratio: 0.78;
+    rotate: 6deg;
+    border: 1.5px solid rgba(39, 43, 38, 0.45);
+    background: #fffdfa;
     box-shadow:
-      0 20px 42px rgba(82, 76, 68, 0.07),
-      0 3px 0 rgba(221, 216, 206, 0.82);
+      -0.35rem 0.35rem 0 #f3f0ea,
+      -0.7rem 0.7rem 0 #e9e6df,
+      -1.05rem 1.05rem 0 #d7d3cb,
+      0 18px 30px rgba(72, 57, 37, 0.08);
   }
 
-  .sticky-note {
+  .paper-stack-sheet span {
     position: absolute;
-    left: -1rem;
-    top: -1.2rem;
-    rotate: -6deg;
-    border: 1.4px solid rgba(85, 81, 75, 0.6);
-    background: #fff0a9;
-    padding: 0.85rem 1rem;
-    font-family: "Comic Sans MS", "Bradley Hand", cursive;
-    font-size: 1.15rem;
-    color: var(--color-es-ink);
-    box-shadow: 0 10px 24px rgba(82, 76, 68, 0.08);
+    left: 22%;
+    right: 14%;
+    height: 0.18rem;
+    background: rgba(39, 43, 38, 0.78);
   }
 
-  .landing-band {
-    position: relative;
-    left: 50%;
-    width: 100vw;
-    transform: translateX(-50%);
-    overflow: hidden;
-    background: #eef0ea;
-    padding: 5.5rem 1rem;
+  .paper-stack-sheet span:nth-child(1) {
+    top: 30%;
   }
 
-  .landing-watermark {
-    pointer-events: none;
+  .paper-stack-sheet span:nth-child(2) {
+    top: 40%;
+  }
+
+  .paper-stack-sheet span:nth-child(3) {
+    top: 50%;
+  }
+
+  .paper-stack-sheet span:nth-child(4) {
+    top: 60%;
+  }
+
+  .paper-stack-note {
     position: absolute;
-    inset: 0;
-    top: 0.5rem;
-    display: flex;
-    justify-content: center;
-    font-size: clamp(8rem, 24vw, 18rem);
-    font-weight: 700;
-    letter-spacing: -0.08em;
-    color: rgba(47, 52, 48, 0.045);
+    left: 24%;
+    right: 12%;
+    bottom: 16%;
+    height: 4rem;
+    border: 1.5px solid rgba(39, 43, 38, 0.42);
+    background: #fffcc5;
   }
 
-  .quote-shell {
-    position: relative;
-    overflow: hidden;
-    transform-style: preserve-3d;
-    border-radius: 2rem;
-    border: 1.6px solid rgba(85, 81, 75, 0.68);
-    background: rgba(255, 255, 255, 0.62);
-    padding: 3.5rem 1.5rem;
-    box-shadow: 0 18px 40px rgba(82, 76, 68, 0.05);
+  .paper-stack-rings {
+    position: absolute;
+    top: 11%;
+    left: 23%;
+    display: grid;
+    gap: 1.24rem;
   }
 
-  .landing-footer {
-    position: relative;
-    left: 50%;
-    width: 100vw;
-    transform: translateX(-50%);
-    border-top: 1px solid var(--color-es-line);
-    padding: 2.6rem 1rem 2.25rem;
-  }
-
-  .footer-icon {
-    display: flex;
-    height: 3rem;
-    width: 3rem;
-    align-items: center;
-    justify-content: center;
+  .paper-stack-rings span {
+    display: block;
+    width: 2.1rem;
+    height: 0.55rem;
+    border: 0.2rem solid #b98442;
     border-radius: 999px;
-    border: 1px solid var(--color-es-line);
-    color: var(--color-es-soft-ink);
-    transition: background 160ms ease;
+    background: #ffe6aa;
+    box-shadow: 1px 1px 0 rgba(39, 43, 38, 0.2);
   }
 
-  .footer-icon:hover {
-    background: rgba(255, 255, 255, 0.88);
+  .paper-stack-star {
+    position: absolute;
+    top: 18%;
+    left: 12%;
+    width: 2.1rem;
+    height: 2.1rem;
+    rotate: 14deg;
+    color: #2369c9;
   }
 
-  @media (min-width: 640px) {
-    .landing-shell,
-    .landing-hero,
-    .landing-band,
-    .landing-footer {
-      padding-left: 2rem;
-      padding-right: 2rem;
-    }
+  .paper-stack-tab-label {
+    position: absolute;
+    display: none;
+  }
 
-    .quote-shell {
-      padding: 4.25rem 2rem;
-    }
+  .paper-stack-tab-label-rooms {
+    top: 25%;
+    right: 1%;
+    rotate: 7deg;
+  }
+
+  .paper-stack-tab-label-notes {
+    top: 42%;
+    right: -2%;
+    rotate: 4deg;
+  }
+
+  .paper-stack-tab-label-decisions {
+    top: 57%;
+    right: 5%;
+    rotate: -5deg;
+  }
+
+  .paper-stack-room-card {
+    position: absolute;
+    left: 12%;
+    bottom: 0;
+    width: 16rem;
+    rotate: -3deg;
   }
 
   @media (min-width: 1024px) {
-    .landing-shell,
-    .landing-hero,
-    .landing-band,
-    .landing-footer {
-      padding-left: 3rem;
-      padding-right: 3rem;
+    .paper-stack-tab-label {
+      display: block;
+    }
+  }
+
+  .paper-button {
+    border-radius: 4px;
+    border: 1.5px solid var(--color-paper-ink);
+    background: var(--color-paper-ink);
+    color: #fffdf7;
+    font-weight: 800;
+    box-shadow: 4px 4px 0 rgba(39, 43, 38, 0.18);
+  }
+
+  .paper-button:hover {
+    background: #11140f;
+    color: #fffdf7;
+    transform: translate(-1px, -1px);
+    box-shadow: 6px 6px 0 rgba(39, 43, 38, 0.2);
+  }
+
+  .paper-button-red {
+    background: var(--color-paper-red);
+  }
+
+  .paper-link-button {
+    border-radius: 4px;
+    color: var(--color-paper-ink);
+    font-weight: 800;
+    text-decoration: underline;
+    text-decoration-color: var(--color-paper-ink);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.42rem;
+  }
+
+  .paper-link-button:hover {
+    background: transparent;
+    color: var(--color-paper-red);
+    text-decoration-color: var(--color-paper-red);
+  }
+
+  .paper-panel {
+    position: relative;
+    border: 1.5px solid
+      color-mix(in srgb, var(--color-paper-ink) 72%, transparent);
+    border-radius: 6px;
+    background: rgba(255, 248, 234, 0.94);
+    box-shadow:
+      0 18px 38px rgba(72, 57, 37, 0.08),
+      3px 3px 0 rgba(39, 43, 38, 0.12);
+  }
+
+  .paper-panel::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0.45rem;
+    border: 1px dashed rgba(39, 43, 38, 0.1);
+    border-radius: 4px;
+  }
+
+  .paper-note {
+    border: 1.5px solid rgba(39, 43, 38, 0.6);
+    border-radius: 4px;
+    padding: 0.9rem;
+    box-shadow: 3px 5px 0 rgba(39, 43, 38, 0.1);
+  }
+
+  .paper-tab {
+    border: 1.5px solid rgba(39, 43, 38, 0.62);
+    border-radius: 4px;
+    padding: 0.55rem 0.8rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    box-shadow: 2px 3px 0 rgba(39, 43, 38, 0.12);
+  }
+
+  .shadow-paper {
+    box-shadow:
+      0 16px 34px rgba(72, 57, 37, 0.1),
+      4px 4px 0 rgba(39, 43, 38, 0.14);
+  }
+
+  .public-torn-section {
+    position: relative;
+    background: #fffdf7;
+    border-block: 1px solid var(--color-paper-line);
+  }
+
+  .public-torn-section::before,
+  .public-torn-section::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1.1rem;
+    background:
+      linear-gradient(135deg, transparent 0.45rem, #fffdf7 0.48rem),
+      linear-gradient(225deg, transparent 0.45rem, #fffdf7 0.48rem);
+    background-position:
+      0 0,
+      0 0;
+    background-size: 1.6rem 1.1rem;
+  }
+
+  .public-torn-section::before {
+    top: -1rem;
+  }
+
+  .public-torn-section::after {
+    bottom: -1rem;
+    rotate: 180deg;
+  }
+
+  .public-band {
+    position: relative;
+    background:
+      linear-gradient(90deg, rgba(35, 105, 201, 0.08), transparent 30%),
+      linear-gradient(180deg, #f4ead7, #fbf2e3);
+    border-block: 1px solid var(--color-paper-line);
+  }
+
+  .paper-ledger {
+    border: 1.5px solid var(--color-paper-line);
+    border-radius: 6px;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        rgba(35, 105, 201, 0.08) 0 1px,
+        transparent 1px 2.05rem
+      ),
+      linear-gradient(
+        90deg,
+        transparent 0 3rem,
+        rgba(223, 62, 45, 0.18) 3rem 3.08rem,
+        transparent 3.08rem
+      ), #fff8ea;
+    box-shadow:
+      0 20px 44px rgba(72, 57, 37, 0.08),
+      5px 5px 0 rgba(39, 43, 38, 0.1);
+  }
+
+  .public-footer {
+    position: relative;
+    border-top: 1px solid var(--color-paper-line);
+    background: rgba(255, 248, 234, 0.66);
+  }
+
+  .public-icon-button {
+    display: inline-flex;
+    height: 2.35rem;
+    width: 2.35rem;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--color-paper-ink);
+    border-radius: 999px;
+    background: #fffdf7;
+    color: var(--color-paper-ink);
+    box-shadow: 2px 2px 0 rgba(39, 43, 38, 0.12);
+    transition:
+      transform 160ms ease,
+      box-shadow 160ms ease;
+  }
+
+  .public-icon-button:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 rgba(39, 43, 38, 0.16);
+  }
+
+  @media (max-width: 768px) {
+    .public-shell {
+      width: min(100% - 1.25rem, 90rem);
     }
 
-    .landing-hero {
-      padding-top: 2.75rem;
-      padding-bottom: 5.5rem;
+    .public-hero-title {
+      font-size: clamp(2.6rem, 11.5vw, 3.85rem);
     }
 
-    .quote-shell {
-      padding: 4.75rem 3rem;
+    .paper-stack-illustration {
+      min-height: 17rem;
+      width: min(100%, 24rem);
+    }
+
+    .paper-stack-illustration.is-compact {
+      min-height: 18rem;
+      width: min(100%, 22rem);
+    }
+
+    .paper-stack-sheet {
+      left: 28%;
+      width: 52%;
+    }
+
+    .paper-stack-rings {
+      left: 23%;
+      gap: 0.63rem;
+    }
+
+    .paper-stack-rings span {
+      width: 1.25rem;
+      height: 0.38rem;
+      border-width: 0.14rem;
+    }
+
+    .paper-stack-tabs,
+    .paper-stack-tab-label,
+    .paper-stack-room-card {
+      display: none;
+    }
+
+    .paper-stack-star {
+      top: 21%;
+      left: 16%;
+      width: 1.25rem;
+      height: 1.25rem;
     }
   }
 }
 
-/* ── BlockNote canvas mode ─────────────────────────────────────
+/* BlockNote canvas mode
    Strip BlockNote's default white background so the editor
    renders directly on the #faf9f6 canvas (Editorial Sketchbook).
    The floating toolbar still appears as a white popover.
-──────────────────────────────────────────────────────────────── */
+*/
 .bn-container,
 .bn-editor {
-  background: transparent !important;
+  background: transparent;
 }
 
 .bn-editor {
   font-family: var(--font-manrope), sans-serif;
-  color: #2f3430 !important;
+  color: #2f3430;
 }
 
 /* Placeholder text */
 .bn-editor .bn-block-content[data-is-empty-and-focused="true"]::before,
 .bn-editor .bn-block-content[data-is-placeholder-visible="true"]::before {
-  color: #c4c2bc !important;
+  color: #c4c2bc;
   font-style: italic;
 }
 

@@ -1,8 +1,11 @@
-import { withSentryConfig } from "@sentry/nextjs";
 import { createRequire } from "node:module";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import nextra from "nextra";
 
+const appRoot = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 const yjsPath = require.resolve("yjs");
 
@@ -57,8 +60,12 @@ const nextConfig: NextConfig = {
     "@liveblocks/react-blocknote",
   ],
 
-  // Webpack alias for yjs deduplication (needed by BlockNote + Liveblocks)
-  // Turbopack handles this natively — no alias needed there
+  // Keep Turbopack rooted at this app when a parent lockfile exists.
+  turbopack: {
+    root: appRoot,
+  },
+
+  // Webpack alias for yjs deduplication (needed by BlockNote + Liveblocks).
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -75,7 +82,8 @@ export default withSentryConfig(nextraConfig, {
   project: "tandaan",
   silent: !process.env.CI,
   widenClientFileUpload: true,
-  tunnelRoute: process.env.NODE_ENV === "production" ? "/monitoring" : undefined,
+  tunnelRoute:
+    process.env.NODE_ENV === "production" ? "/monitoring" : undefined,
   disableLogger: true,
   automaticVercelMonitors: true,
 });

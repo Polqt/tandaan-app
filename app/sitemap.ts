@@ -15,7 +15,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       lastModified: now,
       priority: 0.8,
-      url: `${siteUrl}/pricing`,
+      url: `${siteUrl}/features`,
+    },
+    {
+      changeFrequency: "weekly",
+      lastModified: now,
+      priority: 0.8,
+      url: `${siteUrl}/billing`,
     },
     {
       changeFrequency: "daily",

@@ -11,23 +11,17 @@
     {
       "collectionGroup": "versions",
       "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "timeStamp", "order": "ASCENDING" }
-      ]
+      "fields": [{ "fieldPath": "timeStamp", "order": "ASCENDING" }]
     },
     {
       "collectionGroup": "versions",
       "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "timeStamp", "order": "DESCENDING" }
-      ]
+      "fields": [{ "fieldPath": "timeStamp", "order": "DESCENDING" }]
     },
     {
       "collectionGroup": "documents",
       "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "replayShareId", "order": "ASCENDING" }
-      ]
+      "fields": [{ "fieldPath": "replayShareId", "order": "ASCENDING" }]
     }
   ],
   "fieldOverrides": []
