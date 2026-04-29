@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
 import {
   ClientSideSuspense,
   RoomProvider as RoomProviderWrapper,
 } from "@liveblocks/react/suspense";
+import type React from "react";
 import { Spinner } from "../ui/spinner";
 import LiveCursorProvider from "./livecursor-provider";
 import RoomErrorBoundary from "./room-error-boundary";

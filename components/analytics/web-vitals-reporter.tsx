@@ -1,8 +1,8 @@
 "use client";
 
-import { onCLS, onINP, onLCP } from "web-vitals";
 import posthog from "posthog-js";
 import { useEffect } from "react";
+import { onCLS, onINP, onLCP } from "web-vitals";
 
 export default function WebVitalsReporter() {
   useEffect(() => {

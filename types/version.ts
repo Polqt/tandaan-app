@@ -25,6 +25,8 @@ export interface ReplayUserProfile {
 export type ReplayProfilesByUserId = Record<string, ReplayUserProfile>;
 
 export interface ReplayTimeline {
+  hasMore?: boolean;
+  nextCursor?: string;
   roomId: string;
   title: string;
   shareId?: string;

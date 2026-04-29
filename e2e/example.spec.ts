@@ -40,7 +40,10 @@ test.describe("editor authenticated smoke", () => {
     if ((await firstDoc.count()) > 0) {
       await firstDoc.click();
     } else {
-      await page.getByRole("button", { name: /new document/i }).first().click();
+      await page
+        .getByRole("button", { name: /new document/i })
+        .first()
+        .click();
     }
 
     await expect(page).toHaveURL(/\/documents\/[^/]+/);

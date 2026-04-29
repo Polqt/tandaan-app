@@ -11,6 +11,9 @@ export const PLAN_LIMITS = {
     label: "Pro",
     price: 299, // PHP per month
   },
-} as const satisfies Record<Plan, { documents: number; label: string; price: number }>;
+} as const satisfies Record<
+  Plan,
+  { documents: number; label: string; price: number }
+>;
 
 export const FREE_DOC_LIMIT = PLAN_LIMITS.free.documents;

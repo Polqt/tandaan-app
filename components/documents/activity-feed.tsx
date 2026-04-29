@@ -1,14 +1,17 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { Activity } from "lucide-react";
-import { useState } from "react";
 import { useRoom } from "@liveblocks/react/suspense";
-import { formatVersionTimestamp, describeVersionChange } from "@/lib/version-utils";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { Activity, LoaderCircle } from "lucide-react";
+import { useState } from "react";
+import {
+  formatActivityAction,
+  getDisplayInitials,
+} from "@/lib/docs/replay-formatters";
+import { formatVersionTimestamp } from "@/lib/docs/version-utils";
 import type { ReplayTimeline, Version } from "@/types/version";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
-import { Skeleton } from "../ui/skeleton";
 import {
   Sheet,
   SheetContent,
@@ -17,15 +20,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
-
-function getInitials(name: string) {
-  return name
-    .trim()
-    .split(" ")
-    .slice(0, 2)
-    .map((s) => s[0]?.toUpperCase() || "")
-    .join("");
-}
+import { Skeleton } from "../ui/skeleton";
 
 function ActivitySkeleton() {
   return (
@@ -58,14 +53,7 @@ function ActivityItem({
   const name = profile?.name || "Someone";
   const isLast = index === total - 1;
 
-  const { addedBlocks = 0, updatedBlocks = 0, removedBlocks = 0 } =
-    version.summary ?? {};
-
-  const parts: string[] = [];
-  if (addedBlocks > 0) parts.push(`added ${addedBlocks} block${addedBlocks > 1 ? "s" : ""}`);
-  if (updatedBlocks > 0) parts.push(`edited ${updatedBlocks}`);
-  if (removedBlocks > 0) parts.push(`removed ${removedBlocks}`);
-  const action = parts.length > 0 ? parts.join(", ") : "made changes";
+  const action = formatActivityAction(version.summary);
 
   return (
     <div className="relative flex gap-3 pb-4">
@@ -76,7 +64,7 @@ function ActivityItem({
       <Avatar className="h-8 w-8 shrink-0 ring-2 ring-white">
         <AvatarImage src={profile?.avatar} alt={name} />
         <AvatarFallback className="bg-stone-100 text-xs font-medium text-stone-600">
-          {getInitials(name)}
+          {getDisplayInitials(name)}
         </AvatarFallback>
       </Avatar>
 
@@ -102,24 +90,45 @@ export default function ActivityFeed() {
   const room = useRoom();
   const [open, setOpen] = useState(false);
 
-  const { data, isLoading } = useQuery<ReplayTimeline>({
-    enabled: open,
-    queryKey: ["activity", room.id],
-    queryFn: async () => {
-      const res = await fetch(`/api/documents/${room.id}/versions`);
-      if (!res.ok) throw new Error("Failed to load activity");
-      return res.json() as Promise<ReplayTimeline>;
-    },
-    staleTime: 30_000,
-  });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useInfiniteQuery<ReplayTimeline>({
+      enabled: open,
+      queryKey: ["activity", room.id],
+      initialPageParam: null as string | null,
+      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      queryFn: async ({ pageParam }) => {
+        const params = new URLSearchParams({
+          limit: "20",
+          view: "activity",
+        });
+        if (typeof pageParam === "string" && pageParam.length > 0) {
+          params.set("cursor", pageParam);
+        }
 
-  const versions = [...(data?.versions ?? [])].reverse();
-  const profilesByUserId = data?.profilesByUserId ?? {};
+        const res = await fetch(
+          `/api/documents/${room.id}/versions?${params.toString()}`,
+        );
+        if (!res.ok) throw new Error("Failed to load activity");
+        return res.json() as Promise<ReplayTimeline>;
+      },
+      staleTime: 30_000,
+    });
+
+  const pages = data?.pages ?? [];
+  const versions = pages.flatMap((page) => page.versions);
+  const profilesByUserId = Object.assign(
+    {},
+    ...pages.map((page) => page.profilesByUserId),
+  ) as ReplayTimeline["profilesByUserId"];
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button className="h-8 rounded-lg bg-transparent px-3 text-xs font-medium text-es-primary hover:bg-[#eeede8] hover:text-es-ink" size="sm" variant="ghost">
+        <Button
+          className="h-8 rounded-lg bg-transparent px-3 text-xs font-medium text-es-primary hover:bg-[#eeede8] hover:text-es-ink"
+          size="sm"
+          variant="ghost"
+        >
           <Activity className="mr-1.5 h-3.5 w-3.5" />
           Activity
         </Button>
@@ -143,7 +152,9 @@ export default function ActivityFeed() {
               <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-100">
                 <Activity className="h-5 w-5 text-stone-400" />
               </div>
-              <p className="text-sm font-medium text-stone-700">No activity yet</p>
+              <p className="text-sm font-medium text-stone-700">
+                No activity yet
+              </p>
               <p className="mt-1 text-xs text-stone-400">
                 Start editing to see the log here.
               </p>
@@ -151,7 +162,7 @@ export default function ActivityFeed() {
           )}
 
           {!isLoading && versions.length > 0 && (
-            <div>
+            <div className="space-y-4">
               {versions.map((version, i) => (
                 <ActivityItem
                   key={version.id}
@@ -161,6 +172,28 @@ export default function ActivityFeed() {
                   version={version}
                 />
               ))}
+
+              {hasNextPage && (
+                <div className="flex justify-center pt-2">
+                  <Button
+                    className="rounded-full"
+                    disabled={isFetchingNextPage}
+                    onClick={() => void fetchNextPage()}
+                    size="sm"
+                    variant="outline"
+                  >
+                    {isFetchingNextPage && (
+                      <LoaderCircle
+                        className="animate-spin"
+                        data-icon="inline-start"
+                      />
+                    )}
+                    {isFetchingNextPage
+                      ? "Loading more"
+                      : "Load older activity"}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>

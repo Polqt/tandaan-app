@@ -1,7 +1,12 @@
 "use server";
 
-import { adminDB } from "@/firebase-admin";
 import { auth, clerkClient } from "@clerk/nextjs/server";
+import { adminDB } from "@/firebase-admin";
+import { buildRoomListDocument } from "@/lib/docs/document-list";
+import {
+  recordAnalyticsEventServer,
+  recordAuditEventServer,
+} from "@/lib/telemetry/server-events";
 import type { User } from "@/types/user";
 
 // Search users by name or email — uses Clerk's server-side search so we never
@@ -50,7 +55,10 @@ export async function inviteUser(roomId: string, email: string) {
     .get();
 
   if (!ownerRoomSnap.exists || ownerRoomSnap.data()?.role !== "owner") {
-    return { success: false, error: "Only the document owner can invite users" };
+    return {
+      success: false,
+      error: "Only the document owner can invite users",
+    };
   }
 
   try {
@@ -69,8 +77,16 @@ export async function inviteUser(roomId: string, email: string) {
         .get();
 
       if (existingSnap.exists) {
-        return { success: false, error: "User is already a member of this document" };
+        return {
+          success: false,
+          error: "User is already a member of this document",
+        };
       }
+
+      const documentSnap = await adminDB
+        .collection("documents")
+        .doc(roomId)
+        .get();
 
       await adminDB
         .collection("users")
@@ -78,11 +94,34 @@ export async function inviteUser(roomId: string, email: string) {
         .collection("rooms")
         .doc(roomId)
         .set({
+          document: buildRoomListDocument(
+            roomId,
+            documentSnap.exists
+              ? (documentSnap.data() as Record<string, unknown>)
+              : null,
+          ),
           userId: userIdToInvite,
           role: "editor",
           createdAt: new Date(),
           roomId,
         });
+
+      await Promise.all([
+        recordAnalyticsEventServer({
+          actorUserId: ownerId,
+          event: "document_user_invited",
+          metadata: { inviteMode: "direct", invitedUserId: userIdToInvite },
+          roomId,
+        }),
+        recordAuditEventServer({
+          action: "document.user_invited",
+          actorUserId: ownerId,
+          metadata: { inviteMode: "direct", invitedUserId: userIdToInvite },
+          roomId,
+          targetId: userIdToInvite,
+          targetType: "user",
+        }),
+      ]);
 
       return { success: true };
     }
@@ -94,7 +133,10 @@ export async function inviteUser(roomId: string, email: string) {
 
     const existing = await pendingRef.get();
     if (existing.exists) {
-      return { success: false, error: "An invite has already been sent to this email" };
+      return {
+        success: false,
+        error: "An invite has already been sent to this email",
+      };
     }
 
     await pendingRef.set({
@@ -109,6 +151,23 @@ export async function inviteUser(roomId: string, email: string) {
       emailAddress: email,
       redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/sign-up`,
     });
+
+    await Promise.all([
+      recordAnalyticsEventServer({
+        actorUserId: ownerId,
+        event: "document_user_invited",
+        metadata: { email, inviteMode: "pending" },
+        roomId,
+      }),
+      recordAuditEventServer({
+        action: "document.user_invited",
+        actorUserId: ownerId,
+        metadata: { email, inviteMode: "pending" },
+        roomId,
+        targetId: email,
+        targetType: "email",
+      }),
+    ]);
 
     return { success: true, pending: true };
   } catch (error) {
@@ -132,11 +191,15 @@ export async function removeUser(roomId: string, userId: string) {
     .doc(roomId)
     .get();
 
-  const isOwner = ownerRoomSnap.exists && ownerRoomSnap.data()?.role === "owner";
+  const isOwner =
+    ownerRoomSnap.exists && ownerRoomSnap.data()?.role === "owner";
   const isSelf = currentUserId === userId;
 
   if (!isOwner && !isSelf) {
-    return { success: false, error: "Insufficient permissions to remove this user" };
+    return {
+      success: false,
+      error: "Insufficient permissions to remove this user",
+    };
   }
 
   try {
@@ -146,6 +209,23 @@ export async function removeUser(roomId: string, userId: string) {
       .collection("rooms")
       .doc(roomId)
       .delete();
+
+    await Promise.all([
+      recordAnalyticsEventServer({
+        actorUserId: currentUserId,
+        event: "document_user_removed",
+        metadata: { removedUserId: userId },
+        roomId,
+      }),
+      recordAuditEventServer({
+        action: "document.user_removed",
+        actorUserId: currentUserId,
+        metadata: { removedUserId: userId },
+        roomId,
+        targetId: userId,
+        targetType: "user",
+      }),
+    ]);
 
     return { success: true };
   } catch (error) {

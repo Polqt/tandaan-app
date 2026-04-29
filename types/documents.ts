@@ -22,4 +22,3 @@ export interface TrashDocument extends DocumentData {
   userId: string;
   roomId: string;
 }
-

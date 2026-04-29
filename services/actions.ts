@@ -1,15 +1,25 @@
 "use server";
 
-import { adminDB } from "@/firebase-admin";
-import liveblocks from "@/lib/liveblocks";
 import { auth } from "@clerk/nextjs/server";
-import type { DocumentData } from "@/types/documents";
+import { adminDB } from "@/firebase-admin";
+import liveblocks from "@/lib/collaboration/liveblocks";
+import { buildRoomListDocument } from "@/lib/docs/document-list";
+import {
+  type DocumentTemplateId,
+  getDocumentTemplate,
+  serializeTemplateContent,
+} from "@/lib/docs/document-templates";
+import {
+  recordAnalyticsEventServer,
+  recordAuditEventServer,
+} from "@/lib/telemetry/server-events";
 import { FREE_DOC_LIMIT } from "@/types/billing";
+import type { DocumentData } from "@/types/documents";
 
 const TRASH_RETENTION_DAYS = 30;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-export async function createNewDocument() {
+export async function createNewDocument(templateId?: DocumentTemplateId) {
   const { userId } = await auth();
 
   if (!userId) {
@@ -27,6 +37,8 @@ export async function createNewDocument() {
     return { error: "upgrade_required" as const };
   }
 
+  const selectedTemplate = getDocumentTemplate(templateId);
+
   // Generate a doc ID upfront so both writes can go in one atomic batch
   const docRef = adminDB.collection("documents").doc();
   const roomRef = adminDB
@@ -37,14 +49,17 @@ export async function createNewDocument() {
 
   const batch = adminDB.batch();
 
-  batch.set(docRef, {
-    title: "New Document",
-    content: "",
+  const initialDocument = {
+    title: selectedTemplate.initialTitle,
+    content: serializeTemplateContent(selectedTemplate.id),
     createdAt: new Date(),
     updatedAt: new Date(),
-  });
+  };
+
+  batch.set(docRef, initialDocument);
 
   batch.set(roomRef, {
+    document: buildRoomListDocument(docRef.id, initialDocument),
     userId,
     role: "owner",
     createdAt: new Date(),
@@ -52,6 +67,23 @@ export async function createNewDocument() {
   });
 
   await batch.commit();
+
+  await Promise.all([
+    recordAnalyticsEventServer({
+      actorUserId: userId,
+      event: "document_created_server",
+      metadata: { templateId: selectedTemplate.id },
+      roomId: docRef.id,
+    }),
+    recordAuditEventServer({
+      action: "document.created",
+      actorUserId: userId,
+      metadata: { templateId: selectedTemplate.id },
+      roomId: docRef.id,
+      targetId: docRef.id,
+      targetType: "document",
+    }),
+  ]);
 
   return { docId: docRef.id };
 }
@@ -115,6 +147,23 @@ export async function deleteDocument(roomId: string) {
       console.warn(`Could not delete Liveblocks room ${roomId}:`, err);
     });
 
+    await Promise.all([
+      recordAnalyticsEventServer({
+        actorUserId: userId,
+        event: "document_deleted_server",
+        metadata: { membershipCount: membershipsSnap.size },
+        roomId,
+      }),
+      recordAuditEventServer({
+        action: "document.deleted",
+        actorUserId: userId,
+        metadata: { membershipCount: membershipsSnap.size },
+        roomId,
+        targetId: roomId,
+        targetType: "document",
+      }),
+    ]);
+
     return { success: true };
   } catch (error) {
     console.error("Error deleting document:", error);
@@ -157,6 +206,7 @@ export async function restoreDocument(roomId: string) {
     batch.set(
       adminDB.collection("users").doc(userId).collection("rooms").doc(roomId),
       {
+        document: buildRoomListDocument(roomId, data),
         userId,
         role: "owner",
         createdAt: new Date(),
@@ -168,6 +218,21 @@ export async function restoreDocument(roomId: string) {
     batch.delete(trashRef);
 
     await batch.commit();
+
+    await Promise.all([
+      recordAnalyticsEventServer({
+        actorUserId: userId,
+        event: "document_restored_server",
+        roomId,
+      }),
+      recordAuditEventServer({
+        action: "document.restored",
+        actorUserId: userId,
+        roomId,
+        targetId: roomId,
+        targetType: "document",
+      }),
+    ]);
 
     return { success: true };
   } catch (error) {

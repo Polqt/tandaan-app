@@ -1,9 +1,10 @@
 "use client";
 
+import { usePathname, useSearchParams } from "next/navigation";
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 import { useEffect } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { captureAnalyticsEvent } from "@/lib/telemetry/analytics";
 
 type Props = {
   children: React.ReactNode;
@@ -22,13 +23,13 @@ export default function AppPostHogProvider({ children }: Props) {
     posthog.init(posthogKey, {
       api_host: posthogHost,
       capture_pageleave: true,
-      capture_pageview: true,
+      capture_pageview: false,
       person_profiles: "identified_only",
     });
   }, []);
 
   useEffect(() => {
-    posthog.capture("$pageview", {
+    captureAnalyticsEvent("$pageview", {
       $current_url:
         pathname + (searchParams.size ? `?${searchParams.toString()}` : ""),
       feature_flags: posthog.featureFlags.getFlags(),

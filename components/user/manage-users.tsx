@@ -6,10 +6,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Users } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { useRoomUsers } from "@/hooks/useRoomUsers";
+import { useRoomUsers } from "@/hooks/docs/use-room-users";
 import { removeUser } from "@/services/users";
 import { Button } from "../ui/button";
-import { Skeleton } from "../ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
+import { Skeleton } from "../ui/skeleton";
 
 export default function ManageUsers() {
   const { user } = useUser();
@@ -30,7 +30,10 @@ export default function ManageUsers() {
   const usersInRoom = data?.users ?? [];
 
   const isOwner = useMemo(
-    () => usersInRoom.some((m) => m.userId === user?.id && m.role === "owner"),
+    () =>
+      usersInRoom.some(
+        (member) => member.userId === user?.id && member.role === "owner",
+      ),
     [user?.id, usersInRoom],
   );
 
@@ -49,11 +52,15 @@ export default function ManageUsers() {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog onOpenChange={setIsOpen} open={isOpen}>
       <DialogTrigger asChild>
-        <Button className="h-8 rounded-lg bg-transparent px-2.5 text-xs font-medium text-es-primary hover:bg-[#eeede8] hover:text-es-ink" size="sm" variant="ghost">
+        <Button
+          className="h-8 rounded-lg bg-transparent px-2.5 text-xs font-medium text-es-primary hover:bg-[#eeede8] hover:text-es-ink"
+          size="sm"
+          variant="ghost"
+        >
           <Users className="mr-1.5 h-3.5 w-3.5" />
-          People {isLoading ? "…" : usersInRoom.length}
+          People {isLoading ? "..." : usersInRoom.length}
         </Button>
       </DialogTrigger>
 
@@ -69,7 +76,10 @@ export default function ManageUsers() {
           {isLoading ? (
             <div className="space-y-2">
               {[1, 2].map((i) => (
-                <div key={i} className="flex items-center gap-3 rounded-2xl border border-[#ebe9e6] px-4 py-3">
+                <div
+                  className="flex items-center gap-3 rounded-2xl border border-[#ebe9e6] px-4 py-3"
+                  key={i}
+                >
                   <Skeleton className="h-8 w-8 rounded-full" />
                   <div className="flex-1 space-y-1.5">
                     <Skeleton className="h-3 w-2/5 rounded-full" />
@@ -92,7 +102,9 @@ export default function ManageUsers() {
                 >
                   <div>
                     <p className="text-sm font-medium text-es-ink">
-                      {isCurrentUser ? "You" : (member.name ?? member.email ?? member.userId)}
+                      {isCurrentUser
+                        ? "You"
+                        : (member.name ?? member.email ?? member.userId)}
                     </p>
                     <p className="text-xs text-es-muted">
                       {member.email || member.userId}
@@ -104,7 +116,7 @@ export default function ManageUsers() {
                       {member.role}
                     </span>
 
-                    {isOwner && !isCurrentUser && (
+                    {isOwner && !isCurrentUser ? (
                       <Button
                         disabled={isPending}
                         onClick={() => handleDelete(member.userId)}
@@ -113,7 +125,7 @@ export default function ManageUsers() {
                       >
                         {isPending ? "Removing..." : "Remove"}
                       </Button>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               );

@@ -1,16 +1,29 @@
 "use client";
 
-import { Bookmark, BookmarkCheck, Copy, Pause, Play, SkipBack, SkipForward, Sparkles } from "lucide-react";
+import {
+  Bookmark,
+  BookmarkCheck,
+  Copy,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Sparkles,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import {
+  getDisplayInitials,
+  getReplayProfileName,
+} from "@/lib/docs/replay-formatters";
 import {
   describeVersionChange,
   extractPreviewText,
   formatVersionTimestamp,
   getInitialReplayIndex,
   summarizeVersionChange,
-} from "@/lib/version-utils";
+} from "@/lib/docs/version-utils";
+import { cn } from "@/lib/utils";
 import type { ReplayProfilesByUserId, Version } from "@/types/version";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
@@ -32,20 +45,6 @@ type ReplayViewerProps = {
   title?: string;
   versions: Version[];
 };
-
-function getProfileName(profilesByUserId: ReplayProfilesByUserId, userId: string) {
-  return profilesByUserId[userId]?.name || "Unknown collaborator";
-}
-
-function getInitials(name: string) {
-  const trimmedName = name.trim();
-  if (!trimmedName) return "?";
-  return trimmedName
-    .split(" ")
-    .slice(0, 2)
-    .map((s) => s[0]?.toUpperCase() || "")
-    .join("");
-}
 
 function ChapterLabelEditor({
   documentId,
@@ -131,7 +130,9 @@ function ChapterLabelEditor({
       {version.chapterLabel ? (
         <>
           <BookmarkCheck className="h-3.5 w-3.5 text-coral" />
-          <span className="font-medium text-stone-700">{version.chapterLabel}</span>
+          <span className="font-medium text-stone-700">
+            {version.chapterLabel}
+          </span>
           <span className="text-stone-400">· edit</span>
         </>
       ) : (
@@ -160,7 +161,9 @@ export default function ReplayViewer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedVersionIndex, setSelectedVersionIndex] = useState(0);
   // Local label overrides so UI updates instantly after save
-  const [labelOverrides, setLabelOverrides] = useState<Record<string, string>>({});
+  const [labelOverrides, setLabelOverrides] = useState<Record<string, string>>(
+    {},
+  );
 
   const versions = useMemo(
     () =>
@@ -175,7 +178,9 @@ export default function ReplayViewer({
   const contributors = useMemo(
     () =>
       Array.from(
-        new Set(versions.map((v) => getProfileName(profilesByUserId, v.userId))),
+        new Set(
+          versions.map((v) => getReplayProfileName(profilesByUserId, v.userId)),
+        ),
       ),
     [profilesByUserId, versions],
   );
@@ -190,7 +195,9 @@ export default function ReplayViewer({
   }, []);
 
   const goToNextVersion = useCallback(() => {
-    setSelectedVersionIndex((i) => Math.min(i + 1, Math.max(versions.length - 1, 0)));
+    setSelectedVersionIndex((i) =>
+      Math.min(i + 1, Math.max(versions.length - 1, 0)),
+    );
   }, [versions.length]);
 
   const togglePlayback = useCallback(() => {
@@ -207,7 +214,10 @@ export default function ReplayViewer({
     if (!isPlaying || versions.length <= 1) return;
     const interval = setInterval(() => {
       setSelectedVersionIndex((i) => {
-        if (i >= versions.length - 1) { setIsPlaying(false); return i; }
+        if (i >= versions.length - 1) {
+          setIsPlaying(false);
+          return i;
+        }
         return i + 1;
       });
     }, PLAYBACK_INTERVAL_MS);
@@ -269,7 +279,11 @@ export default function ReplayViewer({
                 size="sm"
                 variant="outline"
               >
-                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                {isPlaying ? (
+                  <Pause className="h-4 w-4" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
               </Button>
               <Button
                 className="rounded-full"
@@ -313,16 +327,27 @@ export default function ReplayViewer({
               <div className="flex items-center gap-3">
                 <Avatar className="h-11 w-11">
                   <AvatarImage
-                    alt={getProfileName(profilesByUserId, selectedVersion.userId)}
+                    alt={getReplayProfileName(
+                      profilesByUserId,
+                      selectedVersion.userId,
+                    )}
                     src={profilesByUserId[selectedVersion.userId]?.avatar}
                   />
                   <AvatarFallback className="bg-stone-100 text-stone-700">
-                    {getInitials(getProfileName(profilesByUserId, selectedVersion.userId))}
+                    {getDisplayInitials(
+                      getReplayProfileName(
+                        profilesByUserId,
+                        selectedVersion.userId,
+                      ),
+                    )}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <p className="text-sm font-medium text-stone-900">
-                    {getProfileName(profilesByUserId, selectedVersion.userId)}
+                    {getReplayProfileName(
+                      profilesByUserId,
+                      selectedVersion.userId,
+                    )}
                   </p>
                   <p className="text-sm text-stone-500">
                     {formatVersionTimestamp(selectedVersion.timeStamp)}
@@ -422,7 +447,7 @@ export default function ReplayViewer({
                   )}
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-sm font-medium text-stone-900">
-                      {getProfileName(profilesByUserId, version.userId)}
+                      {getReplayProfileName(profilesByUserId, version.userId)}
                     </p>
                     <span className="text-xs text-stone-400">#{index + 1}</span>
                   </div>

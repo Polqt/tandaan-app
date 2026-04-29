@@ -1,9 +1,11 @@
 "use client";
 
 import { Trash2Icon } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { captureAnalyticsEvent } from "@/lib/telemetry/analytics";
+import { cn } from "@/lib/utils";
 import { deleteDocument } from "@/services/actions";
 import { Button } from "../ui/button";
 import {
@@ -17,23 +19,35 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 
-export default function DeleteDocument() {
+export default function DeleteDocument({
+  className,
+  showLabel = false,
+}: {
+  className?: string;
+  showLabel?: boolean;
+}) {
   const router = useRouter();
+  const params = useParams<{ id: string }>();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const pathname = usePathname();
 
   const handleDelete = async () => {
-    const roomId = pathname.split("/").pop();
+    const roomId = params.id;
     if (!roomId) return;
 
     startTransition(async () => {
       const { success } = await deleteDocument(roomId);
       if (success) {
-        router.replace("/");
-        toast.success("Room deleted successfully");
+        captureAnalyticsEvent("document_deleted", {
+          room_id: roomId,
+        });
+        router.replace("/documents/trash");
+        toast.success("Document moved to trash");
       } else {
-        toast.error("Failed to delete the room");
+        captureAnalyticsEvent("document_delete_failed", {
+          room_id: roomId,
+        });
+        toast.error("Failed to move the document to trash");
       }
     });
   };
@@ -41,13 +55,20 @@ export default function DeleteDocument() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <Button
+        aria-label="Delete document"
         asChild
-        className="h-8 w-8 rounded-lg text-[#8a8a87] hover:bg-[#eeede8] hover:text-red-600"
-        size="icon"
+        className={cn(
+          showLabel
+            ? "h-9 rounded-full px-3 text-xs text-red-700 hover:bg-red-50 hover:text-red-700"
+            : "h-8 w-8 rounded-lg text-es-muted hover:bg-[#eeede8] hover:text-red-600",
+          className,
+        )}
+        size={showLabel ? "sm" : "icon"}
         variant="ghost"
       >
         <DialogTrigger>
           <Trash2Icon className="h-3.5 w-3.5" />
+          {showLabel ? <span className="ml-1.5">Move to trash</span> : null}
         </DialogTrigger>
       </Button>
       <DialogContent>

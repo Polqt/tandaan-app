@@ -1,15 +1,15 @@
 "use client";
 
 import { useMyPresence, useOthers } from "@liveblocks/react/suspense";
-import React, { PointerEvent } from "react";
-import FollowPointer from "../follow-pointer";
+import type { PointerEvent, ReactNode } from "react";
+import FollowPointer from "../collaboration/follow-pointer";
 
 export default function LiveCursorProvider({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
-  const [myPresence, updateMyPresence] = useMyPresence();
+  const [, updateMyPresence] = useMyPresence();
   const others = useOthers();
 
   function handlePointerMove(e: PointerEvent<HTMLDivElement>) {
@@ -26,6 +26,11 @@ export default function LiveCursorProvider({
       {others
         .filter((user) => user.presence.cursor != null)
         .map(({ connectionId, presence, info }) => {
+          const cursor = presence.cursor;
+          if (!cursor) {
+            return null;
+          }
+
           const resolvedInfo = {
             name:
               info.name ??
@@ -37,8 +42,8 @@ export default function LiveCursorProvider({
           return (
             <FollowPointer
               key={connectionId}
-              x={presence.cursor!.x}
-              y={presence.cursor!.y}
+              x={cursor.x}
+              y={cursor.y}
               info={resolvedInfo}
             />
           );

@@ -1,12 +1,22 @@
 "use client";
 
-import { BookmarkCheck, ExternalLink, Play, SkipBack, SkipForward } from "lucide-react";
+import {
+  BookmarkCheck,
+  ExternalLink,
+  Play,
+  SkipBack,
+  SkipForward,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  getDisplayInitials,
+  getReplayProfileName,
+} from "@/lib/docs/replay-formatters";
 import {
   describeVersionChange,
   extractPreviewText,
   formatVersionTimestamp,
-} from "@/lib/version-utils";
+} from "@/lib/docs/version-utils";
 import type { ReplayTimeline } from "@/types/version";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
@@ -18,14 +28,6 @@ type EmbedReplayProps = {
   timeline: ReplayTimeline;
 };
 
-function getProfileName(profilesByUserId: ReplayTimeline["profilesByUserId"], userId: string) {
-  return profilesByUserId[userId]?.name || "Anonymous";
-}
-
-function getInitials(name: string) {
-  return name.trim().split(" ").slice(0, 2).map((s) => s[0]?.toUpperCase() || "").join("");
-}
-
 export default function EmbedReplay({ shareId, timeline }: EmbedReplayProps) {
   const { versions, profilesByUserId, title } = timeline;
   const [index, setIndex] = useState(0);
@@ -36,7 +38,10 @@ export default function EmbedReplay({ shareId, timeline }: EmbedReplayProps) {
   const isAtEnd = index >= versions.length - 1;
 
   const prev = useCallback(() => setIndex((i) => Math.max(i - 1, 0)), []);
-  const next = useCallback(() => setIndex((i) => Math.min(i + 1, versions.length - 1)), [versions.length]);
+  const next = useCallback(
+    () => setIndex((i) => Math.min(i + 1, versions.length - 1)),
+    [versions.length],
+  );
 
   const togglePlay = useCallback(() => {
     if (versions.length > 1) setIsPlaying((p) => !p);
@@ -46,7 +51,10 @@ export default function EmbedReplay({ shareId, timeline }: EmbedReplayProps) {
     if (!isPlaying || versions.length <= 1) return;
     const id = setInterval(() => {
       setIndex((i) => {
-        if (i >= versions.length - 1) { setIsPlaying(false); return i; }
+        if (i >= versions.length - 1) {
+          setIsPlaying(false);
+          return i;
+        }
         return i + 1;
       });
     }, PLAYBACK_INTERVAL_MS);
@@ -65,7 +73,9 @@ export default function EmbedReplay({ shareId, timeline }: EmbedReplayProps) {
       {/* Embed header */}
       <div className="flex items-center justify-between border-b border-[#ebe9e6] px-4 py-3">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-stone-900">{title}</p>
+          <p className="truncate text-sm font-semibold text-stone-900">
+            {title}
+          </p>
           <p className="text-xs text-stone-400">{versions.length} snapshots</p>
         </div>
         <a
@@ -114,14 +124,26 @@ export default function EmbedReplay({ shareId, timeline }: EmbedReplayProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={profilesByUserId[version.userId]?.avatar} />
+                      <AvatarImage
+                        src={profilesByUserId[version.userId]?.avatar}
+                      />
                       <AvatarFallback className="bg-stone-100 text-xs text-stone-700">
-                        {getInitials(getProfileName(profilesByUserId, version.userId))}
+                        {getDisplayInitials(
+                          getReplayProfileName(
+                            profilesByUserId,
+                            version.userId,
+                            "Anonymous",
+                          ),
+                        )}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="text-xs font-medium">
-                        {getProfileName(profilesByUserId, version.userId)}
+                        {getReplayProfileName(
+                          profilesByUserId,
+                          version.userId,
+                          "Anonymous",
+                        )}
                       </p>
                       <p className="text-[11px] text-stone-400">
                         {formatVersionTimestamp(version.timeStamp)}
@@ -142,7 +164,9 @@ export default function EmbedReplay({ shareId, timeline }: EmbedReplayProps) {
 
                 {version.aiSummary && (
                   <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-                    <p className="text-xs leading-6 text-slate-600">{version.aiSummary}</p>
+                    <p className="text-xs leading-6 text-slate-600">
+                      {version.aiSummary}
+                    </p>
                   </div>
                 )}
 
@@ -159,7 +183,9 @@ export default function EmbedReplay({ shareId, timeline }: EmbedReplayProps) {
                 </div>
               </div>
             ) : (
-              <p className="py-10 text-center text-sm text-stone-400">No snapshots yet.</p>
+              <p className="py-10 text-center text-sm text-stone-400">
+                No snapshots yet.
+              </p>
             )}
           </div>
 
@@ -182,7 +208,9 @@ export default function EmbedReplay({ shareId, timeline }: EmbedReplayProps) {
                 size="sm"
                 variant="outline"
               >
-                <Play className={`h-3.5 w-3.5 ${isPlaying ? "opacity-50" : ""}`} />
+                <Play
+                  className={`h-3.5 w-3.5 ${isPlaying ? "opacity-50" : ""}`}
+                />
               </Button>
               <Button
                 className="h-8 w-8 rounded-full p-0"

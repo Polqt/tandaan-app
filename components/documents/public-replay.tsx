@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { buildReplayShareUrl } from "@/lib/docs/replay-formatters";
 import type { ReplayTimeline, Version } from "@/types/version";
 import ReplayViewer from "./replay-viewer";
 
@@ -11,19 +12,15 @@ type PublicReplayProps = {
   timeline: ReplayTimeline;
 };
 
-function buildShareUrl(shareId: string, versionId: string) {
-  const url = new URL(`/replay/${shareId}`, window.location.origin);
-  url.searchParams.set("version", versionId);
-  return url.toString();
-}
-
 export default function PublicReplay({ shareId, timeline }: PublicReplayProps) {
   const searchParams = useSearchParams();
 
   const copyShareLink = useCallback(
     async (version: Version) => {
       try {
-        await navigator.clipboard.writeText(buildShareUrl(shareId, version.id));
+        await navigator.clipboard.writeText(
+          buildReplayShareUrl(shareId, version.id, window.location.origin),
+        );
         toast.success("Replay share link copied.");
       } catch (error) {
         console.error("Error copying shared replay link:", error);

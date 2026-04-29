@@ -5,6 +5,8 @@ import { Code2, History } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { buildReplayShareUrl } from "@/lib/docs/replay-formatters";
+import { captureAnalyticsEvent } from "@/lib/telemetry/analytics";
 import type { ReplayTimeline, Version } from "@/types/version";
 import { Button } from "../ui/button";
 import {
@@ -17,13 +19,11 @@ import {
 } from "../ui/sheet";
 import ReplayViewer from "./replay-viewer";
 
-function buildReplayUrl(shareId: string, versionId: string) {
-  const url = new URL(`/replay/${shareId}`, window.location.origin);
-  url.searchParams.set("version", versionId);
-  return url.toString();
-}
-
-export default function CollaborationReplay({ isOwner = false }: { isOwner?: boolean }) {
+export default function CollaborationReplay({
+  isOwner = false,
+}: {
+  isOwner?: boolean;
+}) {
   const room = useRoom();
   const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
@@ -93,8 +93,12 @@ export default function CollaborationReplay({ isOwner = false }: { isOwner?: boo
         }
 
         await navigator.clipboard.writeText(
-          buildReplayUrl(shareId, version.id),
+          buildReplayShareUrl(shareId, version.id, window.location.origin),
         );
+        captureAnalyticsEvent("replay_share_link_copied", {
+          room_id: room.id,
+          version_id: version.id,
+        });
         toast.success("Replay share link copied.");
       } catch (error) {
         console.error("Error copying replay share link:", error);
@@ -109,8 +113,12 @@ export default function CollaborationReplay({ isOwner = false }: { isOwner?: boo
       return;
     }
 
+    captureAnalyticsEvent("replay_opened", {
+      is_owner: isOwner,
+      room_id: room.id,
+    });
     void loadReplayTimeline();
-  }, [isOpen, loadReplayTimeline]);
+  }, [isOpen, isOwner, loadReplayTimeline, room.id]);
 
   useEffect(() => {
     if (searchParams.get("replay") !== "1" || hasAutoOpenedFromLink.current) {
@@ -124,7 +132,11 @@ export default function CollaborationReplay({ isOwner = false }: { isOwner?: boo
   return (
     <Sheet onOpenChange={setIsOpen} open={isOpen}>
       <SheetTrigger asChild>
-        <Button className="h-8 rounded-lg bg-transparent px-3 text-xs font-medium text-[#5f5e5e] hover:bg-[#eeede8] hover:text-[#2f3430]" size="sm" variant="ghost">
+        <Button
+          className="h-8 rounded-lg bg-transparent px-3 text-xs font-medium text-es-primary hover:bg-[#eeede8] hover:text-es-ink"
+          size="sm"
+          variant="ghost"
+        >
           <History className="mr-1.5 h-3.5 w-3.5" />
           Replay
         </Button>
@@ -138,7 +150,8 @@ export default function CollaborationReplay({ isOwner = false }: { isOwner?: boo
                 Collaboration Replay
               </SheetTitle>
               <SheetDescription className="mt-1 max-w-2xl text-sm leading-7 text-stone-500">
-                Review each saved checkpoint, annotate chapters, and share a public replay link.
+                Review each saved checkpoint, annotate chapters, and share a
+                public replay link.
               </SheetDescription>
             </div>
             {timeline?.shareId && (
@@ -147,6 +160,9 @@ export default function CollaborationReplay({ isOwner = false }: { isOwner?: boo
                 onClick={() => {
                   const code = `<iframe src="${typeof window !== "undefined" ? window.location.origin : ""}/replay/${timeline.shareId}/embed" width="100%" height="480" frameborder="0" allowfullscreen></iframe>`;
                   navigator.clipboard.writeText(code);
+                  captureAnalyticsEvent("replay_embed_copied", {
+                    room_id: room.id,
+                  });
                   toast.success("Embed code copied to clipboard.");
                 }}
                 size="sm"

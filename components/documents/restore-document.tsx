@@ -1,4 +1,13 @@
-import React, { useState, useTransition } from "react";
+"use client";
+
+import { ArchiveRestore } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
+import { captureAnalyticsEvent } from "@/lib/telemetry/analytics";
+import { cn } from "@/lib/utils";
+import { restoreDocument } from "@/services/actions";
+import { Button } from "../ui/button";
 import {
   Dialog,
   DialogClose,
@@ -9,27 +18,38 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { Button } from "../ui/button";
-import { ArchiveRestore } from "lucide-react";
-import { restoreDocument } from "@/services/actions";
-import { toast } from "sonner";
-import { usePathname, useRouter } from "next/navigation";
 
-export default function RestoreDocument() {
+export default function RestoreDocument({
+  className,
+  roomId,
+  showLabel = false,
+}: {
+  className?: string;
+  roomId?: string;
+  showLabel?: boolean;
+}) {
   const router = useRouter();
-  const pathname = usePathname();
+  const params = useParams<{ id?: string }>();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
+  const resolvedRoomId = roomId || params.id;
+
   const handleRestore = async () => {
-    const roomId = pathname.split("/").pop();
-    if (!roomId) return;
+    if (!resolvedRoomId) return;
+
     startTransition(async () => {
-      const { success } = await restoreDocument(roomId);
+      const { success } = await restoreDocument(resolvedRoomId);
       if (success) {
-        router.replace("/documents/{roomId}");
+        captureAnalyticsEvent("document_restored", {
+          room_id: resolvedRoomId,
+        });
+        router.replace(`/documents/${resolvedRoomId}`);
         toast.success("Document restored successfully");
       } else {
+        captureAnalyticsEvent("document_restore_failed", {
+          room_id: resolvedRoomId,
+        });
         toast.error("Failed to restore the document");
       }
     });
@@ -37,35 +57,47 @@ export default function RestoreDocument() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Button asChild variant={"ghost"}>
-        <DialogTrigger>
-          <ArchiveRestore className="w-5 h-5" />
-        </DialogTrigger>
-      </Button>
+      <DialogTrigger asChild>
+        <Button
+          aria-label="Restore document"
+          className={cn(
+            showLabel
+              ? "h-9 rounded-full px-3 text-xs"
+              : "h-8 w-8 rounded-lg text-es-primary hover:bg-[#eeede8]",
+            className,
+          )}
+          size={showLabel ? "sm" : "icon"}
+          variant={showLabel ? "default" : "ghost"}
+        >
+          <ArchiveRestore className="h-3.5 w-3.5" />
+          {showLabel ? <span className="ml-1.5">Restore</span> : null}
+        </Button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
             Are you sure you want to restore this document?
           </DialogTitle>
           <DialogDescription>
-            This will restore the document back to your documents list.
+            This will move the note back into your active documents list and
+            reopen collaboration for it.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="sm:justify-end gap-2">
+        <DialogFooter className="gap-2 sm:justify-end">
           <Button
-            type="button"
-            variant={"secondary"}
-            onClick={handleRestore}
             disabled={isPending}
+            onClick={handleRestore}
+            type="button"
+            variant="secondary"
           >
             {isPending ? "Restoring..." : "Restore Document"}
           </Button>
+          <DialogClose asChild>
+            <Button type="button" variant="ghost">
+              Close
+            </Button>
+          </DialogClose>
         </DialogFooter>
-        <DialogClose asChild>
-          <Button type="button" variant={"ghost"}>
-            Close
-          </Button>
-        </DialogClose>
       </DialogContent>
     </Dialog>
   );
