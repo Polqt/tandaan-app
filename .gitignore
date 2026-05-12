@@ -53,3 +53,9 @@ node_modules/
 /playwright/.auth/
 
 service_key.json
+# Firebase
+.firebase/
+firebase-debug.log
+
+# VS Code
+.vscode/
