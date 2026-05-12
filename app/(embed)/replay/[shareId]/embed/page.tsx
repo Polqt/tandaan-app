@@ -16,7 +16,7 @@ export default async function EmbedPage({ params }: EmbedPageProps) {
   const { shareId } = await params;
   const timeline = await getReplayTimelineByShareId(shareId);
 
-  if (!timeline) notFound();
+  if (!timeline || "error" in timeline) notFound();
 
   return <EmbedReplay shareId={shareId} timeline={timeline} />;
 }

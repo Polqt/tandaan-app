@@ -3,21 +3,21 @@ import LandingPage from "@/components/marketing/landing/landing-page";
 
 export const metadata: Metadata = {
   description:
-    "Tandaan is a living workspace for notes, rooms, and replayable decisions.",
+    "Tandaan.AI is a collaborative workspace for real-time ideas, replayable sessions, and shared team knowledge.",
   openGraph: {
     description:
-      "A living workspace for notes, rooms, and replayable decisions.",
+      "A collaborative workspace for real-time ideas, replayable sessions, and shared team knowledge.",
     images: ["/og-image.png"],
-    title: "Tandaan | Remember together",
+    title: "Tandaan.AI | Your ideas, remembered together",
     type: "website",
   },
-  title: "Tandaan | Remember together",
+  title: "Tandaan.AI | Your ideas, remembered together",
   twitter: {
     card: "summary_large_image",
     description:
-      "A living workspace for notes, rooms, and replayable decisions.",
+      "A collaborative workspace for real-time ideas, replayable sessions, and shared team knowledge.",
     images: ["/og-image.png"],
-    title: "Tandaan | Remember together",
+    title: "Tandaan.AI | Your ideas, remembered together",
   },
 };
 

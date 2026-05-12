@@ -10,7 +10,7 @@ export default async function ReplayPage({ params }: ReplayPageProps) {
   const { shareId } = await params;
   const timeline = await getReplayTimelineByShareId(shareId);
 
-  if (!timeline) {
+  if (!timeline || "error" in timeline) {
     notFound();
   }
 
