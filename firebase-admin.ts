@@ -13,7 +13,6 @@ import { getFirestore } from "firebase-admin/firestore";
 let app: App;
 
 function loadServiceKey(): ServiceAccount | null {
-  // Priority 1: single JSON env var (recommended for production)
   const raw = process.env.FIREBASE_ADMIN_SERVICE_KEY;
   if (raw) {
     try {
@@ -23,7 +22,6 @@ function loadServiceKey(): ServiceAccount | null {
     }
   }
 
-  // Priority 2: split env vars (useful when the platform doesn't support JSON values)
   const projectId =
     process.env.FIREBASE_ADMIN_PROJECT_ID ||
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
@@ -37,7 +35,6 @@ function loadServiceKey(): ServiceAccount | null {
     return { projectId, clientEmail, privateKey };
   }
 
-  // Priority 3: local file (dev only — add service_key.json to .gitignore)
   const keyPath = join(process.cwd(), "service_key.json");
   if (existsSync(keyPath)) {
     try {
@@ -55,18 +52,9 @@ if (getApps().length === 0) {
 
   if (serviceKey) {
     app = initializeApp({ credential: cert(serviceKey) });
-  } else if (process.env.NODE_ENV === "production") {
-    // Hard fail in production — missing credentials is a misconfiguration.
-    throw new Error(
-      "Firebase Admin credentials are not configured. " +
-        "Set FIREBASE_ADMIN_SERVICE_KEY or the split " +
-        "FIREBASE_ADMIN_PROJECT_ID / FIREBASE_ADMIN_CLIENT_EMAIL / FIREBASE_ADMIN_PRIVATE_KEY env vars.",
-    );
   } else {
-    // Dev/CI: allow startup without credentials; Firestore calls will fail at runtime.
-    console.warn(
-      "Firebase Admin: no credentials found. Firestore API calls will fail at runtime.",
-    );
+    // Firebase Functions provides application default credentials at runtime.
+    // Local development can also use ADC via `gcloud auth application-default login`.
     app = initializeApp();
   }
 } else {

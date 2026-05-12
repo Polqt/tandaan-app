@@ -1,6 +1,38 @@
 {
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
+  "hosting": {
+    "source": ".",
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      "node_modules/**",
+      ".next/**",
+      "*.config.js",
+      "*.config.ts",
+      "**/.*"
+    ],
+    "frameworksBackend": {
+      "region": "us-central1",
+      "runtime": "node22",
+      "timeoutSeconds": 60
+    },
+    "headers": [
+      {
+        "source": "/(.*)",
+        "headers": [
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "X-XSS-Protection",
+            "value": "1; mode=block"
+          }
+        ]
+      }
+    ]
   }
 }
