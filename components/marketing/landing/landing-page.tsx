@@ -1,27 +1,27 @@
 import { HeroSection } from "@/components/marketing/landing/hero-section";
 import {
-  BillingTeaser,
-  BlogTeaser,
-  FaqSection,
-  LandingFeatureStrip,
-  ReplaySection,
-  WorkflowSection,
+  LandingFeatureGrid,
+  LandingFinalCta,
+  LandingProofCta,
+  LandingWorkflow,
 } from "@/components/marketing/landing/landing-sections";
 import PublicFooter from "@/components/marketing/shared/public-footer";
 
 export default function LandingPage() {
   return (
-    <div className="public-page">
-      <div className="paper-grain pointer-events-none fixed inset-0 z-0 opacity-70" />
-      <div className="relative z-10">
+    <div className="tandaan-page">
+      <div className="sketch-grain pointer-events-none fixed inset-0 z-0 opacity-80" />
+      <div className="landing-scroll relative z-10">
         <HeroSection />
-        <LandingFeatureStrip />
-        <WorkflowSection />
-        <ReplaySection />
-        <BillingTeaser />
-        <BlogTeaser />
-        <FaqSection />
-        <PublicFooter />
+        <LandingFeatureGrid />
+        <LandingWorkflow />
+        <LandingProofCta />
+        <LandingFinalCta />
+        <section className="landing-panel flex items-end">
+          <div className="w-full">
+            <PublicFooter />
+          </div>
+        </section>
       </div>
     </div>
   );

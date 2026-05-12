@@ -3,9 +3,64 @@
 import { Activity, Ellipsis, Users } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { Component, type ReactNode } from "react";
 import { useDocument } from "@/hooks/docs/use-document";
 import type { DocumentProps } from "@/types/documents";
+import { Button } from "../ui/button";
 import Avatars from "../collaboration/avatars";
+
+type ErrorBoundaryProps = {
+  children: ReactNode;
+  fallback?: ReactNode;
+};
+
+type ErrorBoundaryState = {
+  hasError: boolean;
+  error?: Error;
+};
+
+/**
+ * Error boundary to catch React component errors and prevent full page crash
+ */
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("ErrorBoundary caught an error:", error.message, errorInfo.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
+      return (
+        <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-xl border border-red-200 bg-red-50/50 p-8 text-center">
+          <p className="text-sm font-medium text-red-700">
+            Something went wrong loading this content.
+          </p>
+          <Button
+            onClick={() => this.setState({ hasError: false })}
+            size="sm"
+            variant="outline"
+          >
+            Try again
+          </Button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,7 +68,6 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "../ui/breadcrumb";
-import { Button } from "../ui/button";
 import {
   Sheet,
   SheetContent,
@@ -59,8 +113,17 @@ const ManageUsers = dynamic(() => import("../user/manage-users"), {
 const DeleteDocument = dynamic(() => import("./delete-document"), {
   ssr: false,
 });
+const ShareDocument = dynamic(() => import("./share-document"), {
+  ssr: false,
+});
 
-function MobileActionSheet({ isOwner }: { isOwner: boolean }) {
+function MobileActionSheet({
+  documentId,
+  isOwner,
+}: {
+  documentId: string;
+  isOwner: boolean;
+}) {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -121,6 +184,7 @@ function MobileActionSheet({ isOwner }: { isOwner: boolean }) {
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-es-muted">
               Admin
             </p>
+            <ShareDocument documentId={documentId} />
             <DeleteDocument showLabel />
           </div>
         </div>
@@ -177,18 +241,12 @@ export default function Document({ id }: DocumentProps) {
               <div className="flex items-center justify-end gap-2 md:hidden">
                 <CommentsPanel iconOnly />
                 <CollaborationReplay isOwner={isOwner} />
-                <MobileActionSheet isOwner={isOwner} />
+                <MobileActionSheet documentId={id} isOwner={isOwner} />
               </div>
 
               <div className="hidden md:flex md:items-center md:justify-end">
                 <div className="workspace-panel flex flex-wrap items-center gap-2 rounded-3xl px-3 py-2 sm:px-4 sm:py-2.5">
                   <div className="hidden items-center gap-3 border-r border-[#ddd8cf] pr-4 xl:flex">
-                    <div className="min-w-0 text-right">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-es-muted">
-                        Active now
-                      </p>
-                      <p className="text-sm text-es-primary">1 collaborator</p>
-                    </div>
                     <Avatars />
                   </div>
 
@@ -203,6 +261,7 @@ export default function Document({ id }: DocumentProps) {
 
                   <div className="flex items-center gap-1.5">
                     <InviteUser iconOnly />
+                    <ShareDocument documentId={id} />
                     <DeleteDocument />
                   </div>
                 </div>
@@ -211,7 +270,8 @@ export default function Document({ id }: DocumentProps) {
 
             <div className="mt-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-es-muted md:hidden">
               <span className="inline-flex items-center gap-1 rounded-full border border-[#e6e1d7] bg-white/80 px-2.5 py-1 text-[10px] text-es-primary">
-                <Users className="h-3 w-3" />1 collaborator
+                <Users className="h-3 w-3" />
+                <Avatars />
               </span>
               <span className="inline-flex items-center gap-1 rounded-full border border-[#e6e1d7] bg-white/80 px-2.5 py-1 text-[10px] text-es-primary">
                 <Activity className="h-3 w-3" />
@@ -227,7 +287,26 @@ export default function Document({ id }: DocumentProps) {
               shape the thought here
             </p>
             <div className="editor-canvas px-4 py-4 sm:px-5 sm:py-5 md:px-8 md:py-7">
-              <Editor />
+              <ErrorBoundary
+                fallback={
+                  <div className="flex min-h-[300px] items-center justify-center rounded-lg border border-red-200 bg-red-50/50 p-8">
+                    <div className="text-center">
+                      <p className="mb-3 text-sm font-medium text-red-700">
+                        Editor failed to load
+                      </p>
+                      <Button
+                        onClick={() => window.location.reload()}
+                        size="sm"
+                        variant="outline"
+                      >
+                        Refresh page
+                      </Button>
+                    </div>
+                  </div>
+                }
+              >
+                <Editor />
+              </ErrorBoundary>
             </div>
           </div>
         </div>

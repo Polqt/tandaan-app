@@ -1,7 +1,7 @@
 "use client";
 
 import { PenLine } from "lucide-react";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 export default function DocumentTitle({
@@ -17,11 +17,39 @@ export default function DocumentTitle({
   const [isPending, startTransition] = useTransition();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedTitleRef = useRef(initialTitle);
+  const isBlurringRef = useRef(false);
 
   useEffect(() => {
     setTitle(initialTitle);
     lastSavedTitleRef.current = initialTitle;
   }, [initialTitle]);
+
+  // Save function - extracted for reuse
+  const saveTitle = useCallback(
+    async (titleToSave: string) => {
+      if (titleToSave === lastSavedTitleRef.current) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/documents/${documentId}`, {
+          body: JSON.stringify({ title: titleToSave }),
+          headers: { "Content-Type": "application/json" },
+          method: "PATCH",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update title");
+        }
+
+        lastSavedTitleRef.current = titleToSave;
+      } catch (error) {
+        console.error("Error updating title:", error);
+        toast.error("Could not save title.");
+      }
+    },
+    [documentId],
+  );
 
   useEffect(() => {
     return () => {
@@ -31,39 +59,31 @@ export default function DocumentTitle({
     };
   }, []);
 
-  const scheduleSave = (nextTitle: string) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+  const scheduleSave = useCallback(
+    (nextTitle: string) => {
+      // Skip if we're in the middle of a blur event (blur handler will save)
+      if (isBlurringRef.current) {
+        isBlurringRef.current = false;
+        return;
+      }
 
-    const normalizedTitle = nextTitle.trim() || "Untitled";
-    if (normalizedTitle === lastSavedTitleRef.current) {
-      return;
-    }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
 
-    timeoutRef.current = setTimeout(() => {
-      startTransition(async () => {
-        try {
-          const response = await fetch(`/api/documents/${documentId}`, {
-            body: JSON.stringify({ title: normalizedTitle }),
-            headers: {
-              "Content-Type": "application/json",
-            },
-            method: "PATCH",
-          });
+      const normalizedTitle = nextTitle.trim() || "Untitled";
+      if (normalizedTitle === lastSavedTitleRef.current) {
+        return;
+      }
 
-          if (!response.ok) {
-            throw new Error("Failed to update title");
-          }
-
-          lastSavedTitleRef.current = normalizedTitle;
-        } catch (error) {
-          console.error("Error updating title:", error);
-          toast.error("Could not save title.");
-        }
-      });
-    }, 500);
-  };
+      timeoutRef.current = setTimeout(() => {
+        startTransition(() => {
+          saveTitle(normalizedTitle);
+        });
+      }, 500);
+    },
+    [saveTitle],
+  );
 
   const isBreadcrumb = variant === "breadcrumb";
 
@@ -86,9 +106,16 @@ export default function DocumentTitle({
             : "font-display text-[2rem] font-semibold leading-[0.96] tracking-[-0.05em] md:text-[2.5rem]"
         }`}
         onBlur={() => {
+          // Clear any pending debounced save
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+          }
           const normalizedTitle = title.trim() || "Untitled";
           setTitle(normalizedTitle);
-          scheduleSave(normalizedTitle);
+          startTransition(() => {
+            saveTitle(normalizedTitle);
+          });
         }}
         onChange={(event) => {
           const nextTitle = event.target.value;

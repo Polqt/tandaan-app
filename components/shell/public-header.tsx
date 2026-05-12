@@ -1,21 +1,25 @@
 "use client";
 
 import { SignedIn, UserButton, useAuth } from "@clerk/nextjs";
-import { Menu, PenBox } from "lucide-react";
+import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BrandWordmark } from "@/components/marketing/shared/sketch-primitives";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { publicNavItems } from "@/lib/marketing/site-content";
-import { Button } from "../ui/button";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "../ui/sheet";
-
-const navItems = [...publicNavItems, { href: "/docs", label: "Docs" }];
 
 function isActiveNavItem(pathname: string, href: string) {
-  return (
-    pathname === href ||
-    pathname.startsWith(`${href}/`) ||
-    (href === "/billing" && pathname === "/pricing")
-  );
+  if (href === "/pricing") {
+    return pathname === "/pricing" || pathname === "/billing";
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export default function PublicHeader() {
@@ -23,72 +27,96 @@ export default function PublicHeader() {
   const { userId } = useAuth();
 
   return (
-    <header className="relative z-40 border-b border-[rgba(39,43,38,0.08)] bg-[rgba(247,237,219,0.72)] backdrop-blur-md">
-      <div className="public-shell flex h-[76px] items-center justify-between gap-4">
-        <div className="flex items-center gap-10">
-          <Link
-            aria-label="Tandaan home"
-            className="group flex items-center gap-2"
-            href="/"
-          >
-            <PenBox className="size-[15px] text-(--color-es-soft-ink)" />
-            <p className="font-hand text-[1.55rem] font-semibold leading-none text-(--color-paper-ink)">
-              Tandaan
-            </p>
-          </Link>
+    <header className="sticky top-0 z-40 border-b border-[var(--color-sketch-line)] bg-white/85 backdrop-blur-xl dark:bg-slate-950/82">
+      <div className="sketch-shell flex h-[74px] items-center justify-between gap-5">
+        <Link
+          aria-label="Tandaan.AI home"
+          className="relative inline-flex items-center"
+          href="/"
+        >
+          <BrandWordmark />
+          <span className="absolute -bottom-2 left-0 h-px w-full -rotate-2 bg-[var(--color-sketch-ink)]" />
+        </Link>
 
-          <nav
-            aria-label="Main navigation"
-            className="hidden items-center gap-8 md:flex"
-          >
-            {navItems.map((item) => {
-              const isActive = isActiveNavItem(pathname, item.href);
+        <nav
+          aria-label="Main navigation"
+          className="hidden items-center gap-9 lg:flex"
+        >
+          {publicNavItems.map((item) => {
+            const isActive = isActiveNavItem(pathname, item.href);
 
-              return (
-                <Link
-                  aria-current={isActive ? "page" : undefined}
-                  className={`text-[13px] font-bold transition ${
-                    isActive
-                      ? "text-(--color-paper-ink) underline decoration-paper-red decoration-2 underline-offset-8"
-                      : "text-(--color-paper-muted) hover:text-(--color-paper-ink)"
-                  }`}
-                  href={item.href}
-                  key={item.label}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+            return (
+              <Link
+                aria-current={isActive ? "page" : undefined}
+                className={`inline-flex items-center gap-1 text-[13px] font-semibold transition ${
+                  isActive
+                    ? "text-[var(--color-sketch-ink)] underline decoration-[var(--color-sketch-ink)] decoration-2 underline-offset-10"
+                    : "text-[var(--color-sketch-muted)] hover:text-[var(--color-sketch-ink)]"
+                }`}
+                href={item.href}
+                key={item.label}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
 
         <div className="flex items-center gap-2">
+          <SignedIn>
+            <Button
+              asChild
+              className="sketch-primary-button hidden h-10 px-5 text-[13px] md:inline-flex"
+            >
+              <Link href="/documents">Open Workspace</Link>
+            </Button>
+            <UserButton
+              afterSignOutUrl="/"
+              appearance={{ elements: { avatarBox: "w-7 h-7" } }}
+            />
+          </SignedIn>
+
+          {!userId ? (
+            <>
+              <Button
+                asChild
+                className="hidden h-10 px-4 text-[13px] text-[var(--color-sketch-ink)] hover:bg-[var(--color-sketch-soft)] md:inline-flex"
+                variant="ghost"
+              >
+                <Link href="/sign-in">Log in</Link>
+              </Button>
+              <Button
+                asChild
+                className="sketch-primary-button hidden h-10 px-5 text-[13px] md:inline-flex"
+              >
+                <Link href="/billing">Get Started Free</Link>
+              </Button>
+            </>
+          ) : null}
+
           <Sheet>
             <SheetTrigger asChild>
               <Button
                 aria-label="Open navigation"
-                className="paper-link-button h-10 w-10 p-0 md:hidden"
-                variant="ghost"
+                className="size-10 rounded-lg border border-[var(--color-sketch-line)] bg-white p-0 text-[var(--color-sketch-ink)] lg:hidden dark:bg-slate-900"
+                variant="outline"
               >
-                <Menu className="size-5" />
+                <Menu />
               </Button>
             </SheetTrigger>
             <SheetContent
-              className="w-[min(22rem,100vw)] border-(--color-paper-line) bg-paper-sheet p-0"
+              className="w-[min(23rem,100vw)] border-[var(--color-sketch-line)] bg-white p-0 dark:bg-slate-950"
               side="right"
             >
               <SheetTitle className="sr-only">Public navigation</SheetTitle>
               <div className="flex h-full flex-col p-5">
-                <Link
-                  className="font-hand text-4xl font-semibold text-(--color-paper-ink)"
-                  href="/"
-                >
-                  Tandaan
+                <Link href="/" aria-label="Tandaan.AI home">
+                  <BrandWordmark className="text-[2.2rem]" />
                 </Link>
-                <nav className="mt-8 flex flex-col gap-3">
-                  {navItems.map((item) => (
+                <nav className="mt-8 flex flex-col gap-2">
+                  {publicNavItems.map((item) => (
                     <Link
-                      className="border-b border-(--color-paper-line) py-3 text-lg font-bold text-(--color-paper-ink)"
+                      className="rounded-lg border border-[var(--color-sketch-line)] px-4 py-3 text-base font-bold text-[var(--color-sketch-ink)]"
                       href={item.href}
                       key={item.label}
                     >
@@ -97,52 +125,18 @@ export default function PublicHeader() {
                   ))}
                 </nav>
                 <div className="mt-auto flex flex-col gap-3">
-                  <Button asChild className="paper-button h-11">
-                    <Link href="/documents">Start writing</Link>
+                  <Button asChild className="sketch-primary-button h-11">
+                    <Link href="/billing">Get Started Free</Link>
                   </Button>
                   {!userId ? (
-                    <Button
-                      asChild
-                      className="paper-link-button h-11"
-                      variant="ghost"
-                    >
-                      <Link href="/sign-in">Sign in</Link>
+                    <Button asChild className="h-11" variant="outline">
+                      <Link href="/sign-in">Log in</Link>
                     </Button>
                   ) : null}
                 </div>
               </div>
             </SheetContent>
           </Sheet>
-
-          <SignedIn>
-            <Button
-              asChild
-              className="paper-button hidden h-10 px-5 text-[13px] md:inline-flex"
-            >
-              <Link href="/documents">Open workspace</Link>
-            </Button>
-            <UserButton
-              afterSignOutUrl="/"
-              appearance={{ elements: { avatarBox: "w-7 h-7" } }}
-            />
-          </SignedIn>
-          {!userId ? (
-            <>
-              <Button
-                asChild
-                className="paper-link-button hidden h-9 px-2 text-[13px] md:inline-flex"
-                variant="ghost"
-              >
-                <Link href="/sign-in">Sign in</Link>
-              </Button>
-              <Button
-                asChild
-                className="paper-button hidden h-10 px-6 text-[13px] md:inline-flex"
-              >
-                <Link href="/billing">Get started</Link>
-              </Button>
-            </>
-          ) : null}
         </div>
       </div>
     </header>

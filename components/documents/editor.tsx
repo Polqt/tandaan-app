@@ -18,24 +18,38 @@ import {
   Check,
   Copy,
   FilePlus2,
+  Languages,
   LayoutTemplate,
+  Lightbulb,
   RotateCcw,
   Sparkles,
   WifiOff,
+  X,
 } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { getDocumentTemplate } from "@/lib/docs/document-templates";
 import {
+  blocksToPlainText,
   createIdempotencyKey,
   getDocumentBackupKey,
   isDocumentEmpty,
   parseSerializedBlocks,
   type SerializedBlock,
 } from "@/lib/docs/editor-content";
+import {
+  debouncedAISuggestion,
+  debouncedTranslate,
+  detectLanguage,
+  getAISuggestion,
+  translateText,
+} from "@/lib/ai/editor-assistants";
+import { loggerWithRequest } from "@/lib/telemetry/logger";
 import stringToColor from "@/lib/users/color";
 import { Button } from "../ui/button";
 import { Spinner } from "../ui/spinner";
+
+const editorLogger = loggerWithRequest("editor");
 
 type EditorIdentity = {
   color: string;
@@ -165,9 +179,15 @@ const BlockNote = memo(function BlockNote({
 
   const handleEditorChange = useCallback(() => {
     try {
-      onContentChange(JSON.stringify(editor.document));
+      // Check if editor document is valid before serializing
+      if (!editor.document || editor.document.length === 0) {
+        return;
+      }
+      const content = JSON.stringify(editor.document);
+      onContentChange(content);
     } catch (error) {
-      console.error("Error serializing document:", error);
+      // Silently ignore serialization errors during sync conflicts
+      console.warn("Editor change handler skipped:", error);
     }
   }, [editor, onContentChange]);
 
@@ -251,6 +271,21 @@ export default function Editor() {
   const [initialServerContent, setInitialServerContent] = useState<
     string | null | undefined
   >(undefined);
+
+  // AI Assistant states
+  const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
+  const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false);
+  const [showTranslateMenu, setShowTranslateMenu] = useState(false);
+  const [translatedText, setTranslatedText] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
+  const [translateFromLang, setTranslateFromLang] = useState<string>("auto");
+
+  // Refs for debounced AI calls
+  const suggestionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const translateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editorContentRef = useRef<string>("");
+
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeSaveControllerRef = useRef<AbortController | null>(null);
   const saveRevisionRef = useRef(0);
@@ -273,6 +308,44 @@ export default function Editor() {
       name: displayName,
     };
   }, [room.id, selfInfo]);
+
+  // Error handler for Yjs/Liveblocks sync issues
+  // Logs errors but doesn't crash/refresh - lets user continue editing
+  const handleSyncError = useCallback((error: unknown) => {
+    editorLogger.warn({
+      msg: "Sync error (non-fatal)",
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }, []);
+
+  // Global error handler for uncaught errors during collaboration
+  useEffect(() => {
+    const handleWindowError = (event: ErrorEvent) => {
+      // Check if this is a ProseMirror/BlockNote related error
+      if (
+        event.message?.includes("Position") ||
+        event.message?.includes("resolve") ||
+        event.message?.includes("ProseMirror")
+      ) {
+        handleSyncError(event.error);
+      }
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      handleSyncError(event.reason);
+    };
+
+    window.addEventListener("error", handleWindowError);
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener("error", handleWindowError);
+      window.removeEventListener(
+        "unhandledrejection",
+        handleUnhandledRejection,
+      );
+    };
+  }, [handleSyncError]);
 
   useEffect(() => {
     const handleSynced = () => {
@@ -362,6 +435,14 @@ export default function Editor() {
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
+      }
+
+      if (suggestionTimeoutRef.current) {
+        clearTimeout(suggestionTimeoutRef.current);
+      }
+
+      if (translateTimeoutRef.current) {
+        clearTimeout(translateTimeoutRef.current);
       }
 
       activeSaveControllerRef.current?.abort();
@@ -502,7 +583,7 @@ export default function Editor() {
           });
 
           if (!response.ok) {
-            throw new Error("Failed to save document");
+            throw new Error(`Save failed: ${response.status}`);
           }
 
           if (revision !== saveRevisionRef.current) {
@@ -542,6 +623,166 @@ export default function Editor() {
     },
     [clearBackup, createSnapshot, isOnline, persistBackup, room.id],
   );
+
+  // Fetch AI suggestion for current content
+  const fetchAISuggestion = useCallback(async (content: string) => {
+    if (!content || content.length < 20) {
+      setAiSuggestion(null);
+      setIsLoadingSuggestion(false);
+      return;
+    }
+
+    try {
+      const plainText = blocksToPlainText(content);
+      if (!plainText || plainText.length < 20) {
+        setAiSuggestion(null);
+        setIsLoadingSuggestion(false);
+        return;
+      }
+
+      // Get last 500 chars for context (avoid sending huge payloads)
+      const context = plainText.slice(-500);
+      
+      const result = await getAISuggestion(context, "Untitled Document");
+      
+      if (result.success && result.suggestions?.[0]) {
+        setAiSuggestion(result.suggestions[0]);
+      } else {
+        setAiSuggestion(null);
+      }
+    } catch (error) {
+      console.warn("AI suggestion failed:", error);
+      setAiSuggestion(null);
+    } finally {
+      setIsLoadingSuggestion(false);
+    }
+  }, []);
+
+  // Handle content change with AI suggestion trigger
+  const handleContentChangeWithAI = useCallback(
+    (content: string) => {
+      // Store content for AI
+      editorContentRef.current = content;
+      
+      // Call original handler
+      handleContentChange(content);
+      
+      // Cancel previous suggestion timeout
+      if (suggestionTimeoutRef.current) {
+        clearTimeout(suggestionTimeoutRef.current);
+      }
+      
+      // Clear current suggestion while typing
+      setAiSuggestion(null);
+      setIsLoadingSuggestion(true);
+      
+      // Debounce AI suggestion call (2 seconds)
+      suggestionTimeoutRef.current = setTimeout(() => {
+        fetchAISuggestion(content);
+      }, 2000);
+    },
+    [handleContentChange, fetchAISuggestion],
+  );
+
+  // Handle translation request
+  const handleTranslate = useCallback(async (targetLanguage: string) => {
+    const content = editorContentRef.current;
+    if (!content) {
+      toast.error("No content to translate");
+      return;
+    }
+
+    const plainText = blocksToPlainText(content);
+    if (!plainText.trim()) {
+      toast.error("No content to translate");
+      return;
+    }
+
+    setIsTranslating(true);
+    setShowTranslateMenu(false);
+
+    try {
+      // First detect language if auto
+      if (translateFromLang === "auto") {
+        const detectResult = await detectLanguage(plainText);
+        if (detectResult.success) {
+          setDetectedLanguage(detectResult.language);
+        }
+      }
+
+      const result = await translateText(plainText, targetLanguage);
+
+      if (result.success) {
+        setTranslatedText(result.translatedText);
+        if (result.detectedLanguage) {
+          setDetectedLanguage(result.detectedLanguage);
+        }
+        toast.success("Translation complete");
+      } else {
+        toast.error(result.error || "Translation failed");
+      }
+    } catch (error) {
+      console.error("Translation error:", error);
+      toast.error("Translation failed");
+    } finally {
+      setIsTranslating(false);
+    }
+  }, [translateFromLang]);
+
+  // Apply translation to editor
+  const applyTranslation = useCallback(async () => {
+    if (!translatedText) return;
+
+    try {
+      const idempotencyKey = createIdempotencyKey();
+      const response = await fetch(`/api/documents/${room.id}`, {
+        body: JSON.stringify({
+          content: JSON.stringify([
+            {
+              id: crypto.randomUUID(),
+              type: "paragraph",
+              props: {
+                backgroundColor: "default",
+                textColor: "default",
+                textAlignment: "left",
+              },
+              content: [
+                {
+                  type: "text",
+                  text: translatedText,
+                  styles: {},
+                },
+              ],
+              children: [],
+            },
+          ]),
+          idempotencyKey,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          "x-idempotency-key": idempotencyKey,
+        },
+        method: "PATCH",
+      });
+
+      if (response.ok) {
+        toast.success("Translation applied");
+        setTranslatedText(null);
+        window.location.reload();
+      } else {
+        toast.error("Failed to apply translation");
+      }
+    } catch (error) {
+      console.error("Apply translation error:", error);
+      toast.error("Failed to apply translation");
+    }
+  }, [translatedText, room.id]);
+
+  // Clear translation
+  const clearTranslation = useCallback(() => {
+    setTranslatedText(null);
+    setDetectedLanguage(null);
+  }, []);
 
   const saveStatusLabel = useMemo(() => {
     if (saveState === "saving") return "Saving changes";
@@ -622,8 +863,9 @@ export default function Editor() {
                 <Button
                   className="h-8 rounded-full bg-white text-xs text-amber-900 hover:bg-white/90"
                   onClick={async () => {
-                    await navigator.clipboard.writeText(backupMeta.content);
-                    toast.success("Backup copied to clipboard.");
+                    const plainText = blocksToPlainText(backupMeta.content);
+                    await navigator.clipboard.writeText(plainText);
+                    toast.success("Backup text copied to clipboard.");
                   }}
                   size="sm"
                   variant="secondary"
@@ -654,10 +896,125 @@ export default function Editor() {
             </div>
           ) : null}
 
+          {/* AI Toolbar */}
+          <div className="mb-3 flex items-center gap-2">
+            <Button
+              className="h-8 rounded-full text-xs gap-1.5"
+              disabled={isTranslating}
+              onClick={() => {
+                setShowTranslateMenu(!showTranslateMenu);
+                if (showTranslateMenu) {
+                  // Clear translation state when closing menu
+                  setTranslatedText(null);
+                  setDetectedLanguage(null);
+                }
+              }}
+              size="sm"
+              variant="outline"
+            >
+              <Languages className="size-3.5" />
+              {isTranslating ? "Translating..." : "Translate"}
+            </Button>
+
+            {aiSuggestion && (
+              <div className="flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs text-purple-800">
+                <Lightbulb className="size-3.5 shrink-0" />
+                <span className="line-clamp-1 max-w-[200px]">{aiSuggestion}</span>
+              </div>
+            )}
+
+            {isLoadingSuggestion && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Spinner className="size-3.5" />
+                Getting suggestion...
+              </div>
+            )}
+          </div>
+
+          {/* Translate Menu */}
+          {showTranslateMenu && (
+            <div className="mb-4 rounded-xl border border-es-line bg-white p-4 shadow-lg">
+              <div className="mb-3 flex items-center justify-between">
+                <h4 className="text-sm font-medium">Translate to</h4>
+                <Button
+                  className="h-6 w-6 rounded-full p-0"
+                  onClick={() => setShowTranslateMenu(false)}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <X className="size-3.5" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                {["en", "es", "fr", "de", "it", "pt", "zh", "ja", "ko", "ar"].map(
+                  (lang) => (
+                    <Button
+                      key={lang}
+                      className="text-xs"
+                      onClick={() => handleTranslate(lang)}
+                      size="sm"
+                      variant="outline"
+                    >
+                      {lang.toUpperCase()}
+                    </Button>
+                  ),
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Translation Result */}
+          {translatedText && (
+            <div className="mb-4 rounded-xl border border-green-200 bg-green-50/80 p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Languages className="size-4 text-green-600" />
+                  <span className="text-sm font-medium">
+                    {detectedLanguage ? `${detectedLanguage} → Translated` : "Translation"}
+                  </span>
+                </div>
+                <Button
+                  className="h-6 w-6 rounded-full p-0"
+                  onClick={clearTranslation}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <X className="size-3.5" />
+                </Button>
+              </div>
+              <p className="mb-3 max-h-32 overflow-auto whitespace-pre-wrap text-sm text-muted-foreground">
+                {translatedText}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  className="h-8 rounded-full text-xs"
+                  onClick={applyTranslation}
+                  size="sm"
+                  variant="default"
+                >
+                  <Check data-icon="inline-start" />
+                  Apply to document
+                </Button>
+                <Button
+                  className="h-8 rounded-full bg-white text-xs"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(translatedText);
+                    toast.success("Translation copied to clipboard.");
+                  }}
+                  size="sm"
+                  variant="secondary"
+                >
+                  <Copy data-icon="inline-start" />
+                  Copy
+                </Button>
+              </div>
+            </div>
+          )}
+
           <BlockNote
             initialContent={initialServerContent}
             key={room.id}
-            onContentChange={handleContentChange}
+            onContentChange={handleContentChangeWithAI}
             provider={provider}
             userInfo={userInfo}
           />

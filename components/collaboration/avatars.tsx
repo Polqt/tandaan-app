@@ -13,6 +13,9 @@ type Participant = {
 };
 
 export default function Avatars() {
+  // Maximum avatars to show before collapsing into "+N more"
+  const MAX_VISIBLE_AVATARS = 5;
+
   const selfParticipant = useSelf((self) => {
     if (!self) {
       return null;
@@ -41,6 +44,10 @@ export default function Avatars() {
     [otherParticipants, selfParticipant],
   );
 
+  // For large participant counts, show only the first N avatars
+  const visibleParticipants = participants.slice(0, MAX_VISIBLE_AVATARS);
+  const overflowCount = participants.length - MAX_VISIBLE_AVATARS;
+
   return (
     <div className="flex items-center gap-2.5">
       <div className="text-right hidden sm:block">
@@ -54,7 +61,7 @@ export default function Avatars() {
       </div>
 
       <div className="flex -space-x-1.5">
-        {participants.map((participant) => (
+        {visibleParticipants.map((participant) => (
           <Tooltip key={participant.id}>
             <TooltipTrigger asChild>
               <Avatar className="h-7 w-7 border-2 border-es-canvas">
@@ -69,6 +76,23 @@ export default function Avatars() {
             </TooltipContent>
           </Tooltip>
         ))}
+
+        {/* Show overflow count if there are too many participants */}
+        {overflowCount > 0 && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-es-canvas bg-[#f3f2ed] text-[10px] font-medium text-es-muted">
+                +{overflowCount}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent sideOffset={8}>
+              <p>
+                And {overflowCount} more collaborator
+                {overflowCount === 1 ? "" : "s"}
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
     </div>
   );
