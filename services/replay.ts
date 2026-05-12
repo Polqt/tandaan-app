@@ -229,6 +229,14 @@ export async function getReplayTimelineByShareId(
     return null;
   }
 
+  const documentData = snapshot.docs[0].data();
+  
+  // Check if replay share has expired
+  const expiresAt = documentData.replayShareExpiresAt;
+  if (expiresAt && expiresAt.toDate() < new Date()) {
+    return { error: "expired" };
+  }
+
   return buildReplayTimeline(snapshot.docs[0].id, options);
 }
 
@@ -257,10 +265,17 @@ export async function createReplayShareForUser(
   }
 
   const shareId = randomUUID();
+  // Default: shares expire after 30 days
+  const SHARE_EXPIRY_DAYS = 30;
+  const expiresAt = new Date(
+    Date.now() + SHARE_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+  );
+  
   const updatePayload = {
     replayShareId: shareId,
     replaySharedAt: new Date(),
     replaySharedBy: userId,
+    replayShareExpiresAt: expiresAt,
   };
   await documentRef.update(updatePayload);
   await syncRoomDocumentMetadata(roomId, {

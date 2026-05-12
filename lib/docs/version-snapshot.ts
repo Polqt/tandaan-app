@@ -1,7 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { adminDB } from "@/firebase-admin";
+import { generateVersionSummary } from "@/lib/ai/replay-summary";
 import { computeVersionSummary } from "@/lib/docs/version-utils";
+import { loggerWithRequest } from "@/lib/telemetry/logger";
 import { recordAnalyticsEventServer } from "@/lib/telemetry/server-events";
+
+const logger = loggerWithRequest("version-snapshot");
 
 type PersistVersionSnapshotInput = {
   content: string;
@@ -12,6 +16,8 @@ type PersistVersionSnapshotInput = {
 };
 
 type PersistVersionSnapshotResult = {
+  aiSummary?: string;
+  chapterLabel?: string;
   queueLatencyMs: number | null;
   summary: ReturnType<typeof computeVersionSummary>;
   versionId: string;
@@ -130,24 +136,94 @@ export async function persistVersionSnapshot({
       .orderBy("timeStamp", "desc")
       .limit(1)
       .get();
-    const previousContent = latestVersionSnapshot.empty
+
+    const previousVersion = latestVersionSnapshot.empty
       ? null
-      : (latestVersionSnapshot.docs[0].data().content as string | null);
+      : latestVersionSnapshot.docs[0].data();
+    const previousContent = previousVersion?.content as string | null;
     const summary = computeVersionSummary(content, previousContent);
 
-    const versionRef = versionsCollection.doc();
-    await versionRef.set({
+    // Get document title for the AI summary
+    const documentSnap = await adminDB
+      .collection("documents")
+      .doc(roomId)
+      .get();
+    const documentTitle = (documentSnap.data()?.title as string) ?? "Untitled";
+
+    // Prepare the version data (without AI fields first)
+    const versionData: Record<string, unknown> = {
       content,
       summary,
       timeStamp: new Date(),
       userId,
-    });
+    };
+
+    // Create the version first
+    const versionRef = versionsCollection.doc();
+    await versionRef.set(versionData);
 
     const queueLatencyMs = resolveQueueLatencyMs(queuedAt);
+
+    // Generate AI summary asynchronously (non-blocking)
+    let aiSummary: string | undefined;
+    let chapterLabel: string | undefined;
+
+    if (process.env.CLOUDFLARE_AI_WORKER_URL) {
+      const previousTimestamp = previousVersion?.timeStamp as
+        | { toDate?: () => Date }
+        | undefined;
+
+      const aiInput = {
+        currentVersion: {
+          content,
+          summary,
+          timestamp: new Date().toISOString(),
+        },
+        previousVersion: previousVersion
+          ? {
+              content: previousContent ?? "",
+              summary: previousVersion.summary as {
+                addedBlocks: number;
+                updatedBlocks: number;
+                removedBlocks: number;
+              },
+              timestamp: previousTimestamp?.toDate?.()?.toISOString() ?? "",
+            }
+          : null,
+        documentTitle,
+      };
+
+      // Call AI worker in background (don't block the response)
+      generateVersionSummary(aiInput)
+        .then((aiResult) => {
+          if (aiResult) {
+            versionRef
+              .update({
+                aiSummary: aiResult.aiSummary,
+                chapterLabel: aiResult.chapterLabel,
+              })
+              .catch((err) => {
+                logger.error({
+                  msg: "Failed to update version with AI summary",
+                  error: err,
+                  versionId: versionRef.id,
+                });
+              });
+          }
+        })
+        .catch((err) => {
+          logger.warn({
+            msg: "AI summary generation failed (non-blocking)",
+            error: err,
+          });
+        });
+    }
+
     await recordAnalyticsEventServer({
       actorUserId: userId,
       event: "snapshot_persisted",
       metadata: {
+        hasAiSummary: !!process.env.CLOUDFLARE_AI_WORKER_URL,
         lockWaitMs: lock.waitMs,
         queueLatencyMs,
         versionId: versionRef.id,
@@ -156,36 +232,9 @@ export async function persistVersionSnapshot({
       roomId,
     });
 
-    const workerUrl = process.env.CLOUDFLARE_AI_WORKER_URL;
-    const workerSecret = process.env.CLOUDFLARE_AI_WORKER_SECRET;
-    if (workerUrl) {
-      fetch(workerUrl, {
-        body: JSON.stringify({
-          content,
-          documentId: roomId,
-          versionId: versionRef.id,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-          ...(workerSecret ? { "X-Worker-Secret": workerSecret } : {}),
-        },
-        method: "POST",
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            return;
-          }
-          const json = (await res.json()) as { summary?: string };
-          if (json.summary) {
-            await versionRef.update({ aiSummary: json.summary });
-          }
-        })
-        .catch((err) => {
-          console.warn("AI summary worker failed (non-blocking):", err);
-        });
-    }
-
     return {
+      aiSummary,
+      chapterLabel,
       queueLatencyMs,
       summary,
       versionId: versionRef.id,

@@ -57,7 +57,8 @@ export function useDocument(documentId: string) {
       };
     },
     queryKey: ["document", documentId],
-    staleTime: 30 * 60 * 1000,
+    // Short staleTime for collaborative docs - allows seeing other users' changes quickly
+    staleTime: 30 * 1000,
   });
 }
 

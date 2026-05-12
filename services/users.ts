@@ -46,6 +46,12 @@ export async function inviteUser(roomId: string, email: string) {
     return { success: false, error: "Authentication required" };
   }
 
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRegex.test(email)) {
+    return { success: false, error: "Invalid email address" };
+  }
+
   // Verify requester owns the room
   const ownerRoomSnap = await adminDB
     .collection("users")
@@ -242,7 +248,10 @@ export async function getRoomUsers(roomId: string): Promise<string[]> {
   }
 
   try {
-    // Use collectionGroup — acceptable for moderate scale; add a Firestore index on roomId
+    // Use collectionGroup query - requires Firestore composite index
+    // Index: collectionGroup "rooms" where roomId == <value>
+    // Create via: gcloud firestore indexes composite create --collection-group=rooms --field-config=field_path=roomId,order=ASCENDING
+    // Or via Firebase Console: Firestore Indexes > Add composite index on collection "rooms", field "roomId" (Ascending)
     const roomUsers = await adminDB
       .collectionGroup("rooms")
       .where("roomId", "==", roomId)

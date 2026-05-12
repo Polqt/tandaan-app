@@ -50,3 +50,42 @@ export function isDocumentEmpty(blocks: SerializedBlock[]) {
 
   return true;
 }
+/**
+ * Converts BlockNote JSON content to plain text
+ */
+export function blocksToPlainText(content: string | null | undefined): string {
+  if (!content) {
+    return "";
+  }
+
+  const blocks = parseSerializedBlocks(content);
+  if (!blocks || blocks.length === 0) {
+    return "";
+  }
+
+  const textParts: string[] = [];
+
+  for (const block of blocks) {
+    if (block.type === "paragraph" || block.type === "heading") {
+      if (typeof block.content === "string") {
+        textParts.push(block.content);
+      } else if (Array.isArray(block.content)) {
+        const blockText = block.content.map((item) => item.text ?? "").join("");
+        textParts.push(blockText);
+      }
+    } else if (
+      block.type === "bulletListItem" ||
+      block.type === "numberedListItem"
+    ) {
+      if (typeof block.content === "string") {
+        textParts.push(`• ${block.content}`);
+      } else if (Array.isArray(block.content)) {
+        const itemText = block.content.map((item) => item.text ?? "").join("");
+        textParts.push(`• ${itemText}`);
+      }
+    }
+    // Add more block types as needed
+  }
+
+  return textParts.join("\n");
+}

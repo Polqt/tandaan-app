@@ -10,6 +10,12 @@ function getLimiter() {
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
+    // Log warning in production to catch misconfiguration
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        "[RATE-LIMIT] Redis credentials not configured. Rate limiting is DISABLED in production!",
+      );
+    }
     return null;
   }
 
@@ -27,7 +33,14 @@ function getLimiter() {
 
 export async function checkSaveRateLimit(identifier: string) {
   const rateLimiter = getLimiter();
+
+  // Fail-closed in production: if limiter is unavailable, deny the request
+  // This prevents abuse when Redis is misconfigured
   if (!rateLimiter) {
+    if (process.env.NODE_ENV === "production") {
+      return { reset: Date.now() + 60000, success: false };
+    }
+    // Allow in development/testing when Redis isn't configured
     return { reset: 0, success: true };
   }
 
