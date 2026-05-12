@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
   return {
     host: siteUrl,
     rules: {
-      allow: ["/", "/features", "/blog", "/docs", "/billing"],
+      allow: ["/", "/product", "/solutions", "/blog", "/billing"],
       disallow: ["/api/", "/documents/", "/sign-in", "/sign-up"],
       userAgent: "*",
     },

@@ -20,7 +20,7 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "Tandaan",
+  title: "Tandaan.AI",
   description:
     "Collaborative documents with replay, comments, and a calm sketchbook interface for teams.",
   metadataBase: new URL(
@@ -34,11 +34,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${manrope.variable} ${sora.variable} bg-background font-sans antialiased`}
-        >
+    <ClerkProvider
+      afterSignInUrl="/documents"
+      afterSignUpUrl="/documents"
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+    >
+      <html lang="en" className={`${manrope.variable} ${sora.variable}`}>
+        <body className="bg-background font-sans antialiased">
           <Suspense fallback={null}>
             <AppPostHogProvider>
               <WebVitalsReporter />
