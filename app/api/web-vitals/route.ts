@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { loggerWithRequest } from "@/lib/logger";
-import { getRequestId } from "@/lib/request-id";
-import { withRequestHeaders } from "@/lib/response";
+import { getRequestId } from "@/lib/server/request-id";
+import { withRequestHeaders } from "@/lib/server/response";
+import { loggerWithRequest } from "@/lib/telemetry/logger";
 
 type VitalPayload = {
   id?: string;

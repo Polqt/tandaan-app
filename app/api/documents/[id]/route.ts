@@ -1,18 +1,20 @@
+import { getFirestore } from "firebase-admin/firestore";
 import { adminApp } from "@/firebase-admin";
+import { syncRoomDocumentMetadata } from "@/lib/docs/document-list";
 import {
   apiErrorResponseWithRequestId,
   apiSuccessResponseWithRequestId,
   requireAuth,
-} from "@/lib/api-utils";
-import { checkSaveRateLimit } from "@/lib/rate-limit";
+} from "@/lib/server/api-utils";
 import {
   reserveIdempotencyKey,
   storeIdempotencyResponse,
-} from "@/lib/idempotency";
-import { loggerWithRequest } from "@/lib/logger";
-import { getRequestId } from "@/lib/request-id";
-import { patchDocumentSchema, parseBody } from "@/lib/schemas";
-import { getFirestore } from "firebase-admin/firestore";
+} from "@/lib/server/idempotency";
+import { checkSaveRateLimit } from "@/lib/server/rate-limit";
+import { getRequestId } from "@/lib/server/request-id";
+import { parseBody, patchDocumentSchema } from "@/lib/server/schemas";
+import { loggerWithRequest } from "@/lib/telemetry/logger";
+import { setSentryRequestContext } from "@/lib/telemetry/observability";
 
 const db = getFirestore(adminApp);
 
@@ -23,12 +25,21 @@ export async function GET(
   const requestId = await getRequestId();
   const logger = loggerWithRequest(requestId, { route: "documents.get" });
   try {
-    const authResult = await requireAuth();
+    const authResult = await requireAuth({
+      requestId,
+      route: "documents.get",
+    });
     if (!authResult.authorized) {
       return authResult.error;
     }
 
     const { id } = await params;
+    setSentryRequestContext({
+      requestId,
+      roomId: id,
+      route: "documents.get",
+      userId: authResult.userId,
+    });
 
     const roomRef = db
       .collection("users")
@@ -38,7 +49,11 @@ export async function GET(
     const roomSnap = await roomRef.get();
 
     if (!roomSnap.exists) {
-      return apiErrorResponseWithRequestId("Document not found", requestId, 404);
+      return apiErrorResponseWithRequestId(
+        "Document not found",
+        requestId,
+        404,
+      );
     }
 
     const roomData = roomSnap.data();
@@ -47,7 +62,11 @@ export async function GET(
     const docSnap = await db.collection("documents").doc(roomId).get();
 
     if (!docSnap.exists) {
-      return apiErrorResponseWithRequestId("Document not found", requestId, 404);
+      return apiErrorResponseWithRequestId(
+        "Document not found",
+        requestId,
+        404,
+      );
     }
 
     const documentData = docSnap.data();
@@ -55,18 +74,22 @@ export async function GET(
 
     return apiSuccessResponseWithRequestId(
       {
-      id: documentId,
-      ...roomData,
-      document: {
-        ...(documentData ?? {}),
         id: documentId,
-      },
+        ...roomData,
+        document: {
+          ...(documentData ?? {}),
+          id: documentId,
+        },
       },
       requestId,
     );
   } catch (error) {
     logger.error({ error }, "Error fetching document");
-    return apiErrorResponseWithRequestId("Internal Server Error", requestId, 500);
+    return apiErrorResponseWithRequestId(
+      "Internal Server Error",
+      requestId,
+      500,
+    );
   }
 }
 
@@ -77,12 +100,21 @@ export async function PATCH(
   const requestId = await getRequestId();
   const logger = loggerWithRequest(requestId, { route: "documents.patch" });
   try {
-    const authResult = await requireAuth();
+    const authResult = await requireAuth({
+      requestId,
+      route: "documents.patch",
+    });
     if (!authResult.authorized) {
       return authResult.error;
     }
 
     const { id } = await params;
+    setSentryRequestContext({
+      requestId,
+      roomId: id,
+      route: "documents.patch",
+      userId: authResult.userId,
+    });
     const rateLimit = await checkSaveRateLimit(
       `${authResult.userId}:document-save:${id}`,
     );
@@ -127,10 +159,25 @@ export async function PATCH(
     const roomSnap = await roomRef.get();
 
     if (!roomSnap.exists) {
-      return apiErrorResponseWithRequestId("Document not found", requestId, 404);
+      return apiErrorResponseWithRequestId(
+        "Document not found",
+        requestId,
+        404,
+      );
     }
 
     const roomData = roomSnap.data();
+    const userRole = roomData?.role;
+    
+    // Only owners can modify content; editors can only view
+    if (userRole !== "owner" && parsed.data.content !== undefined) {
+      return apiErrorResponseWithRequestId(
+        "You don't have permission to edit this document",
+        requestId,
+        403,
+      );
+    }
+
     const docId = roomData?.roomId ?? id;
     const updatePayload: Record<string, unknown> = {
       updatedAt: new Date(),
@@ -142,10 +189,16 @@ export async function PATCH(
       updatePayload.title = parsed.data.title;
     }
 
-    await db
-      .collection("documents")
-      .doc(docId)
-      .update(updatePayload);
+    await db.collection("documents").doc(docId).update(updatePayload);
+
+    if (parsed.data.title !== undefined) {
+      await syncRoomDocumentMetadata(docId, {
+        ...(roomData?.document && typeof roomData.document === "object"
+          ? (roomData.document as Record<string, unknown>)
+          : {}),
+        ...updatePayload,
+      });
+    }
 
     const responsePayload = { success: true };
     if (idempotencyKey) {
@@ -159,6 +212,10 @@ export async function PATCH(
     return apiSuccessResponseWithRequestId(responsePayload, requestId);
   } catch (error) {
     logger.error({ error }, "Error updating document");
-    return apiErrorResponseWithRequestId("Internal Server Error", requestId, 500);
+    return apiErrorResponseWithRequestId(
+      "Internal Server Error",
+      requestId,
+      500,
+    );
   }
 }

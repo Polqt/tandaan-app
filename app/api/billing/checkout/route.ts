@@ -1,56 +1,93 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { setSentryRequestContext } from "@/lib/telemetry/observability";
+import { recordAnalyticsEventServer } from "@/lib/telemetry/server-events";
 
 const PAYMONGO_SECRET = process.env.PAYMONGO_SECRET_KEY;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
-// PayMongo create payment link
-// Docs: https://developers.paymongo.com/reference/create-a-payment-link
 export async function POST() {
   const { userId } = await auth();
+  setSentryRequestContext({
+    route: "billing.checkout",
+    tags: { provider: "paymongo" },
+    userId,
+  });
+
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   if (!PAYMONGO_SECRET) {
-    return NextResponse.json({ error: "Billing not configured" }, { status: 500 });
+    await recordAnalyticsEventServer({
+      actorUserId: userId,
+      event: "billing_checkout_failed",
+      metadata: { reason: "billing_not_configured" },
+    });
+    return NextResponse.json(
+      { error: "Billing not configured" },
+      { status: 500 },
+    );
   }
 
   const credentials = Buffer.from(`${PAYMONGO_SECRET}:`).toString("base64");
+  await recordAnalyticsEventServer({
+    actorUserId: userId,
+    event: "billing_checkout_started",
+    metadata: { provider: "paymongo" },
+  });
 
   const res = await fetch("https://api.paymongo.com/v1/links", {
-    method: "POST",
+    body: JSON.stringify({
+      data: {
+        attributes: {
+          amount: 29900,
+          currency: "PHP",
+          description: "Tandaan Pro - monthly subscription",
+          redirect: {
+            failed: `${APP_URL}/billing?status=failed`,
+            success: `${APP_URL}/billing?status=success`,
+          },
+          remarks: userId,
+        },
+      },
+    }),
     headers: {
       Authorization: `Basic ${credentials}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      data: {
-        attributes: {
-          amount: 29900,          // ₱299.00 in centavos
-          currency: "PHP",
-          description: "Tandaan Pro — monthly subscription",
-          remarks: userId,        // store userId so webhook can identify who paid
-          redirect: {
-            success: `${APP_URL}/billing?status=success`,
-            failed: `${APP_URL}/billing?status=failed`,
-          },
-        },
-      },
-    }),
+    method: "POST",
   });
 
   if (!res.ok) {
     const error = await res.text();
     console.error("PayMongo checkout error:", error);
-    return NextResponse.json({ error: "Failed to create payment link" }, { status: 502 });
+    await recordAnalyticsEventServer({
+      actorUserId: userId,
+      event: "billing_checkout_failed",
+      metadata: { provider: "paymongo", responseStatus: res.status },
+    });
+    return NextResponse.json(
+      { error: "Failed to create payment link" },
+      { status: 502 },
+    );
   }
 
   const data = await res.json();
-  const checkoutUrl = data?.data?.attributes?.checkout_url as string | undefined;
+  const checkoutUrl = data?.data?.attributes?.checkout_url as
+    | string
+    | undefined;
 
   if (!checkoutUrl) {
-    return NextResponse.json({ error: "No checkout URL returned" }, { status: 502 });
+    await recordAnalyticsEventServer({
+      actorUserId: userId,
+      event: "billing_checkout_failed",
+      metadata: { provider: "paymongo", reason: "missing_checkout_url" },
+    });
+    return NextResponse.json(
+      { error: "No checkout URL returned" },
+      { status: 502 },
+    );
   }
 
   return NextResponse.json({ checkoutUrl });

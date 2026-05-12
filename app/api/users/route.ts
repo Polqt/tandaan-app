@@ -1,5 +1,6 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { type NextRequest, NextResponse } from "next/server";
+import { checkSaveRateLimit } from "@/lib/server/rate-limit";
 
 type ResolvedUser = {
   avatar: string;
@@ -33,6 +34,14 @@ function unknownUser(identifier: string): ResolvedUser {
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limit to prevent abuse
+    const rateLimit = await checkSaveRateLimit(`users-api:${request.headers.get("x-forwarded-for") || "unknown"}`);
+    if (!rateLimit.success) {
+      return new NextResponse("Too many requests. Please try again later.", {
+        status: 429,
+      });
+    }
+
     const { searchParams } = new URL(request.url);
     const userIds = searchParams
       .getAll("userIds")

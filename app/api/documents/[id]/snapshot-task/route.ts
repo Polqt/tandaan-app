@@ -1,16 +1,18 @@
 import { NextResponse } from "next/server";
+import { persistVersionSnapshot } from "@/lib/docs/version-snapshot";
 import {
   reserveIdempotencyKey,
   storeIdempotencyResponse,
-} from "@/lib/idempotency";
-import { loggerWithRequest } from "@/lib/logger";
-import { getRequestId } from "@/lib/request-id";
-import { withRequestHeaders } from "@/lib/response";
-import { persistVersionSnapshot } from "@/lib/version-snapshot";
+} from "@/lib/server/idempotency";
+import { getRequestId } from "@/lib/server/request-id";
+import { withRequestHeaders } from "@/lib/server/response";
+import { loggerWithRequest } from "@/lib/telemetry/logger";
+import { recordAnalyticsEventServer } from "@/lib/telemetry/server-events";
 
 type SnapshotTaskPayload = {
   content: string;
   idempotencyKey?: string;
+  queuedAt?: string;
   roomId: string;
   userId: string;
 };
@@ -18,6 +20,11 @@ type SnapshotTaskPayload = {
 export async function POST(request: Request) {
   const requestId = await getRequestId();
   const logger = loggerWithRequest(requestId, { route: "snapshot-task" });
+  let payload: SnapshotTaskPayload | null = null;
+  const retryCountHeader =
+    request.headers.get("upstash-retried") ??
+    request.headers.get("Upstash-Retried");
+  const retryCount = Number.parseInt(retryCountHeader ?? "0", 10) || 0;
 
   try {
     const bearer = request.headers.get("authorization");
@@ -30,8 +37,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const payload = (await request.json()) as SnapshotTaskPayload;
-    const { content, roomId, userId, idempotencyKey } = payload;
+    payload = (await request.json()) as SnapshotTaskPayload;
+    const { content, roomId, userId, idempotencyKey, queuedAt } = payload;
 
     if (!content || !roomId || !userId) {
       return withRequestHeaders(
@@ -62,9 +69,15 @@ export async function POST(request: Request) {
       }
     }
 
-    const result = await persistVersionSnapshot({ content, roomId, userId });
+    const result = await persistVersionSnapshot({
+      content,
+      queuedAt,
+      requestId,
+      roomId,
+      userId,
+    });
     logger.info(
-      { versionId: result.versionId, roomId, userId },
+      { retryCount, versionId: result.versionId, roomId, userId },
       "Snapshot persisted",
     );
 
@@ -77,11 +90,20 @@ export async function POST(request: Request) {
       });
     }
 
-    return withRequestHeaders(
-      NextResponse.json(responsePayload),
-      requestId,
-    );
+    return withRequestHeaders(NextResponse.json(responsePayload), requestId);
   } catch (error) {
+    await recordAnalyticsEventServer({
+      actorUserId: payload?.userId ?? null,
+      event: "snapshot_task_failed",
+      metadata: { retryCount },
+      requestId,
+      roomId: payload?.roomId ?? null,
+    }).catch((analyticsError) => {
+      logger.error(
+        { analyticsError },
+        "Could not record snapshot task failure",
+      );
+    });
     logger.error({ error }, "Snapshot task failed");
     return withRequestHeaders(
       NextResponse.json({ error: "Internal Server Error" }, { status: 500 }),

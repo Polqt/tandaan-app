@@ -27,7 +27,10 @@ export async function GET(
       .get();
 
     if (!currentUserSnap.exists) {
-      return NextResponse.json({ error: "Room not found or access denied" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Room not found or access denied" },
+        { status: 404 },
+      );
     }
 
     // Direct path query — O(members) reads, no collectionGroup scan
@@ -42,7 +45,9 @@ export async function GET(
       return [{ data: doc.data(), userId: parentUser.id }];
     });
 
-    const memberUserIds = Array.from(new Set(memberEntries.map((e) => e.userId)));
+    const memberUserIds = Array.from(
+      new Set(memberEntries.map((e) => e.userId)),
+    );
 
     const profileFallback = { email: "", image: "", name: "Unknown user" };
     const profilesByUserId = new Map(
@@ -86,6 +91,9 @@ export async function GET(
     return NextResponse.json({ users });
   } catch (error) {
     console.error("Error fetching room users:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

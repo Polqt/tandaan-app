@@ -1,32 +1,11 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { adminApp } from "@/firebase-admin";
-import { apiErrorResponse, requireAuth } from "@/lib/api-utils";
-import { toIsoTimestampOrNull } from "@/lib/timestamp-utils";
+import { toIsoTimestampOrNull } from "@/lib/dates/timestamp";
+import { buildRoomListDocument } from "@/lib/docs/document-list";
+import { apiErrorResponse, requireAuth } from "@/lib/server/api-utils";
 
 const db = getFirestore(adminApp);
-
-function toRoomDocument(
-  id: string,
-  source: Record<string, unknown> | undefined,
-) {
-  if (!source) {
-    return null;
-  }
-
-  const title =
-    typeof source.title === "string" && source.title.trim().length > 0
-      ? source.title
-      : "Untitled Document";
-
-  return {
-    id,
-    replayShareId:
-      typeof source.replayShareId === "string" ? source.replayShareId : null,
-    title,
-    updatedAt: toIsoTimestampOrNull(source.updatedAt),
-  };
-}
 
 export async function GET() {
   try {
@@ -55,8 +34,15 @@ export async function GET() {
       };
     });
 
+    const missingMetadataEntries = roomEntries.filter(
+      ({ roomId, room }) =>
+        !room.document ||
+        typeof room.document !== "object" ||
+        buildRoomListDocument(roomId, room.document as Record<string, unknown>)
+          .updatedAt === null,
+    );
     const documentIds = Array.from(
-      new Set(roomEntries.map((entry) => entry.roomId)),
+      new Set(missingMetadataEntries.map((entry) => entry.roomId)),
     );
     const documentRefs = documentIds.map((documentId) =>
       db.collection("documents").doc(documentId),
@@ -77,7 +63,13 @@ export async function GET() {
       ...room,
       createdAt: toIsoTimestampOrNull(room.createdAt),
       roomId,
-      document: toRoomDocument(roomId, documentsById.get(roomId)),
+      document:
+        room.document && typeof room.document === "object"
+          ? buildRoomListDocument(
+              roomId,
+              room.document as Record<string, unknown>,
+            )
+          : buildRoomListDocument(roomId, documentsById.get(roomId)),
     }));
 
     return NextResponse.json({ rooms });

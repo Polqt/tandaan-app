@@ -1,18 +1,18 @@
+import { persistVersionSnapshot } from "@/lib/docs/version-snapshot";
 import {
   apiErrorResponseWithRequestId,
   apiSuccessResponseWithRequestId,
   requireAuth,
-} from "@/lib/api-utils";
-import { checkSaveRateLimit } from "@/lib/rate-limit";
+} from "@/lib/server/api-utils";
 import {
   reserveIdempotencyKey,
   storeIdempotencyResponse,
-} from "@/lib/idempotency";
-import { loggerWithRequest } from "@/lib/logger";
-import { getRequestId } from "@/lib/request-id";
-import { createVersionSchema, parseBody } from "@/lib/schemas";
-import { getQStashClient } from "@/lib/qstash";
-import { persistVersionSnapshot } from "@/lib/version-snapshot";
+} from "@/lib/server/idempotency";
+import { getQStashClient } from "@/lib/server/qstash";
+import { checkSaveRateLimit } from "@/lib/server/rate-limit";
+import { getRequestId } from "@/lib/server/request-id";
+import { createVersionSchema, parseBody } from "@/lib/server/schemas";
+import { loggerWithRequest } from "@/lib/telemetry/logger";
 import {
   getReplayTimelineForUser,
   resolveAccessibleRoomId,
@@ -26,24 +26,44 @@ export async function GET(_request: Request, { params }: RouteContext) {
   const requestId = await getRequestId();
   const logger = loggerWithRequest(requestId, { route: "versions.get" });
   try {
-    const authResult = await requireAuth();
+    const authResult = await requireAuth({ requestId, route: "versions.get" });
     if (!authResult.authorized) {
       return authResult.error;
     }
 
     const { id } = await params;
+    const searchParams = new URL(_request.url).searchParams;
+    const view = searchParams.get("view");
+    const cursor = searchParams.get("cursor");
+    const requestedLimit = Number.parseInt(searchParams.get("limit") ?? "", 10);
     const replayTimeline = await getReplayTimelineForUser(
       authResult.userId,
       id,
+      view === "activity"
+        ? {
+            cursor,
+            includeContent: false,
+            limit: Number.isNaN(requestedLimit) ? undefined : requestedLimit,
+            order: "desc",
+          }
+        : undefined,
     );
     if (!replayTimeline) {
-      return apiErrorResponseWithRequestId("Document not found", requestId, 404);
+      return apiErrorResponseWithRequestId(
+        "Document not found",
+        requestId,
+        404,
+      );
     }
 
     return apiSuccessResponseWithRequestId(replayTimeline, requestId);
   } catch (error) {
     logger.error({ error }, "Error fetching document versions");
-    return apiErrorResponseWithRequestId("Internal Server Error", requestId, 500);
+    return apiErrorResponseWithRequestId(
+      "Internal Server Error",
+      requestId,
+      500,
+    );
   }
 }
 
@@ -51,7 +71,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   const requestId = await getRequestId();
   const logger = loggerWithRequest(requestId, { route: "versions.post" });
   try {
-    const authResult = await requireAuth();
+    const authResult = await requireAuth({ requestId, route: "versions.post" });
     if (!authResult.authorized) {
       return authResult.error;
     }
@@ -59,7 +79,11 @@ export async function POST(request: Request, { params }: RouteContext) {
     const { id } = await params;
     const roomId = await resolveAccessibleRoomId(authResult.userId, id);
     if (!roomId) {
-      return apiErrorResponseWithRequestId("Document not found", requestId, 404);
+      return apiErrorResponseWithRequestId(
+        "Document not found",
+        requestId,
+        404,
+      );
     }
 
     const rateLimit = await checkSaveRateLimit(
@@ -99,11 +123,16 @@ export async function POST(request: Request, { params }: RouteContext) {
     }
 
     const qstash = getQStashClient();
-    if (qstash && process.env.SNAPSHOT_TASK_SECRET && process.env.NEXT_PUBLIC_APP_URL) {
+    if (
+      qstash &&
+      process.env.SNAPSHOT_TASK_SECRET &&
+      process.env.NEXT_PUBLIC_APP_URL
+    ) {
       await qstash.publishJSON({
         body: {
           content: parsed.data.content,
           idempotencyKey,
+          queuedAt: new Date().toISOString(),
           roomId,
           userId: authResult.userId,
         },
@@ -111,6 +140,8 @@ export async function POST(request: Request, { params }: RouteContext) {
           Authorization: `Bearer ${process.env.SNAPSHOT_TASK_SECRET}`,
           "x-request-id": requestId,
         },
+        retries: 3,
+        retryDelay: "1000",
         url: `${process.env.NEXT_PUBLIC_APP_URL}/api/documents/${id}/snapshot-task`,
       });
 
@@ -123,14 +154,13 @@ export async function POST(request: Request, { params }: RouteContext) {
         });
       }
 
-      return apiSuccessResponseWithRequestId(
-        queuedPayload,
-        requestId,
-      );
+      return apiSuccessResponseWithRequestId(queuedPayload, requestId);
     }
 
     const result = await persistVersionSnapshot({
       content: parsed.data.content,
+      queuedAt: new Date().toISOString(),
+      requestId,
       roomId,
       userId: authResult.userId,
     });
@@ -138,6 +168,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     const responsePayload = {
       success: true,
       summary: result.summary,
+      queueLatencyMs: result.queueLatencyMs,
       versionId: result.versionId,
     };
     if (idempotencyKey) {
@@ -151,6 +182,10 @@ export async function POST(request: Request, { params }: RouteContext) {
     return apiSuccessResponseWithRequestId(responsePayload, requestId);
   } catch (error) {
     logger.error({ error }, "Error creating document version");
-    return apiErrorResponseWithRequestId("Internal Server Error", requestId, 500);
+    return apiErrorResponseWithRequestId(
+      "Internal Server Error",
+      requestId,
+      500,
+    );
   }
 }

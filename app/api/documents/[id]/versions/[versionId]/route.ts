@@ -1,9 +1,9 @@
-import { adminDB } from "@/firebase-admin";
-import { requireAuth, apiErrorResponse } from "@/lib/api-utils";
-import { parseBody } from "@/lib/schemas";
-import { resolveAccessibleRoomId } from "@/services/replay";
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { adminDB } from "@/firebase-admin";
+import { apiErrorResponse, requireAuth } from "@/lib/server/api-utils";
+import { parseBody } from "@/lib/server/schemas";
+import { resolveAccessibleRoomId } from "@/services/replay";
 
 const patchVersionSchema = z.object({
   chapterLabel: z.string().max(80).trim(),
@@ -13,7 +13,7 @@ type RouteContext = {
   params: Promise<{ id: string; versionId: string }>;
 };
 
-export async function PATCH(request: Request, { params }: RouteContext) {
+export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
     const authResult = await requireAuth();
     if (!authResult.authorized) return authResult.error;
@@ -29,7 +29,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       .get();
 
     if (!roomSnap.exists || roomSnap.data()?.role !== "owner") {
-      return apiErrorResponse("Only the document owner can set chapter labels", 403);
+      return apiErrorResponse(
+        "Only the document owner can set chapter labels",
+        403,
+      );
     }
 
     const roomId = await resolveAccessibleRoomId(authResult.userId, id);
