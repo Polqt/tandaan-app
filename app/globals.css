@@ -221,23 +221,23 @@
   .tandaan-page {
     position: relative;
     min-height: 100vh;
-    overflow: hidden;
+    overflow: clip;
     background:
       radial-gradient(
-        circle at 12% 4%,
-        rgba(81, 104, 246, 0.08),
+        circle at 10% 2%,
+        rgba(255, 214, 90, 0.24),
         transparent 19rem
       ),
       radial-gradient(
-        circle at 90% 10%,
-        rgba(46, 167, 176, 0.07),
+        circle at 92% 8%,
+        rgba(46, 167, 176, 0.13),
         transparent 20rem
       ),
       linear-gradient(
         180deg,
-        #ffffff 0%,
-        var(--color-sketch-page) 58%,
-        #ffffff 100%
+        #fffdf8 0%,
+        var(--color-sketch-page) 52%,
+        #fffdf8 100%
       );
     color: var(--color-sketch-ink);
   }
@@ -256,24 +256,10 @@
       ), linear-gradient(180deg, #0d1020 0%, #11162a 58%, #0d1020 100%);
   }
 
-  .landing-scroll {
-    height: calc(100dvh - 74px);
-    overflow-y: auto;
-    scroll-behavior: smooth;
-    scroll-snap-type: y mandatory;
-    scrollbar-gutter: stable;
-  }
-
-  .landing-panel {
-    min-height: calc(100dvh - 74px);
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-  }
-
   .sketch-shell {
     position: relative;
     margin-inline: auto;
-    width: min(100% - 2rem, 84rem);
+    width: min(100% - 2rem, 86rem);
   }
 
   .sketch-grain {
@@ -305,7 +291,7 @@
     position: relative;
     border: 1px solid var(--color-sketch-line);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.88);
+    background: rgba(255, 255, 255, 0.82);
     box-shadow:
       0 12px 28px rgba(20, 24, 40, 0.05),
       0 1px 0 rgba(255, 255, 255, 0.85) inset;
@@ -319,7 +305,6 @@
       0 1px 0 rgba(255, 255, 255, 0.08) inset;
   }
 
-  .sketch-card::after,
   .sketch-window::after {
     content: "";
     pointer-events: none;
@@ -337,21 +322,17 @@
   }
 
   .sketch-primary-button {
-    border-radius: 8px;
-    background: linear-gradient(
-      180deg,
-      var(--color-sketch-violet),
-      var(--color-sketch-blue)
-    );
+    border-radius: 999px;
+    background: var(--color-sketch-ink);
     color: white;
     font-weight: 800;
     box-shadow:
-      0 9px 18px rgba(81, 104, 246, 0.22),
+      0 9px 18px rgba(24, 24, 39, 0.16),
       0 1px 0 rgba(255, 255, 255, 0.35) inset;
   }
 
   .sketch-primary-button:hover {
-    background: linear-gradient(180deg, #725df2, #435cf0);
+    background: #2a2a3a;
     color: white;
     transform: translateY(-1px);
   }
@@ -848,17 +829,6 @@
   }
 
   @media (max-width: 768px) {
-    .landing-scroll {
-      height: auto;
-      overflow-y: visible;
-      scroll-snap-type: none;
-    }
-
-    .landing-panel {
-      min-height: auto;
-      scroll-snap-align: none;
-    }
-
     .public-shell {
       width: min(100% - 1.25rem, 90rem);
     }

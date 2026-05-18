@@ -1,28 +1,25 @@
 import { HeroSection } from "@/components/marketing/landing/hero-section";
 import {
+  LandingFaq,
   LandingFeatureGrid,
   LandingFinalCta,
   LandingProofCta,
   LandingWorkflow,
+  LandingWorkspaceShowcase,
 } from "@/components/marketing/landing/landing-sections";
 import PublicFooter from "@/components/marketing/shared/public-footer";
 
 export default function LandingPage() {
   return (
-    <div className="tandaan-page">
-      <div className="sketch-grain pointer-events-none fixed inset-0 z-0 opacity-80" />
-      <div className="landing-scroll relative z-10">
-        <HeroSection />
-        <LandingFeatureGrid />
-        <LandingWorkflow />
-        <LandingProofCta />
-        <LandingFinalCta />
-        <section className="landing-panel flex items-end">
-          <div className="w-full">
-            <PublicFooter />
-          </div>
-        </section>
-      </div>
+    <div className="bg-[#fbfbfa]">
+      <HeroSection />
+      <LandingFeatureGrid />
+      <LandingWorkflow />
+      <LandingWorkspaceShowcase />
+      <LandingProofCta />
+      <LandingFaq />
+      <LandingFinalCta />
+      <PublicFooter />
     </div>
   );
 }

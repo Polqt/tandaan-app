@@ -6,8 +6,8 @@ export default async function DocLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ id: string }>;
+  params: Promise<unknown>;
 }) {
-  const { id } = await params;
+  const { id } = (await params) as { id: string };
   return <RoomProvider roomId={id}>{children}</RoomProvider>;
 }

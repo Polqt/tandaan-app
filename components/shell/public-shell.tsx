@@ -8,7 +8,7 @@ export default function PublicShell({
   return (
     <>
       <PublicHeader />
-      <main className="min-h-[calc(100vh-74px)] bg-[var(--color-sketch-page)]">
+      <main className="min-h-[calc(100vh-72px)] bg-[var(--color-sketch-page)]">
         {children}
       </main>
     </>

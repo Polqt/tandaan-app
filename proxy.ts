@@ -1,9 +1,22 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import {
+  clerkMiddleware,
+  createRouteMatcher,
+} from "@clerk/nextjs/server";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 let edgeSaveLimiter: Ratelimit | null | undefined;
+
+const isProtectedRoute = createRouteMatcher([
+  "/api/auth-endpoint(.*)",
+  "/api/billing/cancel(.*)",
+  "/api/billing/checkout(.*)",
+  "/api/documents(.*)",
+  "/api/rooms(.*)",
+  "/api/users(.*)",
+]);
 
 function getEdgeSaveLimiter() {
   if (edgeSaveLimiter !== undefined) {
@@ -34,28 +47,14 @@ function isDocumentSavePatch(request: Request) {
   );
 }
 
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/robots.txt",
-  "/sitemap.xml",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/replay/(.*)",
-  "/product(.*)",
-  "/solutions(.*)",
-  "/blog(.*)",
-  "/docs(.*)",
-  "/billing(.*)",
-  "/pricing(.*)",
-  "/api/clerk-webhook",
-  "/api/billing/webhook",
-  "/monitoring(.*)",
-]);
-
-export default clerkMiddleware(async (auth, request) => {
+export default clerkMiddleware(async (auth, request: NextRequest) => {
   const requestId = crypto.randomUUID();
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-request-id", requestId);
+
+  if (isProtectedRoute(request)) {
+    await auth.protect();
+  }
 
   if (isDocumentSavePatch(request)) {
     const limiter = getEdgeSaveLimiter();
@@ -79,10 +78,6 @@ export default clerkMiddleware(async (auth, request) => {
     }
   }
 
-  if (!isPublicRoute(request)) {
-    await auth.protect();
-  }
-
   const response = NextResponse.next({
     request: {
       headers: requestHeaders,
@@ -94,9 +89,6 @@ export default clerkMiddleware(async (auth, request) => {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and static files
-    "/((?!_next|favicon.ico|icon\\?.*|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
     "/(api|trpc)(.*)",
   ],
 };

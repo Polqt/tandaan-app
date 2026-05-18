@@ -1,54 +1,11 @@
-import type { LucideIcon } from "lucide-react";
-
-export type AccentName = "blue" | "green" | "red" | "yellow";
-
 export type PublicNavItem = {
   href: string;
   label: string;
   shortLabel?: string;
 };
 
-export type IconContent = {
-  accent: AccentName;
-  body: string;
-  icon: LucideIcon;
-  title: string;
-};
-
-export type ProductTabId =
-  | "collaboration"
-  | "replay"
-  | "analytics"
-  | "comments";
-
-export type ProductTab = {
-  body: string;
-  bullets: string[];
-  id: ProductTabId;
-  title: string;
-};
-
-export type SolutionPersonaId =
-  | "product-teams"
-  | "designers"
-  | "students"
-  | "startups";
-
-export type SolutionPersona = {
-  challenge: string;
-  features: string[];
-  id: SolutionPersonaId;
-  impact: Array<{
-    label: string;
-    value: string;
-  }>;
-  label: string;
-  solution: string;
-};
-
 export type LandingFeature = {
   body: string;
-  illustration: "collaboration" | "replay" | "analytics";
   title: string;
 };
 

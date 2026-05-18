@@ -1,30 +1,18 @@
 import {
   BarChart3,
-  BookOpenCheck,
-  FileClock,
-  Layers3,
   MessageCircle,
   PenLine,
   PlayCircle,
-  PlugZap,
-  ShieldCheck,
-  Sparkles,
-  UserCheck,
   UsersRound,
 } from "lucide-react";
 import type {
   BlogPost,
   BlogPostDetail,
-  IconContent,
   LandingFeature,
-  ProductTab,
   PublicNavItem,
-  SolutionPersona,
 } from "@/types/marketing";
 
 export const publicNavItems: PublicNavItem[] = [
-  { href: "/product", label: "Product" },
-  { href: "/solutions", label: "Solutions" },
   { href: "/pricing", label: "Pricing" },
   { href: "/blog", label: "Blog" },
 ];
@@ -32,17 +20,14 @@ export const publicNavItems: PublicNavItem[] = [
 export const landingFeatures: LandingFeature[] = [
   {
     body: "Edit together in real time with cursors, comments, and mentions.",
-    illustration: "collaboration",
     title: "Live Collaboration",
   },
   {
     body: "Rewind and replay the entire journey of your document.",
-    illustration: "replay",
     title: "Session Replay",
   },
   {
     body: "Understand what matters with insights on activity, engagement, and more.",
-    illustration: "analytics",
     title: "Smart Analytics",
   },
 ];
@@ -78,233 +63,6 @@ export const workflowSteps = [
     icon: BarChart3,
     title: "Improve",
   },
-] as const;
-
-export const featurePillars: IconContent[] = [
-  {
-    accent: "blue",
-    body: "A room contains the document, collaborators, replay, file references, and comments that belong together.",
-    icon: Layers3,
-    title: "Room-first organization",
-  },
-  {
-    accent: "red",
-    body: "Every meaningful edit can become a replay frame, giving async teams a way to review the story behind the output.",
-    icon: BookOpenCheck,
-    title: "Narrative replays",
-  },
-  {
-    accent: "green",
-    body: "Mention teammates, inspect participants, and keep document ownership legible across shared workspaces.",
-    icon: UsersRound,
-    title: "Collaborative presence",
-  },
-  {
-    accent: "yellow",
-    body: "Version snapshots, share links, and provenance metadata help teams trust the work they did not see live.",
-    icon: ShieldCheck,
-    title: "Trust traces",
-  },
-];
-
-export const featureDeepDives = [
-  {
-    detail:
-      "Block-based writing stays lightweight, but each room can carry comments, participants, files, and a replayable timeline.",
-    label: "01",
-    title: "Write without turning everything into a database",
-  },
-  {
-    detail:
-      "When the draft changes, Tandaan keeps enough context for teammates to inspect the reasoning rather than only the diff.",
-    label: "02",
-    title: "Review the path, not just the final paragraph",
-  },
-  {
-    detail:
-      "Shared replay links let stakeholders understand a decision without needing full workspace access.",
-    label: "03",
-    title: "Share the useful part of history",
-  },
-];
-
-export const productTabs: ProductTab[] = [
-  {
-    body: "Live cursors, typed edits, comment threads, and lightweight assignments keep collaboration visible without turning the document into a busy chat room.",
-    bullets: [
-      "Live cursors",
-      "Instant edits",
-      "Comments and threads",
-      "Mentions and tasks",
-    ],
-    id: "collaboration",
-    title: "Live Collaboration",
-  },
-  {
-    body: "Replay turns edits into a readable timeline so teammates can understand how the document changed and why a decision landed.",
-    bullets: [
-      "Chapter markers",
-      "Playback controls",
-      "Decision highlights",
-      "Shareable replay links",
-    ],
-    id: "replay",
-    title: "Session Replay",
-  },
-  {
-    body: "Team analytics surface activity, engagement, bottlenecks, and review patterns without forcing managers into another dashboard.",
-    bullets: [
-      "Activity trends",
-      "Review velocity",
-      "Meeting reduction",
-      "Team alignment",
-    ],
-    id: "analytics",
-    title: "Analytics",
-  },
-  {
-    body: "Comments stay anchored to the work, with resolved context, ownership, and follow-ups preserved for async teammates.",
-    bullets: [
-      "Inline comments",
-      "Decision notes",
-      "Owner mentions",
-      "Resolved history",
-    ],
-    id: "comments",
-    title: "Comments",
-  },
-];
-
-export const productFeatureGrid: IconContent[] = [
-  {
-    accent: "blue",
-    body: "Compose structured plans, specs, notes, and checklists in a calm document surface.",
-    icon: PenLine,
-    title: "Rich Editor",
-  },
-  {
-    accent: "green",
-    body: "Control who can view, comment, edit, or share across rooms and documents.",
-    icon: UserCheck,
-    title: "Permissions",
-  },
-  {
-    accent: "yellow",
-    body: "Restore prior snapshots and compare how important sections evolved.",
-    icon: FileClock,
-    title: "Version History",
-  },
-  {
-    accent: "red",
-    body: "Connect the tools your team already uses without adding a heavy workflow layer.",
-    icon: PlugZap,
-    title: "Integrations",
-  },
-];
-
-export const productUseCases = [
-  {
-    body: "Plan, document, and ship better products.",
-    title: "Product Teams",
-  },
-  {
-    body: "Organize docs, feedback, and assets.",
-    title: "Design Teams",
-  },
-  {
-    body: "Move fast and keep everyone aligned.",
-    title: "Startups",
-  },
-  {
-    body: "Collaborate on projects and research.",
-    title: "Students",
-  },
-] as const;
-
-export const solutionPersonas: SolutionPersona[] = [
-  {
-    challenge:
-      "Scattered ideas, endless meetings, and decision history spread across chat, docs, and task tools.",
-    features: [
-      "Session Replay",
-      "Tasks and Checklists",
-      "Analytics",
-      "Comments and Mentions",
-    ],
-    id: "product-teams",
-    impact: [
-      { label: "Fewer Meetings", value: "40%" },
-      { label: "Faster Decisions", value: "60%" },
-      { label: "More Clarity", value: "80%" },
-    ],
-    label: "Product Teams",
-    solution:
-      "Centralize product thinking in one workspace. Capture context, collaborate async, replay every step, and turn decisions into action.",
-  },
-  {
-    challenge:
-      "Feedback lives in design files, screenshots, docs, and meetings, making creative decisions hard to trace.",
-    features: [
-      "Visual Comments",
-      "Replayable Feedback",
-      "Shared Briefs",
-      "Decision Notes",
-    ],
-    id: "designers",
-    impact: [
-      { label: "Faster Reviews", value: "45%" },
-      { label: "Less Rework", value: "50%" },
-      { label: "Clearer Handoffs", value: "70%" },
-    ],
-    label: "Designers",
-    solution:
-      "Keep briefs, references, comments, and rationale together so everyone can understand the creative path without another review call.",
-  },
-  {
-    challenge:
-      "Group projects lose momentum when research, draft edits, responsibilities, and professor feedback are split up.",
-    features: [
-      "Shared Notes",
-      "Task Owners",
-      "Revision History",
-      "Study Replays",
-    ],
-    id: "students",
-    impact: [
-      { label: "Better Alignment", value: "55%" },
-      { label: "Fewer Missed Tasks", value: "35%" },
-      { label: "Cleaner Drafts", value: "65%" },
-    ],
-    label: "Students",
-    solution:
-      "Create one collaborative notebook where research, writing, comments, and version history stay attached to the project.",
-  },
-  {
-    challenge:
-      "Small teams move quickly, but decisions disappear when everyone is switching between sales, product, support, and planning.",
-    features: [
-      "Startup Wiki",
-      "Async Decisions",
-      "Founder Replay",
-      "Team Analytics",
-    ],
-    id: "startups",
-    impact: [
-      { label: "Faster Onboarding", value: "50%" },
-      { label: "Less Context Loss", value: "70%" },
-      { label: "More Focus", value: "30%" },
-    ],
-    label: "Startups",
-    solution:
-      "Give the team one lightweight place to write, decide, replay, and improve without managing a complex operating system.",
-  },
-];
-
-export const solutionWorkflow = [
-  { icon: Sparkles, title: "Identify Problem" },
-  { icon: PenLine, title: "Use Tandaan.AI" },
-  { icon: UsersRound, title: "Collaborate" },
-  { icon: BarChart3, title: "Get Results" },
 ] as const;
 
 export const blogCategories = [
@@ -512,22 +270,20 @@ export const blogPostDetails: Record<BlogPostSlug, BlogPostDetail> = {
 export const footerColumns = [
   {
     links: [
-      { href: "/product", label: "Features" },
-      { href: "/product#replay", label: "Session Replay" },
-      { href: "/product#analytics", label: "Analytics" },
-      { href: "/product#integrations", label: "Integrations" },
+      { href: "/#features", label: "Features" },
+      { href: "/#workflow", label: "Workflow" },
+      { href: "/#replay", label: "Session Replay" },
       { href: "/billing", label: "Pricing" },
     ],
-    title: "Product",
+    title: "Tandaan",
   },
   {
     links: [
-      { href: "/solutions", label: "Teams" },
-      { href: "/solutions#students", label: "Students" },
-      { href: "/solutions#startups", label: "Startups" },
-      { href: "/solutions#designers", label: "Designers" },
+      { href: "/blog/future-team-collaboration", label: "Async Teams" },
+      { href: "/blog/narrative-replays", label: "Narrative Replays" },
+      { href: "/blog/organize-team-knowledge", label: "Knowledge" },
     ],
-    title: "Solutions",
+    title: "Resources",
   },
   {
     links: [
@@ -547,10 +303,3 @@ export const footerColumns = [
     title: "Legal",
   },
 ];
-
-export const accentClassNames = {
-  blue: "text-paper-blue bg-[#dfe9fb] border-paper-blue",
-  green: "text-[#35784a] bg-[#e0efdf] border-paper-green",
-  red: "text-[#b53024] bg-[#f8ded8] border-paper-red",
-  yellow: "text-[#8a6815] bg-[#fff1b8] border-[#dba91f]",
-} as const;

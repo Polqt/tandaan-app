@@ -1,17 +1,14 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import ClientAuthGuard from "@/components/auth/client-auth-guard";
 import ProtectedShell from "@/components/shell/protected-shell";
 
-export default async function ProtectedLayout({
+export default function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    redirect("/sign-in");
-  }
-
-  return <ProtectedShell>{children}</ProtectedShell>;
+  return (
+    <ClientAuthGuard>
+      <ProtectedShell>{children}</ProtectedShell>
+    </ClientAuthGuard>
+  );
 }
